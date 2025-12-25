@@ -1,0 +1,72 @@
+export const STRONG_KEYS = [
+  'okta',
+  'authorization',
+  'oai-sc',
+  'access_token',
+  'refresh_token',
+  'secret',
+  'password',
+  'api_key',
+  'passcode',
+  'otp',
+  'token',
+  'auth_token',
+  'id_token',
+  'oauth_token',
+  'jwt',
+  'private_key',
+  'public_key',
+  'session_token',
+  'csrf_token',
+  'sso_token',
+  'encryption_key',
+  'decryption_key',
+  'user_id',
+  'social_security_number',
+  'ssn',
+  'card_number',
+  'cc_number',
+  'credit_card',
+  'cvv',
+  'bank_account',
+  'routing_number',
+  'iban',
+  'bic',
+  'pin',
+  'api_secret',
+  'auth_secret',
+  'client_id',
+  'client_secret',
+  'aws_access_key',
+  'aws_secret_key',
+  'azure_key',
+  'gcp_key',
+  'stripe_key',
+  'webhook_secret',
+  'master_key',
+  'vault_key',
+  'sid',
+  'sidcc',
+  'gmail_at',
+];
+
+// Explicitly DO NOT redact these by name
+export const EXEMPT_KEYS = ['username', 'user_name', 'email', 'e-mail', 'login', 'user', 'user_id', 'userid'];
+
+// Non-sensitive/date-ish by default
+export const NON_SENSITIVE_KEYS = [
+  'date',
+  'start_date',
+  'end_date',
+  'start-date',
+  'end-date',
+  'created_at',
+  'updated_at',
+  'dob',
+  'birthday',
+  'expiration_date',
+];
+
+// Compile case-insensitive boundary-aware matchers
+export const keyMatches = (k: string | undefined | null, list: string[]) =>
+  !!k && list.some(s => new RegExp(`(^|[^a-z0-9])${s.replace(/_/g, '[_-]?')}([^a-z0-9]|$)`, 'i').test(k));
