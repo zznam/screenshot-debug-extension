@@ -44,3 +44,20 @@ A powerful and privacy-focused Chrome extension for capturing screenshots and ge
 
 - Run dev server: `pnpm run:chrome:local`
 - Lint: `pnpm lint`
+
+## Acknowledgments
+
+This project is built upon the excellent [Brie Extension](https://github.com/briehq/brie-extension) by the Brie team.
+
+**Special thanks to:**
+
+- [Ion Leu](mailto:ion@brie.io) — Co-founder & Developer
+- [Luminita Leu](mailto:luminita@brie.io) — Co-founder & Developer
+
+The original Brie extension provides a full-featured bug reporting solution with server-side integration. This fork strips away the server components to create a purely local, privacy-focused screenshot and debugging tool.
+
+If you need a complete bug reporting workflow with team collaboration features, check out the original project at [brie.io](https://brie.io).
+
+## License
+
+Apache-2.0 — See [LICENSE](LICENSE) for details.
