@@ -1,6 +1,6 @@
 export { annotationsHistoryStorage, annotationsRedoStorage, annotationsStorage } from './annotations/index.js';
 export { authIdentityProviderStorage, authTokensStorage } from './auth/index.js';
-export { captureNotifyStorage, captureStateStorage, captureTabStorage } from './capture/index.js';
+export { captureNotifyStorage, captureStateStorage, captureTabStorage, debugModeStorage } from './capture/index.js';
 export type { AuthTokensStorage } from './auth/index.js';
 export type { CaptureNotifyStorage } from './capture/index.js';
 

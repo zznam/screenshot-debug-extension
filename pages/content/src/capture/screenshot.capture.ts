@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { t } from '@extension/i18n';
 import type { Screenshot } from '@extension/shared';
+import { debugModeStorage } from '@extension/storage';
 
 let lastPointerX = 0;
 let lastPointerY = 0;
@@ -546,9 +547,12 @@ const processScreenshot = async ({
 };
 
 // Save and notify with screenshots
-const saveAndNotify = ({ screenshots, mode }: { screenshots: Screenshot[]; mode: 'single' | 'multiple' }) => {
+const saveAndNotify = async ({ screenshots, mode }: { screenshots: Screenshot[]; mode: 'single' | 'multiple' }) => {
   const timestamp = Date.now();
   const screenshotName: string = `${location.host}-${timestamp}`.replaceAll('.', '-');
+
+  // Get debug mode state
+  const saveDebugLog = await debugModeStorage.getDebugMode();
 
   // Send message to background to download assets immediately
   chrome.runtime.sendMessage({
@@ -561,6 +565,7 @@ const saveAndNotify = ({ screenshots, mode }: { screenshots: Screenshot[]; mode:
       host: location.host,
       url: location.href,
       title: document.title,
+      saveDebugLog,
     },
   });
 };

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useStorage } from '@extension/shared';
 import { captureStateStorage } from '@extension/storage';
 
-import { CaptureScreenshotGroup } from './components/capture';
+import { CaptureScreenshotGroup, DebugToggle } from './components/capture';
 import { SlicesHistoryButton, SlicesHistoryContent } from './components/slices-history';
 import { Header, BetaNotifier } from './components/ui';
 
@@ -22,6 +22,7 @@ export const PopupContent = () => {
     <>
       <Header />
       <CaptureScreenshotGroup />
+      {captureState === 'idle' && <DebugToggle />}
       {captureState === 'idle' && <SlicesHistoryButton onClick={() => setShowSlicesHistory(true)} />}
       <BetaNotifier />
     </>

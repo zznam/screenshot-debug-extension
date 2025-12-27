@@ -50,7 +50,7 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
 
       case 'DOWNLOAD_ASSETS': {
         const payload = message.payload as any;
-        const { screenshots, name } = payload;
+        const { screenshots, name, saveDebugLog = true } = payload;
 
         // Download screenshots
         for (const screenshot of screenshots) {
@@ -63,30 +63,33 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
           });
         }
 
-        // Fetch captured records (network, console, etc.)
-        const tabId = sender.tab?.id;
-        const records = tabId ? await getRecords(tabId) : [];
+        // Only download JSON log if debug mode is enabled
+        if (saveDebugLog) {
+          // Fetch captured records (network, console, etc.)
+          const tabId = sender.tab?.id;
+          const records = tabId ? await getRecords(tabId) : [];
 
-        // Download JSON log
-        const logData = {
-          ...payload,
-          logs: records,
-          screenshots: screenshots.map((s: any) => ({
-            ...s,
-            src: '[Content Redacted]', // Don't save the huge data URL in JSON
-            filename: `${name}${s.isPrimary ? '' : '-full'}.png`,
-          })),
-        };
+          // Download JSON log
+          const logData = {
+            ...payload,
+            logs: records,
+            screenshots: screenshots.map((s: any) => ({
+              ...s,
+              src: '[Content Redacted]', // Don't save the huge data URL in JSON
+              filename: `${name}${s.isPrimary ? '' : '-full'}.png`,
+            })),
+          };
 
-        const jsonString = JSON.stringify(logData, null, 2);
-        const base64Data = btoa(unescape(encodeURIComponent(jsonString))); // specific encoding for unicode
-        const jsonUrl = `data:application/json;base64,${base64Data}`;
+          const jsonString = JSON.stringify(logData, null, 2);
+          const base64Data = btoa(unescape(encodeURIComponent(jsonString))); // specific encoding for unicode
+          const jsonUrl = `data:application/json;base64,${base64Data}`;
 
-        await chrome.downloads.download({
-          url: jsonUrl,
-          filename: `${name}.json`,
-          saveAs: false,
-        });
+          await chrome.downloads.download({
+            url: jsonUrl,
+            filename: `${name}.json`,
+            saveAs: false,
+          });
+        }
 
         return { status: 'success' };
       }

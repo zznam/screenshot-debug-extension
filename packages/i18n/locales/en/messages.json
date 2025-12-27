@@ -107,7 +107,7 @@
     "message": "Click or drag to select area for screenshot"
   },
   "GUEST_DAILY_LIMIT": {
-    "message": "Unfortunately, you’ve hit the daily limit."
+    "message": "Unfortunately, you've hit the daily limit."
   },
   "refreshPage": {
     "message": "Refresh this page"
@@ -224,6 +224,12 @@
     "message": "Create Workspace"
   },
   "fileTooLarge": {
-    "message": "“$1” is too large. Choose a file under 20 MB."
+    "message": "\u201c$1\u201d is too large. Choose a file under 20 MB."
+  },
+  "debugRecords": {
+    "message": "Debug Records"
+  },
+  "debugRecordsDescription": {
+    "message": "Save JSON log with network requests"
   }
 }
