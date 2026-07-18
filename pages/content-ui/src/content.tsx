@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { t } from '@extension/i18n';
@@ -53,6 +53,7 @@ const Content = ({
   const [title, setTitle] = useState('Untitled report');
   const [activeElement, setActiveElement] = useState<ActiveElement>(defaultNavElement);
   const [isStartingAiDebug, setStartingAiDebug] = useState(false);
+  const aiRendererRef = useRef<(() => string) | null>(null);
 
   const isLg = canvasWidth >= LG_BREAKPOINT;
   const hasShots = screenshots.length > 1;
@@ -119,9 +120,9 @@ const Content = ({
     setStartingAiDebug(true);
     try {
       const stored = await annotationsStorage.getAnnotations(activeScreenshot.id!);
-      let screenshotDataUrl = activeScreenshot.src;
+      let screenshotDataUrl = aiRendererRef.current?.() ?? activeScreenshot.src;
 
-      if (stored?.objects?.length && stored.meta?.sizes?.natural) {
+      if (!aiRendererRef.current && stored?.objects?.length && stored.meta?.sizes?.natural) {
         const { width, height } = stored.meta.sizes.natural;
         const annotatedFile = await mergeScreenshot({
           screenshot: activeScreenshot,
@@ -134,7 +135,7 @@ const Content = ({
           reader.onload = () =>
             typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Invalid annotated image.'));
           reader.onerror = () => reject(reader.error ?? new Error('Could not read the annotated image.'));
-          reader.readAsDataURL(annotatedFile);
+          reader.readAsDataURL(new Blob([annotatedFile], { type: 'image/png' }));
         });
       }
 
@@ -150,6 +151,10 @@ const Content = ({
       setStartingAiDebug(false);
     }
   };
+
+  const handleAiRendererReady = useCallback((renderer: (() => string) | null) => {
+    aiRendererRef.current = renderer;
+  }, []);
 
   const handleOnOpenSidebar = (open: boolean) => {
     setLeftSidebarOpen(open);
@@ -219,6 +224,7 @@ const Content = ({
             key={activeScreenshotId ?? 'empty'}
             screenshot={activeScreenshot!}
             onElement={handleOnElement}
+            onAiRendererReady={handleAiRendererReady}
           />
         </main>
 

@@ -47,9 +47,10 @@ import {
 interface CanvasContainerProps {
   screenshot: Screenshot;
   onElement: (elem: ActiveElement) => void;
+  onAiRendererReady?: (renderer: (() => string) | null) => void;
 }
 
-const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) => {
+const CanvasContainerView = ({ screenshot, onElement, onAiRendererReady }: CanvasContainerProps) => {
   const captureState = useStorage(captureStateStorage);
   const { lastAction, tick } = useAppSelector((state: RootState) => state.canvasReducer);
   const dispatch = useAppDispatch();
@@ -438,6 +439,11 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
       backgroundImage: screenshot?.src,
     });
 
+    onAiRendererReady?.(() => {
+      const scale = canvas.viewportTransform?.[0] || 1;
+      return canvas.toDataURL({ format: 'png', multiplier: 1 / scale });
+    });
+
     const getSavedAnnotations = async () => {
       const annotations = await annotationsStorage.getAnnotations(screenshot.id!);
 
@@ -663,6 +669,7 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
 
     // dispose the canvas and remove the event listeners when the component unmounts
     return () => {
+      onAiRendererReady?.(null);
       /**
        * dispose is a method provided by Fabric that allows you to dispose
        * the canvas. It clears the canvas and removes all the event
@@ -693,7 +700,7 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
         );
       }
     };
-  }, [screenshot?.id]); // run this effect only once when the component mounts and the canvasRef changes
+  }, [onAiRendererReady, screenshot?.id]); // run this effect only once when the component mounts and the canvasRef changes
 
   useFitCanvasToParent(fabricRef.current, screenshot, gridCellRef.current);
 

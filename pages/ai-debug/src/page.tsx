@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AI_DEBUG, useStorage } from '@extension/shared';
 import type { AiDebugMessage, AiDebugResponse, AiDebugSession, AiDebugSessionSummary } from '@extension/shared';
 import { themeStorage } from '@extension/storage';
-import { Button, Icon, Input, Textarea, cn } from '@extension/ui';
+import { Button, Input, Textarea, cn } from '@extension/ui';
 
 import { checkHelper, HELPER_URL, requestAiResponse, savePairingToken } from './helper-client';
 import type { HelperState } from './helper-client';
@@ -132,9 +132,11 @@ export const AiDebugPage = () => {
     <main className="bg-background text-foreground flex min-h-screen">
       <aside className="border-border bg-card hidden w-72 shrink-0 border-r p-4 lg:block">
         <div className="mb-6 flex items-center gap-3">
-          <div className="bg-primary text-primary-foreground flex size-10 items-center justify-center rounded-xl">
-            <Icon name="Sparkles" className="size-5" />
-          </div>
+          <img
+            src={chrome.runtime.getURL('logo.png')}
+            className="size-10 object-contain"
+            alt="Screenshot & Debug nón lá logo"
+          />
           <div>
             <h1 className="font-semibold">AI Debug</h1>
             <p className="text-muted-foreground text-xs">Persistent local sessions</p>

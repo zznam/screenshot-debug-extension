@@ -204,6 +204,108 @@ test('captures the viewport and opens the screenshot editor', async ({ context, 
   expect(extensionErrors).toEqual([]);
 });
 
+test('starts AI Debug from the current annotated screenshot', async ({ context, extensionErrors, serviceWorker }) => {
+  const annotatedTargetUrl = `${targetUrl}?annotated-ai-debug`;
+  const target = await context.newPage();
+  await target.goto(annotatedTargetUrl);
+  await target.bringToFront();
+  await expect(target.locator('#brie-root')).toHaveCount(1);
+
+  await serviceWorker.evaluate(async () => {
+    await chrome.storage.local.set({
+      'ai-debug-helper-pairing-token': 'e2e-pair-token',
+      'ai-debug-helper-url': 'http://127.0.0.1:43124',
+    });
+  });
+
+  expect(await startViewportCapture(serviceWorker, annotatedTargetUrl)).toEqual({ ok: true });
+  await expect(target.getByTestId('screenshot-editor')).toBeVisible();
+
+  await expect
+    .poll(() =>
+      serviceWorker.evaluate(async () => {
+        const stored = await chrome.storage.local.get('annotations-storage-key');
+        const annotations = stored['annotations-storage-key'] as Record<string, { objects?: unknown[] }> | undefined;
+        return Object.keys(annotations ?? {}).length;
+      }),
+    )
+    .toBeGreaterThan(0);
+
+  await serviceWorker.evaluate(async () => {
+    const key = 'annotations-storage-key';
+    const stored = await chrome.storage.local.get(key);
+    const annotations = stored[key] as Record<string, { objects?: unknown[] }>;
+    const screenshotId = Object.keys(annotations)[0];
+    annotations[screenshotId] = {
+      ...annotations[screenshotId],
+      objects: [
+        {
+          type: 'Rect',
+          version: '6.7.1',
+          left: 40,
+          top: 40,
+          width: 120,
+          height: 70,
+          fill: 'transparent',
+          stroke: '#ef4444',
+          strokeWidth: 5,
+          objectId: 'e2e-annotation',
+          shapeType: 'rectangle',
+        },
+      ],
+    };
+    await chrome.storage.local.set({ [key]: annotations });
+  });
+
+  await expect(target.getByRole('button', { name: 'Start over' })).toBeEnabled();
+  await target.getByRole('button', { name: 'Minimize' }).click();
+  await expect(target.getByTestId('screenshot-editor')).toHaveCount(0);
+  await target.getByRole('button', { name: 'Edit' }).click();
+  await expect(target.getByTestId('screenshot-editor')).toBeVisible();
+
+  const aiPagePromise = context.waitForEvent('page', page => page.url().includes('/ai-debug/index.html'));
+  await target.getByRole('button', { name: 'AI Debug' }).click();
+  const aiPage = await aiPagePromise;
+  await expect(aiPage.getByText(/Mock diagnosis for Screenshot & Debug Test Page/)).toBeVisible();
+
+  const sessionId = new URL(aiPage.url()).searchParams.get('session');
+  expect(sessionId).toBeTruthy();
+  const screenshotDataUrl = await serviceWorker.evaluate(async id => {
+    const request = indexedDB.open('screenshot_debug_ai_v1', 1);
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = database.transaction('sessions', 'readonly');
+    const getSession = transaction.objectStore('sessions').get(id!);
+    return new Promise<string | null>((resolve, reject) => {
+      getSession.onsuccess = () => resolve(getSession.result?.context?.screenshotDataUrl ?? null);
+      getSession.onerror = () => reject(getSession.error);
+    });
+  }, sessionId);
+  expect(screenshotDataUrl).toMatch(/^data:image\/png;base64,/);
+  const redAnnotationPixels = await aiPage.evaluate(async dataUrl => {
+    const image = new Image();
+    image.src = dataUrl!;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context2d = canvas.getContext('2d')!;
+    context2d.drawImage(image, 0, 0);
+    const pixels = context2d.getImageData(0, 0, canvas.width, canvas.height).data;
+    let count = 0;
+    for (let index = 0; index < pixels.length; index += 4) {
+      if (pixels[index] > 200 && pixels[index + 1] < 120 && pixels[index + 2] < 120 && pixels[index + 3] > 200) {
+        count += 1;
+      }
+    }
+    return count;
+  }, screenshotDataUrl);
+  expect(redAnnotationPixels).toBeGreaterThan(100);
+  expect(extensionErrors).toEqual([]);
+});
+
 test('downloads debug JSON in individual and ZIP exports before clearing records', async ({
   context,
   extensionErrors,
