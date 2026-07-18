@@ -17,7 +17,7 @@ export type BgResponse =
   | { ok: boolean; error?: string }
   | { isAvailable: boolean };
 
-export type RecordType = 'events' | 'network' | 'console' | 'cookies';
+export type RecordType = 'events' | 'network' | 'console' | 'cookies' | 'performance';
 export interface Record {
   recordType: RecordType;
   url: string;

@@ -5,5 +5,5 @@ export { getBrowserZoomLevel } from './zoom-level.util';
 export { getNetworkInfo } from './network-info.util';
 export { getLanguageInfo } from './language-info.util';
 export { getMemoryInfo } from './memory-info.util';
-export { getIncognitoStatus } from './incognito-status.util';
+export { isIncognito } from './incognito-status.util';
 export { getSystemInfo } from './system-info.util';

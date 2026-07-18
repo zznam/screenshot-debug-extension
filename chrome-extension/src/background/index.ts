@@ -11,6 +11,9 @@ import {
   handleOnTabUpdated,
   handleOnCommitted,
 } from '@src/services';
+import { initBadgeListener } from '@src/services/badge.service';
+
+initBadgeListener();
 
 tabs.onRemoved.addListener(handleOnTabRemoved);
 tabs.onUpdated.addListener(handleOnTabUpdated);

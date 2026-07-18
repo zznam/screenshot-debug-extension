@@ -123,7 +123,7 @@ export default function App() {
   const capturing = captureState === 'capturing';
 
   return (
-    <div id="brie-content" className={cn('light', 'relative')}>
+    <div id="brie-content" className={cn(theme, 'relative')}>
       <ToasterProvider theme={theme} />
 
       <ReduxProvider store={store}>

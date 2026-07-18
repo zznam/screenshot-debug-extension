@@ -15,7 +15,13 @@ export const createDefaultControls = () => {
     rotationStyleHandler,
   } = FabricControls;
 
-  const defaultRender = (ctx, left, top, styleOverride, fabricObject) => {
+  const defaultRender = (
+    ctx: CanvasRenderingContext2D,
+    left: number,
+    top: number,
+    styleOverride: any,
+    fabricObject: any,
+  ) => {
     ctx.save();
     const size = 8;
     const radius = 2.5;

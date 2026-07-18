@@ -13,7 +13,7 @@ const isDomEditor = (el: EventTarget | null): el is HTMLElement =>
 /**
  * Returns `true` when a Fabric text object is currently being edited.
  */
-const isFabricEditing = (canvas: Canvas): boolean => !!canvas.getActiveObject()?.isEditing;
+const isFabricEditing = (canvas: Canvas): boolean => !!(canvas.getActiveObject() as any)?.isEditing;
 
 export const handleCopy = (canvas: Canvas) => {
   const activeObjects = canvas.getActiveObjects();

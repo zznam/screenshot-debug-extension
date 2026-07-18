@@ -3,7 +3,7 @@ import { useStorage } from '@extension/shared';
 import { annotationsHistoryStorage, annotationsRedoStorage, annotationsStorage } from '@extension/storage';
 import { Button, cn, Icon, Tooltip, TooltipContent, TooltipTrigger } from '@extension/ui';
 
-import { CreateDropdown, EditableTitle, WorkspacesDropdown } from '@src/components/dialog-view';
+import { EditableTitle } from '@src/components/dialog-view';
 
 interface EditorHeaderProps {
   /** active screenshot id */
@@ -28,10 +28,9 @@ interface EditorHeaderProps {
   canvasWidth: number;
   canvasHeight: number;
 
-  /** workspace & create dropdowns */
-  onWorkspaceChange: (id: string) => void;
-  onCreate: (key: string) => void;
-  isCreateLoading: boolean;
+  /** download and copy actions */
+  onDownload: () => void;
+  onCopy: () => void;
 
   className?: string;
 }
@@ -50,13 +49,12 @@ export const Header: React.FC<EditorHeaderProps> = ({
   onUndo,
   onRedo,
   onStartOver,
-  isCreateLoading = false,
 
   canvasWidth,
   canvasHeight,
 
-  onWorkspaceChange,
-  onCreate,
+  onDownload,
+  onCopy,
 
   className,
 }) => {
@@ -188,9 +186,14 @@ export const Header: React.FC<EditorHeaderProps> = ({
       </div>
 
       <div className="flex items-center justify-end gap-x-2">
-        <WorkspacesDropdown onChange={onWorkspaceChange} />
-
-        <CreateDropdown isLoading={isCreateLoading} onChange={onCreate} />
+        <Button onClick={onCopy} variant="secondary" className="flex h-[35px] min-w-[80px] justify-center gap-x-2">
+          <Icon name="CopyIcon" size={16} />
+          <span>Copy</span>
+        </Button>
+        <Button onClick={onDownload} className="bg-gradient-overlay flex h-[35px] min-w-[120px] justify-center gap-x-2">
+          <Icon name="DownloadIcon" size={16} />
+          <span>Download</span>
+        </Button>
       </div>
     </header>
   );

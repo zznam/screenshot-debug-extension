@@ -7,9 +7,8 @@
  * @returns    The stored { accessToken, refreshToken } object.
  */
 import { authTokensStorage } from '@extension/storage';
-import type { ITokens } from '@extension/storage';
 
-export const persistTokens = async (url: string): Promise<ITokens> => {
+export const persistTokens = async (url: string): Promise<{ accessToken: string; refreshToken: string }> => {
   const fragment = new URL(url).hash.slice(1);
   const params = new URLSearchParams(fragment);
 
@@ -18,7 +17,7 @@ export const persistTokens = async (url: string): Promise<ITokens> => {
 
   if (!accessToken) throw new Error('No access token found in callback URL');
 
-  const tokens: ITokens = { accessToken, refreshToken };
+  const tokens = { accessToken, refreshToken };
 
   await authTokensStorage.setTokens(tokens);
 

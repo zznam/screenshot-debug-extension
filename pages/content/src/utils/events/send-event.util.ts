@@ -21,8 +21,8 @@ export const sendEvent = (event: AppEventType, el?: Element | null, extra?: Reco
     event,
     timestamp,
     url: location.href,
-    element: buildDescriptor(el ?? null),
-    extra: extra && Object.keys(extra).length ? extra : null,
+    element: buildDescriptor(el ?? null) ?? undefined,
+    extra: extra && Object.keys(extra).length ? extra : undefined,
   });
 
   safePostMessage('ADD_RECORD', {

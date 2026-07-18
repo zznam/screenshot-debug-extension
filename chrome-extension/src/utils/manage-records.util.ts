@@ -6,14 +6,9 @@ import { deepRedactSensitiveInfo } from '@extension/shared';
 import type { Record } from '@src/types';
 
 import { decodeRequestBody } from './decode-request-body.util';
+import { deleteRecordsFromDB, getRecordsFromDB, putRecordToDB } from '../services/indexed-db.service';
 
-const RESTRICTED = [
-  'https://api.briehq.com',
-  'https://sandbox-api.briehq.com',
-  'http://localhost:3006',
-  'fhfdkpfdkimboffigpggibbgggeimpfd', // brie's local uuid
-  'kbmbnelnoppneadncmmkfikbcgmilbao',
-];
+const RESTRICTED: string[] = [];
 
 const invalidRecord = (entity: string) => RESTRICTED.some(word => entity.includes(word));
 
@@ -36,10 +31,25 @@ export const deleteRecords = async (tabId: number) => {
 
   tabRecordsMap.delete(tabId);
   tabUrlToRequestId.delete(tabId);
+  await deleteRecordsFromDB(tabId);
 };
 
 export const getRecords = async (tabId: number): Promise<Record[]> => {
-  return tabId && tabRecordsMap.has(tabId) ? Array.from(tabRecordsMap.get(tabId)!.values()) : [];
+  if (!tabId) return [];
+
+  if (tabRecordsMap.has(tabId)) {
+    return Array.from(tabRecordsMap.get(tabId)!.values());
+  }
+
+  const dbRecords = await getRecordsFromDB(tabId);
+  if (dbRecords.length > 0) {
+    const map = new Map();
+    dbRecords.forEach((record: any) => map.set(record.uuid, record));
+    tabRecordsMap.set(tabId, map);
+    return dbRecords;
+  }
+
+  return [];
 };
 
 export const addOrMergeRecords = async (tabId: number, record: Record): Promise<void> => {
@@ -65,7 +75,9 @@ export const addOrMergeRecords = async (tabId: number, record: Record): Promise<
 
   try {
     if (record.recordType !== 'network') {
-      recordsMap.set(uuid, { uuid, ...deepRedactSensitiveInfo(record, tabUrl) });
+      const newRecord = { uuid, ...deepRedactSensitiveInfo(record, tabUrl) };
+      recordsMap.set(uuid, newRecord);
+      putRecordToDB(tabId, newRecord);
       return;
     }
 
@@ -128,7 +140,9 @@ export const addOrMergeRecords = async (tabId: number, record: Record): Promise<
     };
 
     if (!recordsMap.has(recordKey)) {
-      recordsMap.set(recordKey, { uuid, url, ...redactedRecord });
+      const newRecord = { uuid, url, ...redactedRecord };
+      recordsMap.set(recordKey, newRecord);
+      putRecordToDB(tabId, newRecord);
       return;
     }
 
@@ -152,6 +166,8 @@ export const addOrMergeRecords = async (tabId: number, record: Record): Promise<
         recordData[key] = value;
       }
     }
+
+    putRecordToDB(tabId, recordData);
   } catch (e) {
     console.error('[addOrMergeRecords] Primary: Failed to process network record:', e);
   }

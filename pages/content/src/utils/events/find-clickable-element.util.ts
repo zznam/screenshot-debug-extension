@@ -19,7 +19,7 @@ export const findClickableParent = (element: HTMLElement | null, maxDepth: numbe
   while (current && depth < maxDepth) {
     if (isClickableElement(current)) {
       // Check for React synthetic props but still return the DOM node
-      const reactProp = findReactProp(current);
+      const reactProp = findReactProp(current, '__reactProps$');
 
       return reactProp ? (current as any)[reactProp] : current; // Return the first clickable ancestor found
     }

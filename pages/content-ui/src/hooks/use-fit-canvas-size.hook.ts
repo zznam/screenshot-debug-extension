@@ -30,7 +30,7 @@ export const useFitCanvasToParent = (
         parentHeight: parentElt.clientHeight,
       });
 
-      await annotationsStorage.setAnnotations(screenshot.id!, { meta });
+      await annotationsStorage.setAnnotations(screenshot.id!, { meta } as any);
     };
     fit();
 

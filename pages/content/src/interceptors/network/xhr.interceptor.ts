@@ -31,7 +31,7 @@ export const interceptXHR = (): void => {
       requestStart: new Date().toISOString(),
       requestBody: null,
     };
-    originalOpen.apply(this, [method, url, ...rest]);
+    (originalOpen as any).apply(this, [method, url, ...rest]);
   };
 
   // Intercept XMLHttpRequest send method
@@ -131,7 +131,7 @@ export const interceptXHR = (): void => {
 
       // Call the original onreadystatechange handler if defined
       if (originalOnReadyStateChange) {
-        originalOnReadyStateChange.apply(this, args);
+        (originalOnReadyStateChange as any).apply(this, args);
       }
     };
 

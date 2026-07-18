@@ -45,7 +45,7 @@ export const ColorPalette = ({
                 className="justify-start"
                 type="single"
                 defaultValue={selectedColor}
-                onValueChange={value => {
+                onValueChange={(value: string) => {
                   setSelectedColor(value);
                   onChangeColor(value);
                   setOpen(false);

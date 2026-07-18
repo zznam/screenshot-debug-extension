@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from '../../utils';
 
 export const Skeleton = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
   return <div className={cn('bg-primary/10 animate-pulse rounded-md', className)} {...props} />;

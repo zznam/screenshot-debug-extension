@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { IS_DEV } from '@extension/env';
 import { t } from '@extension/i18n';
-import { AuthMethod, useStorage } from '@extension/shared';
+import { useStorage } from '@extension/shared';
 import { captureStateStorage, captureTabStorage, pendingReloadTabsStorage } from '@extension/storage';
-import { useUser } from '@extension/store';
 import {
   Alert,
   AlertDescription,
@@ -16,8 +14,6 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from '@extension/ui';
-
-import { useSlicesCreatedToday } from '@src/hooks';
 
 const captureTypes = [
   {
@@ -33,37 +29,13 @@ const captureTypes = [
   },
 ];
 
-const DEFAULT_MODE = 'multiple';
-
 export const CaptureScreenshotGroup = () => {
-  const totalSlicesCreatedToday = useSlicesCreatedToday();
-  const user = useUser();
-
   const captureState = useStorage(captureStateStorage);
   const captureTabId = useStorage(captureTabStorage);
   const pendingReloadTabIds = useStorage(pendingReloadTabsStorage);
 
-  const [activeTab, setActiveTab] = useState({ id: null, url: '' });
+  const [activeTab, setActiveTab] = useState({ id: null as number | null, url: '' });
   const [currentActiveTab, setCurrentActiveTab] = useState<number>();
-  const [mode, setMode] = useState(DEFAULT_MODE);
-  const isCaptureScreenshotDisabled = useMemo(() => {
-    const isGuest = user?.fields?.authMethod === AuthMethod.GUEST;
-    /**
-     * Skip limit check
-     * - in dev/sandbox environments
-     * - if has account (!GUEST)
-     */
-    if (IS_DEV || !isGuest) {
-      return false;
-    }
-
-    /**
-     * Only disable if:
-     * - User is a guest
-     * - And has hit the daily limit
-     */
-    return isGuest && totalSlicesCreatedToday > 10 && Boolean(activeTab.id);
-  }, [totalSlicesCreatedToday, user?.fields?.authMethod, activeTab.id]);
 
   const isCaptureActive = useMemo(() => ['capturing', 'unsaved'].includes(captureState), [captureState]);
 
@@ -74,13 +46,12 @@ export const CaptureScreenshotGroup = () => {
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
 
       if (tabs[0]?.url) {
-        setActiveTab(prev => ({ ...prev, url: tabs[0].url }));
-
+        setActiveTab(prev => ({ ...prev, url: tabs[0].url! }));
         setCurrentActiveTab(tabs[0].id);
       }
     };
 
-    const handleEscapeKey = async event => {
+    const handleEscapeKey = async (event: KeyboardEvent) => {
       if (event.key === 'Escape' && captureState === 'capturing') {
         await updateCaptureState('idle');
         await updateActiveTab(null);
@@ -93,37 +64,16 @@ export const CaptureScreenshotGroup = () => {
     return () => window.removeEventListener('keydown', handleEscapeKey);
   }, [captureState, captureTabId]);
 
-  const updateCaptureState = useCallback(async state => {
+  const updateCaptureState = useCallback(async (state: any) => {
     await captureStateStorage.setCaptureState(state);
   }, []);
 
-  const updateActiveTab = useCallback(async (tabId: number) => {
+  const updateActiveTab = useCallback(async (tabId: number | null) => {
     await captureTabStorage.setCaptureTabId(tabId);
     setActiveTab(prev => ({ ...prev, id: tabId }));
   }, []);
 
   const handleCaptureScreenshot = async (type?: 'full-page' | 'viewport' | 'area') => {
-    // if (mode === 'single') {
-    //   if (captureState === 'unsaved' && activeTab?.id) {
-    //     handleOnDiscard(activeTab?.id);
-    //   }
-
-    //   if (['capturing', 'unsaved'].includes(captureState)) {
-    //     chrome.tabs.sendMessage(activeTab?.id, { action: 'EXIT_CAPTURE' }, response => {
-    //       if (chrome.runtime.lastError) {
-    //         console.error('Error stopping unsaved:', chrome.runtime.lastError.message);
-    //       } else {
-    //         console.log('Unsaved closed:', response);
-    //       }
-    //     });
-
-    //     await updateCaptureState('idle');
-    //     await updateActiveTab(null);
-
-    //     return;
-    //   }
-    // }
-
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
 
     if (tabs[0]?.id && type) {
@@ -164,11 +114,6 @@ export const CaptureScreenshotGroup = () => {
   };
 
   const handleOnDiscard = async (activeTabId: number) => {
-    /**
-     * @todo
-     * if unsaved state,
-     * then display a alert with same two option, discard or save
-     */
     await updateCaptureState('idle');
     await updateActiveTab(null);
 
@@ -182,10 +127,9 @@ export const CaptureScreenshotGroup = () => {
   };
 
   const isInternalPage = activeTab.url.startsWith('about:') || activeTab.url.startsWith('chrome:');
-  const showExitCapture =
-    (isCaptureActive && mode === 'single') || (isCaptureActive && currentActiveTab !== activeTab.id);
+  const showExitCapture = isCaptureActive && currentActiveTab !== activeTab.id;
 
-  if (currentActiveTab && pendingReloadTabIds.includes(currentActiveTab)) {
+  if (currentActiveTab && pendingReloadTabIds?.includes(currentActiveTab)) {
     return (
       <>
         <Alert className="text-center">
@@ -255,7 +199,6 @@ export const CaptureScreenshotGroup = () => {
   return (
     <>
       <RadioGroup
-        // disabled={captureState === 'capturing'}
         className={cn('border-muted grid w-full gap-4 rounded-xl border bg-slate-100/20 p-2', {
           'grid-cols-3': !showExitCapture,
         })}>
@@ -274,15 +217,14 @@ export const CaptureScreenshotGroup = () => {
                   value={type.slug}
                   id={type.slug}
                   className="peer sr-only"
-                  onClick={() => handleCaptureScreenshot(type.slug)}
-                  disabled={isCaptureScreenshotDisabled}
+                  onClick={() => handleCaptureScreenshot(type.slug as 'area' | 'viewport' | 'full-page')}
                 />
                 <Label
                   htmlFor={type.slug}
                   className={cn(
                     'hover:bg-accent hover:text-accent-foreground flex flex-col items-center justify-between rounded-md border border-transparent py-3 hover:cursor-pointer hover:border-slate-200 dark:border-0',
                   )}>
-                  <Icon name={type.icon} className="mb-3 size-5" strokeWidth={type.slug === 'area' ? 2 : 1.5} />
+                  <Icon name={type.icon as any} className="mb-3 size-5" strokeWidth={type.slug === 'area' ? 2 : 1.5} />
 
                   <span className="text-nowrap text-[11px]">{type.name}</span>
                 </Label>
@@ -291,11 +233,6 @@ export const CaptureScreenshotGroup = () => {
           </>
         )}
       </RadioGroup>
-      {/* {isCaptureScreenshotDisabled && (
-        <p>
-          You’ve reached the issue limit for your plan. <a href="/pricing">Upgrade your plan</a> for unlimited issues.
-        </p>
-      )} */}
 
       {activeTab.id !== currentActiveTab && ['capturing', 'unsaved'].includes(captureState) && (
         <Button type="button" variant="link" size="sm" className="w-full" onClick={handleGoToActiveTab}>

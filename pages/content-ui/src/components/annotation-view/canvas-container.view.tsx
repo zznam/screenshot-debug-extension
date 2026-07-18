@@ -232,11 +232,9 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
       if (fabricRef.current) {
         const canvasObjects = fabricRef.current.toJSON();
 
-        await saveHistory(
-          screenshot.id!,
-          { objects: canvasObjects.objects },
-          { clearRedo: isProgrammaticChange.current },
-        );
+        await saveHistory(screenshot.id!, { objects: canvasObjects.objects } as ShapeSnapshot, {
+          clearRedo: isProgrammaticChange.current,
+        });
       }
     },
     [screenshot?.id],
@@ -294,7 +292,7 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
         objects = [...objects, shape];
       }
 
-      const shapeSnapshot: ShapeSnapshot = { objects: objects ?? [] };
+      const shapeSnapshot = { objects: objects ?? [] } as ShapeSnapshot;
 
       await annotationsStorage.setAnnotations(screenshot.id!, shapeSnapshot);
 
@@ -390,7 +388,7 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
             isDrawing.current = true;
             fabricRef.current.isDrawingMode = true;
 
-            applyBrush(elem.value, fabricRef.current, currentColorRef);
+            applyBrush(elem?.value as 'freeform' | 'highlighter', fabricRef.current, currentColorRef);
           } else {
             isDrawing.current = false;
             fabricRef.current.isDrawingMode = false;
@@ -644,8 +642,8 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
     if (shadow) {
       shadow.addEventListener('keydown', e =>
         handleKeyDown({
-          e,
-          canvas: fabricRef.current,
+          e: e as KeyboardEvent,
+          canvas: fabricRef.current as Canvas,
           undo,
           redo,
           syncShapeInStorage,
@@ -676,8 +674,8 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
       if (shadow) {
         shadow.removeEventListener('keydown', e =>
           handleKeyDown({
-            e,
-            canvas: fabricRef.current,
+            e: e as KeyboardEvent,
+            canvas: fabricRef.current as Canvas,
             undo,
             redo,
             syncShapeInStorage,
@@ -721,12 +719,12 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
   }, [captureState]);
 
   const updateMenuPosition = (options: any) => {
-    const obj = options.selected ? options.selected[0] : fabricRef.current.getActiveObject();
+    const obj = options.selected ? options.selected[0] : fabricRef.current!.getActiveObject();
     if (!obj) return;
 
     const { left, top, width, height } = obj.getBoundingRect(false, true);
 
-    const vpt = fabricRef.current.viewportTransform!;
+    const vpt = fabricRef.current!.viewportTransform!;
     const vx = vpt[0] * (left + width / 2) + vpt[4];
     const vy = vpt[3] * (top + height) + vpt[5];
 

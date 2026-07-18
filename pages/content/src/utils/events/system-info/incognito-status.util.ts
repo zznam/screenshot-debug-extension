@@ -1,16 +1,20 @@
 /** Detects whether the browser is in incognito mode using the FileSystem API. */
-export const getIncognitoStatus = async (): Promise<boolean> => {
+export const isIncognito = async (): Promise<boolean> => {
   return new Promise(resolve => {
-    const fs = window.RequestFileSystem || (window as any).webkitRequestFileSystem;
-    if (!fs) {
-      resolve(false);
-      return;
+    try {
+      const fs = (window as any).RequestFileSystem || (window as any).webkitRequestFileSystem;
+      if (!fs) {
+        resolve(false);
+        return;
+      }
+      fs(
+        window.TEMPORARY,
+        100,
+        () => resolve(false),
+        () => resolve(true),
+      );
+    } catch (e) {
+      resolve(true);
     }
-    fs(
-      window.TEMPORARY,
-      100,
-      () => resolve(false),
-      () => resolve(true),
-    );
   });
 };

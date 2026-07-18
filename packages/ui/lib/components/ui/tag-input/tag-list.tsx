@@ -1,10 +1,9 @@
 import type { FC, ReactNode } from 'react';
 
-import { cn } from '@/lib/utils';
-
 import type { TagProps } from './tag';
 import { Tag } from './tag';
 import type { TagType } from './tag-input';
+import { cn } from '../../../utils';
 
 export type TagListProps = {
   tags: TagType[];

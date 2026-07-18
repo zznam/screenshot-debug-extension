@@ -7,9 +7,7 @@ import { themeStorage } from '@extension/storage';
 import { store, ReduxProvider } from '@extension/store';
 
 import { Skeleton } from './components/ui';
-import { AuthGuard } from './guards';
 import { PopupContent } from './popup-content';
-import { ApiHealthProvider } from './providers';
 
 const Popup = () => {
   const theme = useStorage(themeStorage);
@@ -22,13 +20,9 @@ const Popup = () => {
 
   return (
     <div className="dark:bg-background.dark relative px-5 pb-5 pt-4">
-      <ApiHealthProvider>
-        <ReduxProvider store={store}>
-          <AuthGuard>
-            <PopupContent />
-          </AuthGuard>
-        </ReduxProvider>
-      </ApiHealthProvider>
+      <ReduxProvider store={store}>
+        <PopupContent />
+      </ReduxProvider>
     </div>
   );
 };
