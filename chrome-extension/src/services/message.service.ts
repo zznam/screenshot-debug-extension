@@ -2,6 +2,7 @@ import { strToU8, zipSync } from 'fflate';
 import type { Runtime } from 'webextension-polyfill';
 import { tabs } from 'webextension-polyfill';
 
+import { REWIND } from '@extension/shared';
 import {
   annotationsRedoStorage,
   annotationsStorage,
@@ -11,7 +12,7 @@ import {
 } from '@extension/storage';
 
 import type { BgResponse } from '@src/types';
-import { addOrMergeRecords, deleteRecords, getRecords } from '@src/utils';
+import { addOrMergeRecords, deleteRecords, getRecords, rewindService } from '@src/utils';
 
 import { handleOnAuthStart } from './auth.service';
 import { buildHarLog } from '../utils/har-builder.util';
@@ -56,6 +57,70 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
 
       case 'AUTH_START':
         return handleOnAuthStart();
+
+      case REWIND.EVENT_BATCH: {
+        const events = Array.isArray(message.events) ? (message.events as unknown[]) : [];
+
+        await rewindService.ingestBatch(events, sender);
+        return { status: 'success' };
+      }
+
+      case REWIND.FREEZE: {
+        const tabId = message?.tabId as number | undefined;
+
+        if (typeof tabId !== 'number') return { status: 'error', message: 'Invalid tabId' };
+
+        const frozen = await rewindService.freeze(tabId);
+
+        const durationMs = frozen.toTimestamp - frozen.fromTimestamp;
+        const eventCount = frozen.events?.length ?? 0;
+
+        addOrMergeRecords(tabId, {
+          type: 'event',
+          recordType: 'events',
+          source: 'background',
+          event: 'SessionReplayCaptured',
+          timestamp: Date.now(),
+          url: (await tabs.get(tabId).catch(() => null))?.url ?? '',
+          description: `Session replay captured (${Math.round(durationMs / 1000)}s, ${eventCount} events)`,
+          extra: {
+            action: 'CAPTURED',
+            durationMs,
+            eventCount,
+            fromTimestamp: frozen.fromTimestamp,
+            toTimestamp: frozen.toTimestamp,
+            missingAnchor: frozen.missingAnchor,
+          },
+        } as any);
+
+        return { status: 'success', ...frozen };
+      }
+
+      case REWIND.GET_FROZEN: {
+        const tabId = sender.tab?.id;
+
+        if (!tabId) return { status: 'error', message: 'Invalid tabId' };
+
+        return (await rewindService.getFrozenOrFreeze(tabId)) as unknown as BgResponse;
+      }
+
+      case REWIND.RESET_TAB: {
+        const tabId = message?.tabId as number | undefined;
+
+        if (typeof tabId !== 'number') return { status: 'error', message: 'Invalid tabId' };
+
+        await rewindService.resetTab(tabId);
+        return { status: 'success' };
+      }
+
+      case REWIND.DELETE_TAB: {
+        const tabId = sender.tab?.id;
+
+        if (!tabId) return { status: 'error', message: 'Invalid tabId' };
+
+        await rewindService.deleteTab(tabId);
+        return { status: 'success' };
+      }
 
       case 'DOWNLOAD_ASSETS': {
         const payload = message.payload as any;

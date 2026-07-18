@@ -17,12 +17,16 @@ import { cn, toast, ToasterProvider, TooltipProvider } from '@extension/ui';
 
 import { MinimizedPreview } from './components/dialog-view';
 import Content from './content';
+import type { VideoSource } from './models';
 
 export default function App() {
   const captureNotifyState = useStorage(captureNotifyStorage);
-  const captureState = useStorage(captureStateStorage);
+  const captureModeAndState = useStorage(captureStateStorage);
+  const captureState = captureModeAndState?.state ?? 'idle';
   const theme = useStorage(themeStorage);
   const [minimized, setMinimized] = useState(true);
+  const [video, setVideo] = useState<VideoSource>();
+  const [events, setEvents] = useState<unknown[] | null>(null);
   const [screenshots, setScreenshots] = useState<Screenshot[]>();
   const [activeScreenshotId, setActiveScreenshotId] = useState<string | null>();
   const [idempotencyKey, setIdempotencyKey] = useState<string>(uuid());
@@ -66,7 +70,7 @@ export default function App() {
   const handleOnDisplay = async (event: any) => {
     setScreenshots(event.detail.screenshots);
     setMinimized(false);
-    await captureStateStorage.setCaptureState('unsaved');
+    await captureStateStorage.setScreenshotState('unsaved');
   };
 
   const handleOnClose = useCallback(async () => {
@@ -75,7 +79,7 @@ export default function App() {
     setMinimized(false);
 
     await Promise.all([
-      captureStateStorage.setCaptureState('idle'),
+      captureStateStorage.setScreenshotState('idle'),
       annotationsStorage.clearAll(),
       annotationsRedoStorage.clearAll(),
       annotationsHistoryStorage.clearAll(),
@@ -109,7 +113,7 @@ export default function App() {
   );
 
   const handleOnMinimize = async () => {
-    await captureStateStorage.setCaptureState('capturing');
+    await captureStateStorage.setScreenshotState('capturing');
     setMinimized(true);
   };
   const handleOnEdit = async () => {
@@ -117,7 +121,7 @@ export default function App() {
 
     setMinimized(false);
 
-    await captureStateStorage.setCaptureState('unsaved');
+    await captureStateStorage.setScreenshotState('unsaved');
   };
 
   const capturing = captureState === 'capturing';

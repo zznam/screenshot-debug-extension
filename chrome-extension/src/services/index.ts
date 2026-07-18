@@ -5,3 +5,5 @@ export { handleOnBeforeRequest, handleOnBeforeSendHeaders, handleOnCompleted } f
 export { handleOnInstalled } from './install.service';
 export { handleOnMessage } from './message.service';
 export { handleOnCommitted } from './web-navigation.service';
+export * from './indexed-db.service';
+export * from './rewind-indexed-db.service';

@@ -12,6 +12,7 @@ export type BgMessage =
 
 export type BgResponse =
   | { status: 'success' }
+  | { status: 'error'; message: string }
   | { records: unknown[] }
   | { success: boolean; dataUrl?: string; message?: string }
   | { ok: boolean; error?: string }

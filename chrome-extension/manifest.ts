@@ -62,7 +62,15 @@ const manifest = {
   ],
   web_accessible_resources: [
     {
-      resources: ['*.js', '*.css', '*.svg', '*.png', 'content/extend.iife.js', 'auth-identity.html'],
+      resources: [
+        '*.js',
+        '*.css',
+        '*.svg',
+        '*.png',
+        'content/extend.iife.js',
+        'auth-identity.html',
+        'mic-permission/index.html',
+      ],
       matches: ['*://*/*'],
     },
   ],

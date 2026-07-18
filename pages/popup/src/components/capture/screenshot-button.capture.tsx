@@ -30,7 +30,8 @@ const captureTypes = [
 ];
 
 export const CaptureScreenshotGroup = () => {
-  const captureState = useStorage(captureStateStorage);
+  const captureModeAndState = useStorage(captureStateStorage);
+  const captureState = captureModeAndState?.state ?? 'idle';
   const captureTabId = useStorage(captureTabStorage);
   const pendingReloadTabIds = useStorage(pendingReloadTabsStorage);
 

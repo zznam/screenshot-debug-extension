@@ -3,6 +3,8 @@ export { deepRedactSensitiveInfo } from './redact-sensitive-info.util.js';
 export { isNonProduction } from './is-non-production.util.js';
 export { isValidJSON } from './is-valid-json.util.js';
 export { safePostMessage } from './safe-post-message.util.js';
+export * from './format-duration.util.js';
+export { isRewindBlocked } from './rewind/index.js';
 export { stripUnCloneable } from './strip-uncloneable.util.js';
 export { safeStructuredClone } from './structured-clone.util.js';
 export { capitalizeWord } from './capitalize.util.js';

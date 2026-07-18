@@ -1,15 +1,12 @@
+import { RECORDING } from '@extension/shared';
 import { captureSettingsStorage } from '@extension/storage';
 
+import { pauseRecording, resumeRecording, stopRecording, toggleMic } from '../capture';
 import { startPerformanceObserver } from '../utils/events/performance.observer';
 
 let lastAutoScreenshotTime = 0;
 
 export const addWindowEventListeners = () => {
-  /**
-   * If you're injecting JavaScript into the webpage (e.g., to override fetch), remember:
-   * The injected script does not have access to Chrome extension APIs (like chrome.runtime.sendMessage).
-   * To communicate, inject the script and use window.postMessage to send data back to the content script.
-   */
   window.addEventListener('message', event => {
     if (event.source !== window || !event.data.type) return;
 
@@ -49,6 +46,14 @@ export const addWindowEventListeners = () => {
       } catch (err) {
         console.error('[sendMessage error]', chrome.runtime.id, err);
       }
+    } else if (event.data.type === RECORDING.PAUSE) {
+      pauseRecording();
+    } else if (event.data.type === RECORDING.RESUME) {
+      resumeRecording();
+    } else if (event.data.type === RECORDING.STOP) {
+      stopRecording();
+    } else if (event.data.type === RECORDING.TOGGLE_MIC) {
+      toggleMic();
     }
   });
 

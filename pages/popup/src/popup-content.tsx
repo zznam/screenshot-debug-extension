@@ -12,7 +12,8 @@ export const PopupContent = () => {
   const [showSlicesHistory, setShowSlicesHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  const captureState = useStorage(captureStateStorage);
+  const captureModeAndState = useStorage(captureStateStorage);
+  const captureState = captureModeAndState?.state ?? 'idle';
 
   const handleOnBackHistory = () => setShowSlicesHistory(false);
   const handleOnBackSettings = () => setShowSettings(false);

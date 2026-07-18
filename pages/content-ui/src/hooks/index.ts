@@ -1,3 +1,10 @@
+export * from './use-draggable-toolbar.hook';
+export * from './use-error-events.hook';
+export * from './use-fit-video-to-parent.hook';
+export * from './use-playback.hook';
+export * from './use-recording-timer.hook';
+export * from './use-trimmed-video.hook';
+export * from './use-video-playback.hook';
 export { useViewportSize } from './use-viewport-size.hook';
 export { useElementSize } from './use-element-size.hook';
 export { useFitCanvasToParent } from './use-fit-canvas-size.hook';

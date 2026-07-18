@@ -691,7 +691,8 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
   // Warn the user when they try to close or refresh the tab
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (captureState !== 'unsaved') return;
+      const isUnsaved = captureState?.state === 'unsaved';
+      if (!isUnsaved) return;
 
       e.preventDefault();
       e.returnValue = '';

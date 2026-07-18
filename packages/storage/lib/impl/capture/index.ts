@@ -1,5 +1,10 @@
 export { captureNotifyStorage } from './notify.storage.js';
 export type { CaptureNotifyStorage } from './notify.storage.js';
 export { captureStateStorage } from './state.storage.js';
+export type { CaptureState, VideoRecordingState, ScreenshotCaptureState, CaptureMode } from './state.storage.js';
 export { captureTabStorage } from './tab-state.storage.js';
 export { debugModeStorage } from './debug-mode.storage.js';
+export { domainSkipListStorage } from './domain-skip-list.storage.js';
+export { captureSettingsStorage } from './settings.storage.js';
+export * from './recording-settings.storage.js';
+export * from './rewind-settings.storage.js';
