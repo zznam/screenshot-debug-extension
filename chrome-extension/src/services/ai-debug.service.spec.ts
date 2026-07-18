@@ -61,6 +61,19 @@ describe('AI Debug orchestration', () => {
     );
   });
 
+  it('uses a prepared annotated screenshot without recapturing the viewport', async () => {
+    const annotated = 'data:image/png;base64,YW5ub3RhdGVk';
+    const response = await startAiDebug(7, annotated);
+    expect(response.status).toBe('success');
+    expect(tabs.captureVisibleTab).not.toHaveBeenCalled();
+    expect(putAiDebugSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'prepared',
+        context: expect.objectContaining({ screenshotDataUrl: annotated }),
+      }),
+    );
+  });
+
   it('reuses the source session while refreshing its context', async () => {
     vi.mocked(findAiDebugSession).mockResolvedValue({
       id: 'existing',

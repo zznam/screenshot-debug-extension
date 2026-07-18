@@ -68,7 +68,7 @@ const openOrFocusAiPage = async (sessionId: string): Promise<void> => {
   await tabs.create({ url: pageUrl, active: true });
 };
 
-const startAiDebug = async (tabId: number): Promise<AiDebugResponse> => {
+const startAiDebug = async (tabId: number, preparedScreenshotDataUrl?: string): Promise<AiDebugResponse> => {
   let tab: Awaited<ReturnType<typeof tabs.get>>;
   try {
     tab = await tabs.get(tabId);
@@ -83,13 +83,15 @@ const startAiDebug = async (tabId: number): Promise<AiDebugResponse> => {
   const sourceId = await getSourceId(tabId);
   const storedRecords = await getRecords(tabId);
   const limited = limitAiDebugRecords(storedRecords);
-  let screenshotDataUrl: string | null = null;
+  let screenshotDataUrl: string | null = preparedScreenshotDataUrl ?? null;
   let captureError: string | undefined;
 
-  try {
-    screenshotDataUrl = await tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 80 });
-  } catch {
-    captureError = 'Could not capture the page. Return to the source tab and retry.';
+  if (!screenshotDataUrl) {
+    try {
+      screenshotDataUrl = await tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 80 });
+    } catch {
+      captureError = 'Could not capture the page. Return to the source tab and retry.';
+    }
   }
 
   const now = Date.now();

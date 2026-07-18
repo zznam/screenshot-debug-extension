@@ -7,6 +7,8 @@ import type { AiDebugContext, AiDebugMessage, AiHelperResponseRequest } from '@e
 const HELPER_HOST = '127.0.0.1';
 const HELPER_PORT = 43123;
 const MAX_BODY_BYTES = 12 * 1024 * 1024;
+const EXTENSION_ID_HEADER = 'x-screenshot-debug-extension-id';
+const EXTENSION_ID_PATTERN = /^[a-p]{32,64}$/;
 
 interface HelperConfig {
   apiKey?: string;
@@ -22,13 +24,38 @@ interface HelperConfig {
   }>;
 }
 
-const validOrigin = (origin?: string) => Boolean(origin && /^chrome-extension:\/\/[a-p]{32}$/.test(origin));
+const extensionIdFromOrigin = (origin?: string) => {
+  if (!origin) return false;
+  try {
+    const parsed = new URL(origin);
+    const valid =
+      parsed.protocol === 'chrome-extension:' &&
+      EXTENSION_ID_PATTERN.test(parsed.hostname) &&
+      !parsed.port &&
+      !parsed.username &&
+      !parsed.password &&
+      (parsed.pathname === '/' || parsed.pathname === '');
+    return valid ? parsed.hostname : false;
+  } catch {
+    return false;
+  }
+};
 
-const sendJson = (response: ServerResponse, statusCode: number, body: unknown, origin?: string) => {
+const allowedOrigin = (origin: string | undefined, extensionId: string | undefined) => {
+  if (!extensionId || !EXTENSION_ID_PATTERN.test(extensionId)) return false;
+  if (!origin) return true;
+  if (origin === 'null') return origin;
+  return extensionIdFromOrigin(origin) === extensionId ? origin : false;
+};
+
+const allowedPreflightOrigin = (origin: string | undefined) =>
+  origin === 'null' || Boolean(extensionIdFromOrigin(origin)) ? origin : false;
+
+const sendJson = (response: ServerResponse, statusCode: number, body: unknown, corsOrigin?: string | boolean) => {
   response.statusCode = statusCode;
   response.setHeader('content-type', 'application/json; charset=utf-8');
   response.setHeader('cache-control', 'no-store');
-  if (validOrigin(origin)) response.setHeader('access-control-allow-origin', origin!);
+  if (typeof corsOrigin === 'string') response.setHeader('access-control-allow-origin', corsOrigin);
   response.end(JSON.stringify(body));
 };
 
@@ -74,28 +101,37 @@ const validatePayload = (value: unknown): AiHelperResponseRequest => {
 const createHelperServer = (config: HelperConfig) =>
   createServer(async (request, response) => {
     const origin = typeof request.headers.origin === 'string' ? request.headers.origin : undefined;
-    if (!validOrigin(origin)) {
-      sendJson(response, 403, { status: 'error', code: 'ORIGIN_DENIED', message: 'Extension origin required.' });
-      return;
-    }
 
     if (request.method === 'OPTIONS') {
+      const corsOrigin = allowedPreflightOrigin(origin);
+      if (!corsOrigin) {
+        sendJson(response, 403, { status: 'error', code: 'ORIGIN_DENIED', message: 'Extension origin required.' });
+        return;
+      }
       response.statusCode = 204;
-      response.setHeader('access-control-allow-origin', origin!);
+      response.setHeader('access-control-allow-origin', corsOrigin);
       response.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
-      response.setHeader('access-control-allow-headers', 'authorization, content-type');
+      response.setHeader('access-control-allow-headers', `authorization, content-type, ${EXTENSION_ID_HEADER}`);
       response.setHeader('access-control-max-age', '600');
       response.end();
       return;
     }
 
+    const extensionIdHeader = request.headers[EXTENSION_ID_HEADER];
+    const extensionId = typeof extensionIdHeader === 'string' ? extensionIdHeader : undefined;
+    const corsOrigin = allowedOrigin(origin, extensionId);
+    if (!corsOrigin) {
+      sendJson(response, 403, { status: 'error', code: 'ORIGIN_DENIED', message: 'Extension origin required.' });
+      return;
+    }
+
     if (request.method === 'GET' && request.url === '/health') {
-      sendJson(response, 200, { status: 'ok', keyConfigured: Boolean(config.apiKey), model: config.model }, origin);
+      sendJson(response, 200, { status: 'ok', keyConfigured: Boolean(config.apiKey), model: config.model }, corsOrigin);
       return;
     }
 
     if (request.method !== 'POST' || request.url !== '/v1/debug/responses') {
-      sendJson(response, 404, { status: 'error', code: 'NOT_FOUND', message: 'Endpoint not found.' }, origin);
+      sendJson(response, 404, { status: 'error', code: 'NOT_FOUND', message: 'Endpoint not found.' }, corsOrigin);
       return;
     }
 
@@ -104,7 +140,7 @@ const createHelperServer = (config: HelperConfig) =>
         response,
         503,
         { status: 'error', code: 'MISSING_API_KEY', message: 'OPENAI_API_KEY is not set.' },
-        origin,
+        corsOrigin,
       );
       return;
     }
@@ -116,7 +152,7 @@ const createHelperServer = (config: HelperConfig) =>
         response,
         401,
         { status: 'error', code: 'PAIRING_REQUIRED', message: 'The pairing token is invalid.' },
-        origin,
+        corsOrigin,
       );
       return;
     }
@@ -133,14 +169,14 @@ const createHelperServer = (config: HelperConfig) =>
           model: result.model ?? config.model,
           ...(result.usage ? { usage: result.usage } : {}),
         },
-        origin,
+        corsOrigin,
       );
     } catch (error) {
       const statusCode = Number((error as { statusCode?: number }).statusCode) || 502;
       const message = statusCode < 500 ? (error as Error).message : 'The OpenAI request failed. Try again.';
-      sendJson(response, statusCode, { status: 'error', code: 'AI_REQUEST_FAILED', message }, origin);
+      sendJson(response, statusCode, { status: 'error', code: 'AI_REQUEST_FAILED', message }, corsOrigin);
     }
   });
 
-export { createHelperServer, HELPER_HOST, HELPER_PORT };
+export { createHelperServer, EXTENSION_ID_HEADER, HELPER_HOST, HELPER_PORT };
 export type { HelperConfig };

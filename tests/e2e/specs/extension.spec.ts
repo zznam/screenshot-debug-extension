@@ -147,10 +147,15 @@ test('opens a persistent AI Debug session with screenshot and diagnostics', asyn
   await target.bringToFront();
 
   await serviceWorker.evaluate(
-    async ({ tokenKey, token }) => {
-      await chrome.storage.local.set({ [tokenKey]: token });
+    async ({ tokenKey, token, helperUrlKey, helperUrl }) => {
+      await chrome.storage.local.set({ [tokenKey]: token, [helperUrlKey]: helperUrl });
     },
-    { tokenKey: 'ai-debug-helper-pairing-token', token: 'e2e-pair-token' },
+    {
+      tokenKey: 'ai-debug-helper-pairing-token',
+      token: 'e2e-pair-token',
+      helperUrlKey: 'ai-debug-helper-url',
+      helperUrl: 'http://127.0.0.1:43124',
+    },
   );
 
   const tabId = await getTabId(serviceWorker, aiTargetUrl);
@@ -194,6 +199,8 @@ test('captures the viewport and opens the screenshot editor', async ({ context, 
 
   expect(response).toEqual({ ok: true });
   await expect(target.locator('#brie-canvas')).toBeVisible();
+  await expect(target.getByText(/eslint-disable-next-line/)).toHaveCount(0);
+  await expect(target.getByRole('button', { name: 'Move' })).toBeVisible();
   expect(extensionErrors).toEqual([]);
 });
 

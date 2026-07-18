@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { t } from '@extension/i18n';
-import type { DownloadRequest, Screenshot } from '@extension/shared';
-import { useStorage } from '@extension/shared';
-import { captureSettingsStorage, debugModeStorage, themeStorage } from '@extension/storage';
+import type { AiDebugResponse, DownloadRequest, Screenshot } from '@extension/shared';
+import { AI_DEBUG, useStorage } from '@extension/shared';
+import { annotationsStorage, captureSettingsStorage, debugModeStorage, themeStorage } from '@extension/storage';
 import { useAppDispatch, triggerCanvasAction } from '@extension/store';
 import { Dialog, DialogContent, DialogTitle, cn, toast } from '@extension/ui';
 
@@ -13,6 +13,7 @@ import { Footer, Header, LeftSidebar } from './components/annotation-view/ui';
 import { defaultNavElement } from './constants';
 import { useElementSize, useViewportSize } from './hooks';
 import type { ActiveElement } from './models';
+import { mergeScreenshot } from './utils/annotation';
 import { copyBase64ImageToClipboard } from './utils/base64-to-clipboard.util';
 import { downloadCapture } from './utils/download-capture.util';
 
@@ -51,6 +52,7 @@ const Content = ({
   const [isFullScreen, setFullScreen] = useState(viewportWidth < SM_BREAKPOINT);
   const [title, setTitle] = useState('Untitled report');
   const [activeElement, setActiveElement] = useState<ActiveElement>(defaultNavElement);
+  const [isStartingAiDebug, setStartingAiDebug] = useState(false);
 
   const isLg = canvasWidth >= LG_BREAKPOINT;
   const hasShots = screenshots.length > 1;
@@ -112,6 +114,43 @@ const Content = ({
     }
   };
 
+  const handleOnAiDebug = async () => {
+    if (!activeScreenshot) return;
+    setStartingAiDebug(true);
+    try {
+      const stored = await annotationsStorage.getAnnotations(activeScreenshot.id!);
+      let screenshotDataUrl = activeScreenshot.src;
+
+      if (stored?.objects?.length && stored.meta?.sizes?.natural) {
+        const { width, height } = stored.meta.sizes.natural;
+        const annotatedFile = await mergeScreenshot({
+          screenshot: activeScreenshot,
+          objects: stored.objects,
+          parentWidth: width,
+          parentHeight: height,
+        });
+        screenshotDataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () =>
+            typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Invalid annotated image.'));
+          reader.onerror = () => reject(reader.error ?? new Error('Could not read the annotated image.'));
+          reader.readAsDataURL(annotatedFile);
+        });
+      }
+
+      const response = (await chrome.runtime.sendMessage({
+        type: AI_DEBUG.START_ANNOTATED,
+        screenshotDataUrl,
+      })) as AiDebugResponse;
+      if (response.status === 'error') throw new Error(response.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not start AI Debug.';
+      toast.error(`AI Debug failed: ${message}`);
+    } finally {
+      setStartingAiDebug(false);
+    }
+  };
+
   const handleOnOpenSidebar = (open: boolean) => {
     setLeftSidebarOpen(open);
   };
@@ -156,6 +195,8 @@ const Content = ({
           canvasHeight={canvasHeight}
           onDownload={handleOnDownload}
           onCopy={handleOnCopy}
+          onAiDebug={handleOnAiDebug}
+          aiDebugLoading={isStartingAiDebug}
         />
 
         <main

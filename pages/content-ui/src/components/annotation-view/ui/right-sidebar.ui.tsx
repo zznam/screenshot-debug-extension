@@ -164,13 +164,15 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         <div className="flex w-full items-center justify-between">
           <p className="text-foreground text-sm font-medium">Details</p>
 
-          <Icon
-            size={16}
-            strokeWidth={1.5}
+          <Button
+            size="icon"
+            variant="ghost"
+            type="button"
+            aria-label="Close details"
             onClick={toggle}
-            name="PanelRightCloseIcon"
-            className="text-muted-foreground hover:text-foreground hover:cursor-pointer"
-          />
+            className="size-7">
+            <Icon size={16} strokeWidth={1.5} name="PanelRightCloseIcon" />
+          </Button>
         </div>
 
         <Form {...formMethods}>
@@ -192,7 +194,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     <FormLabel className="text-muted-foreground text-xs">Description</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         <Textarea
                           {...field}
                           ref={node => {
@@ -350,6 +351,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                           <TooltipTrigger asChild>
                             <label
                               htmlFor="file-input"
+                              aria-label={t('attachFile')}
                               className={cn(
                                 'hover:bg-muted flex size-[35px] cursor-pointer items-center justify-center rounded-md transition',
                                 'text-muted-foreground hover:text-foreground relative bg-transparent',

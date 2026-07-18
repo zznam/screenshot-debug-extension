@@ -31,6 +31,8 @@ interface EditorHeaderProps {
   /** download and copy actions */
   onDownload: () => void;
   onCopy: () => void;
+  onAiDebug: () => void;
+  aiDebugLoading?: boolean;
 
   className?: string;
 }
@@ -55,6 +57,8 @@ export const Header: React.FC<EditorHeaderProps> = ({
 
   onDownload,
   onCopy,
+  onAiDebug,
+  aiDebugLoading = false,
 
   className,
 }) => {
@@ -173,6 +177,15 @@ export const Header: React.FC<EditorHeaderProps> = ({
       </div>
 
       <div className="flex items-center justify-end gap-x-2">
+        <Button
+          onClick={onAiDebug}
+          loading={aiDebugLoading}
+          disabled={aiDebugLoading}
+          variant="secondary"
+          className="flex h-[35px] min-w-[100px] justify-center gap-x-2">
+          <Icon name="Sparkles" size={16} />
+          <span>AI Debug</span>
+        </Button>
         <Button onClick={onCopy} variant="secondary" className="flex h-[35px] min-w-[80px] justify-center gap-x-2">
           <Icon name="CopyIcon" size={16} />
           <span>Copy</span>

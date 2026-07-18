@@ -81,13 +81,15 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
         )}>
         <div className="flex items-center justify-between">
           <p className="text-foreground text-sm font-medium">Screenshots</p>
-          <Icon
-            strokeWidth={1.5}
-            name="PanelLeftCloseIcon"
-            size={16}
+          <Button
+            size="icon"
+            variant="ghost"
+            type="button"
+            aria-label="Close screenshots"
             onClick={toggle}
-            className="text-muted-foreground hover:text-foreground cursor-pointer"
-          />
+            className="size-7">
+            <Icon strokeWidth={1.5} name="PanelLeftCloseIcon" size={16} />
+          </Button>
         </div>
 
         <ScrollArea

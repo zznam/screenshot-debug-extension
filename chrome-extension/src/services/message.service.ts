@@ -20,6 +20,22 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
       case AI_DEBUG.START:
         return startAiDebug(message.tabId as number);
 
+      case AI_DEBUG.START_ANNOTATED: {
+        const tabId = sender.tab?.id;
+        const screenshotDataUrl = message.screenshotDataUrl;
+        if (typeof tabId !== 'number') {
+          return { status: 'error', code: 'TAB_NOT_FOUND', message: 'The annotated source tab is no longer open.' };
+        }
+        if (typeof screenshotDataUrl !== 'string' || !/^data:image\/(?:png|jpe?g);base64,/.test(screenshotDataUrl)) {
+          return {
+            status: 'error',
+            code: 'INVALID_SCREENSHOT',
+            message: 'The annotated screenshot could not be read.',
+          };
+        }
+        return startAiDebug(tabId, screenshotDataUrl);
+      }
+
       case AI_DEBUG.GET_CONTEXT:
       case AI_DEBUG.GET_SESSION:
         return getAiDebug(message.sessionId as string);

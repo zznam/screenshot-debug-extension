@@ -7,7 +7,7 @@
   "sideEffects": false,
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.build.json",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",

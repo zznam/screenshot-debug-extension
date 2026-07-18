@@ -802,6 +802,7 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
           <Button
             type="button"
             size="icon"
+            aria-label="Delete annotation"
             className="hover:bg-accent size-7"
             variant="secondary"
             onClick={handleOnRemove}>

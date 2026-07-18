@@ -62,6 +62,7 @@ const Toolbar = ({ activeElement, onActiveElement, onExport }: ToolbarProps) => 
                       isActive(item.value) ? 'bg-gradient-overlay !text-white hover:bg-black disabled:opacity-100' : '',
                     )}
                     variant="ghost"
+                    aria-label={item.name}
                     //   loading={isUpdating}
                     onClick={() => handleOnActiveElement(item)}>
                     <Tooltip>
@@ -74,7 +75,6 @@ const Toolbar = ({ activeElement, onActiveElement, onExport }: ToolbarProps) => 
                       <TooltipContent side="top" align="center" sideOffset={28}>
                         {item.name}
                       </TooltipContent>
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     </Tooltip>
                   </Button>
                 </DropdownMenuTrigger>
@@ -109,6 +109,7 @@ const Toolbar = ({ activeElement, onActiveElement, onExport }: ToolbarProps) => 
                         isActive(item.value) ? 'bg-gradient-overlay text-white disabled:opacity-100' : '',
                       )}
                       variant="ghost"
+                      aria-label={item.name}
                       onClick={() => handleOnActiveElement(item)}>
                       <Icon name={item.icon} className={item.value === 'blur' ? 'size-5' : 'size-3 sm:size-4'} />
                     </Button>

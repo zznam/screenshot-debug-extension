@@ -27,6 +27,7 @@ export const ColorPalette = ({
         <Button
           type="button"
           size="icon"
+          aria-label={t('colorPalette')}
           disabled={open && isActive}
           className="hidden shadow-none disabled:cursor-not-allowed sm:flex"
           variant="ghost">

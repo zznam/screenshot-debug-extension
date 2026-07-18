@@ -39,6 +39,7 @@ export interface AiDebugSessionSummary {
 
 export type AiDebugRequest =
   | { type: 'AI_DEBUG:START'; tabId: number }
+  | { type: 'AI_DEBUG:START_ANNOTATED'; screenshotDataUrl: string }
   | { type: 'AI_DEBUG:GET_CONTEXT'; sessionId: string }
   | { type: 'AI_DEBUG:GET_SESSION'; sessionId: string }
   | { type: 'AI_DEBUG:LIST_SESSIONS' }
