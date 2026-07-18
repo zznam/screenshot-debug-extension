@@ -29,6 +29,58 @@ const server = createServer((request, response) => {
 
 server.listen(4174, '127.0.0.1');
 
-const shutdown = () => server.close(() => process.exit(0));
+const aiHelper = createServer((request, response) => {
+  const origin = request.headers.origin;
+  const headers = {
+    'content-type': 'application/json',
+    'access-control-allow-origin': origin ?? '',
+    'access-control-allow-headers': 'authorization, content-type',
+    'access-control-allow-methods': 'GET, POST, OPTIONS',
+  };
+
+  if (request.method === 'OPTIONS') {
+    response.writeHead(204, headers);
+    response.end();
+    return;
+  }
+
+  if (request.url === '/health') {
+    response.writeHead(200, headers);
+    response.end(JSON.stringify({ status: 'ok', keyConfigured: true, model: 'gpt-5.6-terra' }));
+    return;
+  }
+
+  if (request.url === '/v1/debug/responses' && request.headers.authorization === 'Bearer e2e-pair-token') {
+    const chunks = [];
+    request.on('data', chunk => chunks.push(chunk));
+    request.on('end', () => {
+      const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      response.writeHead(200, headers);
+      response.end(
+        JSON.stringify({
+          status: 'success',
+          message: {
+            id: 'mock-assistant-message',
+            role: 'assistant',
+            content: `Mock diagnosis for ${body.context.sourceTitle} with ${body.context.records.length} records.`,
+            createdAt: Date.now(),
+          },
+          model: 'gpt-5.6-terra',
+        }),
+      );
+    });
+    return;
+  }
+
+  response.writeHead(401, headers);
+  response.end(JSON.stringify({ status: 'error', code: 'PAIRING_REQUIRED', message: 'Invalid pairing token.' }));
+});
+
+aiHelper.listen(43123, '127.0.0.1');
+
+const shutdown = () => {
+  server.close();
+  aiHelper.close(() => process.exit(0));
+};
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);

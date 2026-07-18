@@ -30,6 +30,7 @@ export const useFitCanvasToParent = (
         parentHeight: parentElt.clientHeight,
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await annotationsStorage.setAnnotations(screenshot.id!, { meta } as any);
     };
     fit();

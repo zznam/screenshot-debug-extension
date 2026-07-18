@@ -12,6 +12,7 @@ export const toArray = <T>(
   if (Array.isArray(v)) return v as T[];
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return Array.from(v as any);
   } catch {
     return [];

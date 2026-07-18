@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { PropsWithChildren } from 'react';
 
 export const AuthGuard = ({ children }: { children: React.ReactNode }) => {

@@ -68,7 +68,7 @@ export interface UpdateSliceState {
 export interface InitSliceRequest {
   summary?: string;
   workspaceId?: string;
-  labels?: any;
+  labels?: unknown;
   spaceId?: string;
   screenshots: Option[];
   attachments: Option[];

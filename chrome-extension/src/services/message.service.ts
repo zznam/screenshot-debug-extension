@@ -1,28 +1,42 @@
-import { strToU8, zipSync } from 'fflate';
 import type { Runtime } from 'webextension-polyfill';
 import { tabs } from 'webextension-polyfill';
 
-import { REWIND, TAB } from '@extension/shared';
-import {
-  annotationsRedoStorage,
-  annotationsStorage,
-  captureStateStorage,
-  captureTabStorage,
-  captureSettingsStorage,
-} from '@extension/storage';
+import { AI_DEBUG, REWIND, TAB } from '@extension/shared';
+import type { DownloadPayload } from '@extension/shared';
+import { annotationsRedoStorage, annotationsStorage, captureStateStorage, captureTabStorage } from '@extension/storage';
 
 import type { BgResponse } from '@src/types';
 import { addOrMergeRecords, deleteRecords, getRecords, rewindService } from '@src/utils';
 
+import { getAiDebug, listAiDebug, removeAiDebug, saveAiDebugMessage, startAiDebug } from './ai-debug.service';
 import { handleOnAuthStart } from './auth.service';
-import { buildHarLog } from '../utils/har-builder.util';
-import { buildDebugReport } from '../utils/report-builder.util';
+import { downloadAssets, downloadZip } from './download.service';
 
 export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSender): Promise<BgResponse | void> => {
   const message = raw as Record<string, unknown>;
 
   try {
     switch (message.type) {
+      case AI_DEBUG.START:
+        return startAiDebug(message.tabId as number);
+
+      case AI_DEBUG.GET_CONTEXT:
+      case AI_DEBUG.GET_SESSION:
+        return getAiDebug(message.sessionId as string);
+
+      case AI_DEBUG.LIST_SESSIONS:
+        return listAiDebug();
+
+      case AI_DEBUG.SAVE_MESSAGE:
+        return saveAiDebugMessage(
+          message.sessionId as string,
+          message.message as Parameters<typeof saveAiDebugMessage>[1],
+          message.model as string | undefined,
+        );
+
+      case AI_DEBUG.DELETE_SESSION:
+        return removeAiDebug(message.sessionId as string);
+
       case 'EXIT_CAPTURE': {
         await Promise.all([
           captureStateStorage.setCaptureState('idle'),
@@ -36,13 +50,14 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
 
       case 'ADD_RECORD': {
         const tabId = sender.tab?.id;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (typeof tabId === 'number') addOrMergeRecords(tabId, message.data as any);
 
         return { status: 'success' };
       }
 
       case 'GET_RECORDS': {
-        const tabId = sender.tab?.id;
+        const tabId = typeof message.tabId === 'number' ? message.tabId : sender.tab?.id;
         const records = tabId ? await getRecords(tabId) : [];
 
         return { records };
@@ -96,6 +111,7 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
             toTimestamp: frozen.toTimestamp,
             missingAnchor: frozen.missingAnchor,
           },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
 
         return { status: 'success', ...frozen };
@@ -131,105 +147,11 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
         return { status: 'success' };
 
       case 'DOWNLOAD_ASSETS': {
-        const payload = message.payload as any;
-        const { screenshots, name, saveDebugLog = true } = payload;
-
-        // Download screenshots
-        for (const screenshot of screenshots) {
-          const filename = `${name}${screenshot.isPrimary ? '' : '-full'}.png`;
-          await chrome.downloads.download({
-            url: screenshot.src,
-            filename: filename,
-            saveAs: false,
-          });
-        }
-
-        if (saveDebugLog) {
-          const tabId = sender.tab?.id;
-          let records = tabId ? await getRecords(tabId) : [];
-          const settings = await captureSettingsStorage.get();
-
-          if (!settings.includePerformance) {
-            records = records.filter((r: any) => r.recordType !== 'performance');
-          }
-          const report = buildDebugReport(records, {
-            ...payload,
-            screenshots: screenshots.map((s: any) => ({
-              type: s.isPrimary ? 'cropped' : 'full-page',
-              filename: `${name}${s.isPrimary ? '' : '-full'}.png`,
-            })),
-          });
-
-          const jsonString = JSON.stringify(report, null, 2);
-          const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
-          const jsonUrl = `data:application/json;base64,${base64Data}`;
-
-          await chrome.downloads.download({
-            url: jsonUrl,
-            filename: `${name}.json`,
-            saveAs: false,
-          });
-        }
-
-        return { status: 'success' };
+        return downloadAssets(message.payload as unknown as DownloadPayload, sender.tab?.id);
       }
 
       case 'DOWNLOAD_ZIP': {
-        const payload = message.payload as any;
-        const { screenshots, name, saveDebugLog = true } = payload;
-
-        const zipData: Record<string, Uint8Array> = {};
-
-        for (const screenshot of screenshots) {
-          const filename = `${name}${screenshot.isPrimary ? '' : '-full'}.png`;
-          try {
-            const res = await fetch(screenshot.src);
-            const arrayBuffer = await res.arrayBuffer();
-            zipData[filename] = new Uint8Array(arrayBuffer);
-          } catch (e) {
-            console.error('[background] Failed to convert screenshot for zip:', e);
-          }
-        }
-
-        if (saveDebugLog) {
-          const tabId = sender.tab?.id;
-          let records = tabId ? await getRecords(tabId) : [];
-          const settings = await captureSettingsStorage.get();
-
-          if (!settings.includePerformance) {
-            records = records.filter((r: any) => r.recordType !== 'performance');
-          }
-
-          const report = buildDebugReport(records, {
-            ...payload,
-            screenshots: screenshots.map((s: any) => ({
-              type: s.isPrimary ? 'cropped' : 'full-page',
-              filename: `${name}${s.isPrimary ? '' : '-full'}.png`,
-            })),
-          });
-
-          const jsonString = JSON.stringify(report, null, 2);
-          zipData[`${name}.json`] = strToU8(jsonString);
-
-          const harLog = buildHarLog(records, payload.url || 'unknown');
-          zipData[`network.har`] = strToU8(JSON.stringify(harLog, null, 2));
-        }
-
-        const zipped = zipSync(zipData);
-        const blob = new Blob([zipped], { type: 'application/zip' });
-        const reader = new FileReader();
-
-        reader.onloadend = async () => {
-          const base64Url = reader.result as string;
-          await chrome.downloads.download({
-            url: base64Url,
-            filename: `${name}.zip`,
-            saveAs: false,
-          });
-        };
-        reader.readAsDataURL(blob);
-
-        return { status: 'success' };
+        return downloadZip(message.payload as unknown as DownloadPayload, sender.tab?.id);
       }
     }
 

@@ -231,6 +231,7 @@ export const startCaptureNow = async () => {
       }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recorder.onerror = (ev: any) => {
       console.error('[brie | Recording] MediaRecorder error:', ev?.error ?? ev);
       cleanup();

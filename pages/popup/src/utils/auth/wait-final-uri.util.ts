@@ -14,6 +14,7 @@ export const waitForUri = (timeout = 60_000): Promise<string> => {
       reject(new Error('Auth identity timed out'));
     }, timeout);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const listener: any = (url: string) => {
       clearTimeout(timer);
       runtime.onMessage.removeListener(listener);

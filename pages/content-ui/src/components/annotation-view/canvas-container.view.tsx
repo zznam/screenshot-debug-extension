@@ -159,6 +159,8 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
    * useUndo and useRedo are hooks provided by local store that allow you to
    * undo and redo mutations.
    */
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const restoreObjects = async (canvas: any, snapshot?: { objects: any[] }) => {
     const { meta } = (await annotationsStorage.getAnnotations(screenshot.id!)) ?? {};
 
@@ -226,6 +228,7 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
       const { objects } = (await annotationsStorage.getAnnotations(screenshot.id!)) ?? {};
       if (!objects) return;
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updatedAnnotations = objects.filter((a: any) => a.objectId !== shapeId);
       await annotationsStorage.setAnnotations(screenshot.id!, { objects: updatedAnnotations });
 
@@ -269,8 +272,10 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
    * We're using this mutation to sync the shape in the key-value store
    * whenever user performs any action on the canvas such as drawing, moving
    * editing, deleting etc.
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
    */
   const syncShapeInStorage = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (object: any) => {
       if (!object || !fabricRef.current) return;
 
@@ -281,9 +286,11 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
 
       let { objects } = (await annotationsStorage.getAnnotations(screenshot.id!)) || {
         objects: [],
+
         meta: {} as BackgroundFitMeta,
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const foundIndex = objects?.findIndex((x: any) => x.objectId === shape.objectId);
 
       if (foundIndex !== -1) {
@@ -360,6 +367,7 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
       // delete the selected shape from the canvas
       case 'delete':
         // delete it from the canvas
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         handleDelete(fabricRef.current as any, deleteShapeFromStorage);
         // set "select" as the active element
         setActiveElement(defaultNavElement);
@@ -579,6 +587,7 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
       updateMenuPosition(options);
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     canvas.on('selection:cleared', options => {
       setActionMenuVisible(false);
     });
@@ -719,6 +728,7 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
     };
   }, [captureState]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateMenuPosition = (options: any) => {
     const obj = options.selected ? options.selected[0] : fabricRef.current!.getActiveObject();
     if (!obj) return;
@@ -735,6 +745,7 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
     });
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onChangeSelection = useCallback((options: any) => {
     if (!options?.selected) {
       return;
@@ -758,6 +769,7 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
         screenshot,
         objects,
         parentHeight: height,
+
         parentWidth: width,
       });
     }
@@ -766,6 +778,7 @@ const CanvasContainerView = ({ screenshot, onElement }: CanvasContainerProps) =>
   };
 
   const handleOnRemove = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     handleActiveElement({ value: 'delete' } as any);
 
     setActionMenuVisible(false);

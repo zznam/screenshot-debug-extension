@@ -12,6 +12,7 @@ const RESTRICTED: string[] = [];
 
 const invalidRecord = (entity: string) => RESTRICTED.some(word => entity.includes(word));
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const tabRecordsMap = new Map<number, Map<string, any>>();
 const tabUrlToRequestId = new Map<number, Map<string, string>>();
 
@@ -19,11 +20,12 @@ const getOrCreateUrlMap = (tabId: number): Map<string, string> => {
   let urlMap = tabUrlToRequestId.get(tabId);
 
   if (!urlMap) {
-    urlMap = new Map<string, string>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    urlMap = new Map<string, any>();
     tabUrlToRequestId.set(tabId, urlMap);
   }
 
-  return urlMap;
+  return urlMap as Map<string, string>;
 };
 
 export const deleteRecords = async (tabId: number) => {
@@ -44,6 +46,7 @@ export const getRecords = async (tabId: number): Promise<Record[]> => {
   const dbRecords = await getRecordsFromDB(tabId);
   if (dbRecords.length > 0) {
     const map = new Map();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dbRecords.forEach((record: any) => map.set(record.uuid, record));
     tabRecordsMap.set(tabId, map);
     return dbRecords;
@@ -124,6 +127,7 @@ export const addOrMergeRecords = async (tabId: number, record: Record): Promise<
     const { requestBody: baseRequestBody, ...restForRedaction } = baseRecord;
 
     const redactedRest = deepRedactSensitiveInfo(restForRedaction, tabUrl);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let safeRequestBody: any = undefined;
 
     if (baseRequestBody?.parsed || baseRequestBody?.decoded) {
@@ -140,7 +144,7 @@ export const addOrMergeRecords = async (tabId: number, record: Record): Promise<
     };
 
     if (!recordsMap.has(recordKey)) {
-      const newRecord = { uuid, url, ...redactedRecord };
+      const newRecord = { uuid, ...redactedRecord };
       recordsMap.set(recordKey, newRecord);
       putRecordToDB(tabId, newRecord);
       return;

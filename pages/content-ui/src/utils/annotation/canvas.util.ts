@@ -93,6 +93,7 @@ export const initializeFabric = ({
   return canvas;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const applyBrush = (tool: 'freeform' | 'highlighter', canvas: Canvas, currentColorRef: any) => {
   const brush = new PencilBrush(canvas);
 
@@ -158,6 +159,7 @@ export const handleCanvasMouseDown = ({
     isDrawing.current = true;
 
     // create custom fabric object/shape and set it to shapeRef
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     shapeRef.current = createSpecificShape(selectedShapeRef.current, pointer as any, currentColorRef?.current, canvas);
 
     // if shapeRef is not null, add it to canvas
@@ -293,6 +295,7 @@ export const handlePathCreated = ({ options, syncShapeInStorage }: CanvasPathCre
 
 // check how object is moving on canvas and restrict it to canvas boundaries
 /** Keep object fully inside the canvas, whatever the zoom. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const handleCanvasObjectMoving = ({ options }: { options: any }) => {
   const target = options.target as FabricObject;
   if (!target) return;
@@ -332,6 +335,7 @@ export const handleCanvasSelectionCreated = ({
   }
 
   // get the selected element
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const selectedElement: any = options?.selected[0] as FabricObject;
 
   // if only one element is selected, set element attributes
@@ -359,6 +363,7 @@ export const handleCanvasSelectionCreated = ({
 
 // update element attributes when element is scaled
 export const handleCanvasObjectScaling = ({ options, setElementAttributes }: CanvasObjectScaling) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const selectedElement: any = options.target;
 
   // calculate scaled dimensions of the object
@@ -378,11 +383,13 @@ export const handleCanvasObjectScaling = ({ options, setElementAttributes }: Can
 };
 
 // render canvas objects coming from storage on canvas
+
 export const renderCanvas = ({ fabricRef, canvasObjects = [], activeObjectRef }: RenderCanvas) => {
   // clear canvas
   fabricRef.current?.clear();
 
   // render all objects on canvas
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   canvasObjects.forEach((objectData: any) => {
     /**
      * enlivenObjects() is used to render objects on canvas.
@@ -433,12 +440,14 @@ export const handleResize = ({
   setCanvasBackground({
     file: backgroundImage,
     canvas,
+
     parentWidth: wrapper.clientWidth,
     parentHeight: wrapper.clientHeight,
   });
 };
 
 // zoom canvas on mouse scroll
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const handleCanvasZoom = ({ options, canvas }: { options: any; canvas: Canvas }) => {
   const delta = options.e?.deltaY;
   let zoom = canvas.getZoom();

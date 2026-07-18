@@ -1,4 +1,4 @@
-import { CAPTURE, CONTENT_SCRIPT, RECORDING, REWIND, UI } from '@extension/shared';
+import { AI_DEBUG, CAPTURE, CONTENT_SCRIPT, RECORDING, REWIND, UI } from '@extension/shared';
 
 import {
   applyEnabledState,
@@ -13,6 +13,17 @@ import {
 
 export const addRuntimeEventListeners = () => {
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg.action === AI_DEBUG.SOURCE_ID) {
+      const key = 'screenshot-debug-ai-source-id';
+      let sourceId = window.sessionStorage.getItem(key);
+      if (!sourceId) {
+        sourceId = crypto.randomUUID();
+        window.sessionStorage.setItem(key, sourceId);
+      }
+      sendResponse({ sourceId });
+      return undefined;
+    }
+
     if (msg.action === CONTENT_SCRIPT.PING) {
       sendResponse({ ok: true, ready: true });
       return undefined;

@@ -19,8 +19,11 @@ export const createDefaultControls = () => {
     ctx: CanvasRenderingContext2D,
     left: number,
     top: number,
-    styleOverride: any,
-    fabricObject: any,
+
+    _styleOverride: unknown,
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    fabricObject: unknown,
   ) => {
     ctx.save();
     const size = 8;
@@ -118,10 +121,12 @@ export const createDefaultControls = () => {
       y: -0.5,
       offsetX: 0,
       offsetY: -25,
+
       actionHandler: rotationWithSnapping,
       cursorStyleHandler: rotationStyleHandler,
       withConnection: false,
       cursorStyle: 'grab',
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       render: function (ctx, left, top, styleOverride, fabricObject) {
         ctx.save();
         const size = 16;

@@ -10,6 +10,7 @@ A privacy-focused Chrome extension for capturing screenshots, recording a tab or
 - Record a browser tab or desktop, with optional microphone audio.
 - Pause, resume, review, trim, and export recordings.
 - Opt in to Rewind to review recent page activity. Rewind is disabled by default.
+- Open a persistent AI Debug session with a redacted viewport screenshot and browser diagnostics.
 - Run locally without login or server uploads.
 
 ## Requirements
@@ -71,6 +72,39 @@ Microphone access is optional. The first time it is enabled, the extension opens
 
 Rewind is disabled by default and only begins collecting recent page activity after you enable it from the **Record** tab. Select **Capture Last Minute** to freeze and review the buffered activity.
 
+### AI Debug
+
+AI Debug uses a loopback-only Node helper so the OpenAI API key never enters Chrome, extension storage, screenshots, or debug reports.
+
+In one terminal, configure the key and start the helper:
+
+```bash
+export OPENAI_API_KEY="your-api-key"
+# Optional; defaults to gpt-5.6-terra
+export OPENAI_MODEL="gpt-5.6-terra"
+pnpm ai:helper
+```
+
+On first launch, the helper creates a pairing token in `~/.screenshot-debug-extension/ai-helper-token` with user-only permissions and prints the token once. Keep the helper terminal running.
+
+Then:
+
+1. Open a normal HTTP or HTTPS page.
+2. Open the extension and click **AI Debug**.
+3. Paste the helper pairing token when prompted.
+4. The prepared screenshot and redacted diagnostics are submitted only after the helper is connected.
+
+The AI session opens in its own extension tab and remains available after the popup closes or the browser restarts. Clicking **AI Debug** again on the same source tab refreshes its context and reuses the session.
+
+If setup fails:
+
+- **Helper is not running:** confirm `pnpm ai:helper` is listening on `127.0.0.1:43123`.
+- **OPENAI_API_KEY is not set:** export it in the same shell before starting the helper, then restart the helper.
+- **Pairing token is invalid:** copy the exact value from the first helper launch or the token file, then pair again.
+- **Model access error:** set `OPENAI_MODEL` to a model available to the API project and restart the helper.
+
+The helper accepts requests only from Chrome extension origins with the pairing credential. Do not put `OPENAI_API_KEY` in the repository `.env`, browser settings, or extension source.
+
 ## Development
 
 ```bash
@@ -82,6 +116,7 @@ pnpm build:chrome:local
 
 # Run validation
 pnpm test:unit
+pnpm -F @extension/ai-helper test
 pnpm type-check
 pnpm lint
 
@@ -101,8 +136,10 @@ The Husky pre-commit hook runs the repository's installed `lint-staged` executab
 - `pages/popup/` — extension popup
 - `pages/content/` — capture and recording runtime
 - `pages/content-ui/` — screenshot editor and recording review UI
+- `pages/ai-debug/` — persistent AI Debug extension page
+- `packages/ai-helper/` — loopback-only OpenAI helper
 - `packages/` — shared storage, UI, translations, and build tooling
-- `tests/e2e/` — WebdriverIO browser tests
+- `tests/e2e/` — Playwright extension tests
 - `dist/` — generated unpacked extension
 
 ## Acknowledgments

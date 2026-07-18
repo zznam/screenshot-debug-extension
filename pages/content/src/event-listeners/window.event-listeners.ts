@@ -26,6 +26,7 @@ export const addWindowEventListeners = () => {
             lastAutoScreenshotTime = now;
             captureSettingsStorage.get().then(settings => {
               if (settings.autoScreenshotOnError) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 chrome.runtime.sendMessage({ action: 'captureVisibleTab' }).then((res: any) => {
                   if (res?.success && res.dataUrl) {
                     window.dispatchEvent(
@@ -72,6 +73,7 @@ export const addWindowEventListeners = () => {
           data: metric,
         },
       });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // Ignore extension context invalidated errors
     }

@@ -68,6 +68,8 @@ const isHeuristicallyClickable = (el: HTMLElement): boolean => {
   }
 
   // Draggable often implies interaction
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if ((el as any).draggable === true || el.getAttribute('draggable') === 'true') return true;
 
   return false;
@@ -117,6 +119,7 @@ export const isInteractive = (el: Element | null): boolean => {
     return true;
 
   // Direct handler (inline onclick) – keep for legacy pages
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (typeof (h as any).onclick === 'function') return true;
 
   // Custom clickable DIVs/spans via heuristics

@@ -1,0 +1,11 @@
+@import '@extension/ui/global.css';
+
+html,
+body,
+#app-container {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}

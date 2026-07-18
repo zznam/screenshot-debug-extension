@@ -5,5 +5,7 @@ export { handleOnBeforeRequest, handleOnBeforeSendHeaders, handleOnCompleted } f
 export { handleOnInstalled } from './install.service';
 export { handleOnMessage } from './message.service';
 export { handleOnCommitted } from './web-navigation.service';
+export { detachAiDebugSessionsFromTab } from './ai-debug-indexed-db.service';
+export { startAiDebug, getAiDebug, saveAiDebugMessage, listAiDebug, removeAiDebug } from './ai-debug.service';
 export * from './indexed-db.service';
 export * from './rewind-indexed-db.service';

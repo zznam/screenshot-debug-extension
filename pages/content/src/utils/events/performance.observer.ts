@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const startPerformanceObserver = (callback: (metric: any) => void) => {
   if (typeof PerformanceObserver === 'undefined') return;
 
@@ -13,7 +14,9 @@ export const startPerformanceObserver = (callback: (metric: any) => void) => {
       } else if (entry.entryType === 'layout-shift') {
         callback({
           type: 'cls',
+
           name: 'Cumulative Layout Shift',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           value: (entry as any).value,
           timestamp: Date.now(),
         });
@@ -21,6 +24,7 @@ export const startPerformanceObserver = (callback: (metric: any) => void) => {
         callback({
           type: 'fid',
           name: 'First Input Delay',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           value: (entry as any).processingStart - entry.startTime,
           timestamp: Date.now(),
         });
@@ -32,6 +36,7 @@ export const startPerformanceObserver = (callback: (metric: any) => void) => {
     observer.observe({ type: 'largest-contentful-paint', buffered: true });
     observer.observe({ type: 'layout-shift', buffered: true });
     observer.observe({ type: 'first-input', buffered: true });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     // Ignore unsupported entry types
   }

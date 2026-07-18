@@ -1,0 +1,233 @@
+@extension/content-script:type-check: src/capture/rewind.capture.ts(35,48): error TS2339: Property 'type' does not exist on type '{}'.
+@extension/content-script:type-check: src/capture/video.capture.ts(235,68): error TS2339: Property 'error' does not exist on type '{}'.
+@extension/content-script:type-check: src/event-listeners/window.event-listeners.ts(30,28): error TS2339: Property 'success' does not exist on type '{}'.
+@extension/content-script:type-check: src/event-listeners/window.event-listeners.ts(30,43): error TS2339: Property 'dataUrl' does not exist on type '{}'.
+@extension/content-script:type-check: src/event-listeners/window.event-listeners.ts(37,40): error TS2339: Property 'dataUrl' does not exist on type '{}'.
+@extension/content-script:type-check: src/event-listeners/window.event-listeners.ts(71,17): error TS18046: 'metric' is of type 'unknown'.
+@extension/content-script:type-check: src/interceptors/console/console.interceptor.ts(78,9): error TS2684: The 'this' context of type '{ (...data: any[]): void; (message?: any, ...optionalParams: any[]): void; } | { (...data: any[]): void; (message?: any, ...optionalParams: any[]): void; } | { (...data: any[]): void; (message?: any, ...optionalParams: any[]): void; } | { ...; } | { ...; } | { ...; }' is not assignable to method's 'this' of type '(this: Console, ...args: unknown[]) => void'.
+@extension/content-script:type-check: src/interceptors/network/fetch.interceptor.ts(108,9): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/interceptors/network/fetch.interceptor.ts(121,7): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/interceptors/network/fetch.interceptor.ts(122,3): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/interceptors/network/fetch.interceptor.ts(151,40): error TS2345: Argument of type 'unknown' is not assignable to parameter of type '[input: URL | RequestInfo, init?: RequestInit | undefined]'.
+@extension/content-script:type-check: src/interceptors/network/fetch.interceptor.ts(168,50): error TS2345: Argument of type 'unknown' is not assignable to parameter of type '[input: URL | RequestInfo, init?: RequestInit | undefined]'.
+@extension/content-script:type-check: src/interceptors/network/xhr.interceptor.ts(34,5): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/interceptors/network/xhr.interceptor.ts(134,9): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/build-descriptor.util.ts(69,39): error TS2339: Property 'isContentEditable' does not exist on type '{}'.
+@extension/content-script:type-check: src/utils/events/element-clickable.util.ts(19,29): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/find-clickable-element.util.ts(24,26): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/find-react-prop.util.ts(3,29): error TS2769: No overload matches this call.
+@extension/content-script:type-check: src/utils/events/is-clickable.util.ts(20,14): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/is-interactive.util.ts(71,7): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/is-interactive.util.ts(120,14): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/performance.observer.ts(17,18): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/performance.observer.ts(24,18): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/pick-attr.util.ts(9,56): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/safe-css-escape.util.ts(3,3): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/safe-css-escape.util.ts(4,7): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/system-info/battery-info.util.ts(6,27): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/system-info/incognito-status.util.ts(5,18): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/system-info/incognito-status.util.ts(5,59): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/system-info/memory-info.util.ts(5,18): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/system-info/network-info.util.ts(6,5): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/system-info/network-info.util.ts(6,42): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/system-info/network-info.util.ts(6,82): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/system-info/user-agent.util.ts(7,16): error TS2571: Object is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/system-info/user-agent.util.ts(98,76): error TS18046: 'b' is of type 'unknown'.
+@extension/content-script:type-check: src/utils/events/system-info/user-agent.util.ts(99,35): error TS18046: 'b' is of type 'unknown'.
+@extension/ui:type-check: lib/components/ui/icon.tsx(22,6): error TS2352: Conversion of type 'typeof import("/Users/zznakan/workspace/screenshot-debug-extension/node_modules/.pnpm/lucide-react@0.548.0_react@19.1.0/node_modules/lucide-react/dist/lucide-react")' to type 'Record<string, FC<LucideProps>>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+@extension/mic-permission:type-check: ../../packages/ui/lib/components/ui/icon.tsx(22,6): error TS2352: Conversion of type 'typeof import("/Users/zznakan/workspace/screenshot-debug-extension/node_modules/.pnpm/lucide-react@0.548.0_react@19.1.0/node_modules/lucide-react/dist/lucide-react")' to type 'Record<string, FC<LucideProps>>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+@extension/mic-permission:type-check: src/mic-permission.tsx(21,16): error TS2339: Property 'name' does not exist on type '{}'.
+screenshot-debug-extension:type-check: src/services/download.service.spec.ts(35,61): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'CaptureSettings'.
+screenshot-debug-extension:type-check: src/services/download.service.spec.ts(43,37): error TS2322: Type '(value: Record[] | PromiseLike<Record[]>) => void' is not assignable to type '(records: unknown[]) => void'.
+screenshot-debug-extension:type-check: src/services/download.service.spec.ts(92,7): error TS2322: Type 'unknown' is not assignable to type 'Record'.
+screenshot-debug-extension:type-check: src/services/message.service.ts(32,65): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Record'.
+screenshot-debug-extension:type-check: src/services/message.service.ts(76,34): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Record'.
+screenshot-debug-extension:type-check: src/utils/har-builder.util.spec.ts(11,7): error TS2322: Type 'unknown' is not assignable to type 'Record'.
+screenshot-debug-extension:type-check: src/utils/har-builder.util.ts(9,49): error TS2769: No overload matches this call.
+screenshot-debug-extension:type-check: src/utils/manage-records.util.ts(47,52): error TS18046: 'record' is of type 'unknown'.
+screenshot-debug-extension:type-check: src/utils/manage-records.util.ts(61,21): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+screenshot-debug-extension:type-check: src/utils/manage-records.util.ts(78,33): error TS2698: Spread types may only be created from object types.
+screenshot-debug-extension:type-check: src/utils/manage-records.util.ts(137,7): error TS2698: Spread types may only be created from object types.
+screenshot-debug-extension:type-check: src/utils/report-builder.util.ts(30,66): error TS2365: Operator '>=' cannot be applied to types '{}' and 'number'.
+screenshot-debug-extension:type-check: src/utils/rewind.util.ts(127,41): error TS18046: 'a' is of type 'unknown'.
+screenshot-debug-extension:type-check: src/utils/rewind.util.ts(127,55): error TS18046: 'b' is of type 'unknown'.
+screenshot-debug-extension:type-check: src/utils/rewind.util.ts(127,70): error TS18046: 'a' is of type 'unknown'.
+screenshot-debug-extension:type-check: src/utils/rewind.util.ts(127,83): error TS18046: 'b' is of type 'unknown'.
+screenshot-debug-extension:type-check: src/utils/rewind.util.ts(129,84): error TS18046: 'row' is of type 'unknown'.
+screenshot-debug-extension:type-check: src/utils/rewind.util.ts(137,36): error TS2339: Property 'timestamp' does not exist on type '{}'.
+screenshot-debug-extension:type-check: src/utils/rewind.util.ts(148,40): error TS2339: Property 'type' does not exist on type '{}'.
+screenshot-debug-extension:type-check: src/utils/rewind.util.ts(151,49): error TS2339: Property 'event' does not exist on type '{}'.
+screenshot-debug-extension:type-check: src/utils/rewind.util.ts(154,42): error TS2339: Property 'data' does not exist on type '{}'.
+screenshot-debug-extension:type-check: src/utils/rewind.util.ts(164,56): error TS2698: Spread types may only be created from object types.
+@extension/popup:type-check: ../../packages/ui/lib/components/ui/icon.tsx(22,6): error TS2352: Conversion of type 'typeof import("/Users/zznakan/workspace/screenshot-debug-extension/node_modules/.pnpm/lucide-react@0.548.0_react@19.1.0/node_modules/lucide-react/dist/lucide-react")' to type 'Record<string, FC<LucideProps>>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+@extension/popup:type-check: src/components/capture/screenshot-button.capture.tsx(231,25): error TS2322: Type 'unknown' is not assignable to type '"Fullscreen" | "Edit" | "Copy" | "Pause" | "Minimize" | "Undo" | "Redo" | "Settings" | "List" | "Group" | "BlurIcon" | "AArrowDown" | "AArrowDownIcon" | "AArrowUp" | "AArrowUpIcon" | ... 5812 more ... | "WidthIcon"'.
+@extension/popup:type-check: src/components/settings/settings.view.tsx(79,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'ValueOrUpdate<Theme>'.
+@extension/popup:type-check: src/utils/auth/wait-final-uri.util.ts(13,40): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'OnMessageListener'.
+@extension/popup:type-check: src/utils/auth/wait-final-uri.util.ts(19,40): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'OnMessageListener'.
+@extension/popup:type-check: src/utils/auth/wait-final-uri.util.ts(23,35): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'OnMessageListener'.
+@extension/content-ui:type-check: ../../packages/ui/lib/components/ui/icon.tsx(22,6): error TS2352: Conversion of type 'typeof import("/Users/zznakan/workspace/screenshot-debug-extension/node_modules/.pnpm/lucide-react@0.548.0_react@19.1.0/node_modules/lucide-react/dist/lucide-react")' to type 'Record<string, FC<LucideProps>>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(173,19): error TS18046: 'canvas' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(177,7): error TS2322: Type 'unknown' is not assignable to type 'Canvas'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(189,47): error TS2345: Argument of type '{}' is not assignable to parameter of type '{ objects: unknown[]; }'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(203,47): error TS2345: Argument of type '{}' is not assignable to parameter of type '{ objects: unknown[]; }'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(229,65): error TS18046: 'a' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(277,15): error TS2339: Property 'objectId' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(277,25): error TS2339: Property 'shapeType' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(277,36): error TS2339: Property 'blurRadius' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(279,32): error TS2339: Property 'toJSON' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(287,61): error TS18046: 'x' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(363,22): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Canvas'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(723,17): error TS18046: 'options' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(723,36): error TS18046: 'options' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(739,19): error TS2339: Property 'selected' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(759,9): error TS2322: Type 'unknown[] | never[]' is not assignable to type 'FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[]'.
+@extension/content-ui:type-check: src/components/annotation-view/canvas-container.view.tsx(769,25): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'ActiveElement'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(29,53): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(32,24): error TS18046: 'item' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(32,65): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(37,23): error TS18046: 'item' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(40,21): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'ActiveElement'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(49,17): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(50,32): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(51,39): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(58,37): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(66,89): error TS2339: Property 'icon' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(71,31): error TS2339: Property 'name' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(77,25): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(79,82): error TS18046: 'i' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(80,28): error TS18046: 'i' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(81,41): error TS18046: 'i' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(83,35): error TS18046: 'i' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(83,72): error TS18046: 'i' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(89,34): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(91,25): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(93,47): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(100,47): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(103,39): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(107,40): error TS2339: Property 'icon' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(107,62): error TS2339: Property 'value' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/annotation-view/ui/toolbar.ui.tsx(112,25): error TS2339: Property 'name' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/dialog-view/create-dropdown.ui.tsx(56,20): error TS18046: 'action' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/dialog-view/create-dropdown.ui.tsx(57,22): error TS18046: 'action' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/dialog-view/create-dropdown.ui.tsx(58,25): error TS18046: 'action' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/dialog-view/create-dropdown.ui.tsx(59,56): error TS18046: 'action' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/dialog-view/create-dropdown.ui.tsx(61,29): error TS18046: 'action' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/dialog-view/create-dropdown.ui.tsx(64,22): error TS18046: 'action' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(44,13): error TS18046: 'anyRec' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(44,46): error TS18046: 'anyRec' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(45,13): error TS18046: 'anyRec' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(45,41): error TS18046: 'anyRec' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(46,13): error TS18046: 'anyRec' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(46,39): error TS18046: 'anyRec' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(54,14): error TS18046: 'anyRec' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(54,29): error TS18046: 'anyRec' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(54,42): error TS18046: 'anyRec' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(60,17): error TS18046: 'anyRec' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(60,38): error TS18046: 'anyRec' is of type 'unknown'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(77,25): error TS2339: Property 'timestamp' does not exist on type 'object'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(78,34): error TS2339: Property 'timestamp' does not exist on type 'object'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(79,25): error TS2339: Property 'type' does not exist on type 'object'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(262,9): error TS2698: Spread types may only be created from object types.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(377,36): error TS2339: Property 'currentTime' does not exist on type '{}'.
+@extension/content-ui:type-check: src/components/recording-view/views/rewind-player.view.tsx(472,9): error TS2322: Type 'unknown[]' is not assignable to type 'eventWithTime[]'.
+@extension/content-ui:type-check: src/hooks/use-draggable-toolbar.hook.ts(39,52): error TS2571: Object is of type 'unknown'.
+@extension/content-ui:type-check: src/hooks/use-fit-canvas-size.hook.ts(33,63): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Annotations'.
+@extension/content-ui:type-check: src/hooks/use-trimmed-video.hook.ts(57,16): error TS2339: Property 'name' does not exist on type '{}'.
+@extension/content-ui:type-check: src/hooks/use-trimmed-video.hook.ts(58,27): error TS2339: Property 'message' does not exist on type '{}'.
+@extension/content-ui:type-check: src/hooks/use-video-playback.hook.ts(167,50): error TS2339: Property 'message' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(101,19): error TS18046: 'currentColorRef' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(104,29): error TS18046: 'currentColorRef' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(161,70): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PointerEvent'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(297,18): error TS18046: 'options' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(340,42): error TS2339: Property 'scaleX' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(341,26): error TS2339: Property 'width' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(341,51): error TS2339: Property 'scaleX' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(342,26): error TS2339: Property 'width' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(344,43): error TS2339: Property 'scaleY' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(345,26): error TS2339: Property 'height' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(345,52): error TS2339: Property 'scaleY' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(346,26): error TS2339: Property 'height' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(351,30): error TS2339: Property 'fill' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(352,32): error TS2339: Property 'stroke' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(353,34): error TS2339: Property 'fontSize' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(354,36): error TS2339: Property 'fontFamily' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(355,36): error TS2339: Property 'fontWeight' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(365,40): error TS2339: Property 'scaleX' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(366,24): error TS2339: Property 'width' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(366,49): error TS2339: Property 'scaleX' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(367,24): error TS2339: Property 'width' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(369,41): error TS2339: Property 'scaleY' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(370,24): error TS2339: Property 'height' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(370,50): error TS2339: Property 'scaleY' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(371,24): error TS2339: Property 'height' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(400,53): error TS18046: 'objectData' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(443,17): error TS18046: 'options' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(456,32): error TS18046: 'options' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(456,51): error TS18046: 'options' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(458,3): error TS18046: 'options' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/canvas.util.ts(459,3): error TS18046: 'options' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/key-events.util.ts(16,95): error TS2339: Property 'isEditing' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/annotation/key-events.util.ts(51,37): error TS2344: Type 'unknown' does not satisfy the constraint 'FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>'.
+@extension/content-ui:type-check: src/utils/annotation/key-events.util.ts(73,52): error TS2344: Type 'unknown' does not satisfy the constraint 'FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>'.
+@extension/content-ui:type-check: src/utils/annotation/merge-screenshot.util.ts(33,52): error TS18046: 'o' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/merge-screenshot.util.ts(34,50): error TS18046: 'o' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/merge-screenshot.util.ts(37,50): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>'.
+@extension/content-ui:type-check: src/utils/annotation/merge-screenshot.util.ts(44,53): error TS2571: Object is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/merge-screenshot.util.ts(57,20): error TS2322: Type 'unknown' is not assignable to type 'BlobPart'.
+@extension/content-ui:type-check: src/utils/annotation/shapes.util.ts(43,21): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'TOptions<CircleProps> | undefined'.
+@extension/content-ui:type-check: src/utils/annotation/shapes.util.ts(156,39): error TS2339: Property 'boxLeft' does not exist on type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/shapes.util.ts(156,48): error TS2339: Property 'boxWidth' does not exist on type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/shapes.util.ts(156,58): error TS2339: Property 'boxTop' does not exist on type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/shapes.util.ts(156,66): error TS2339: Property 'boxHeight' does not exist on type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/shapes.util.ts(156,77): error TS2339: Property 'className' does not exist on type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/shapes.util.ts(156,88): error TS2339: Property 'score' does not exist on type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/shapes.util.ts(199,83): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Partial<GroupProps> | undefined'.
+@extension/content-ui:type-check: src/utils/annotation/shapes.util.ts(252,37): error TS2339: Property 'file' does not exist on type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/shapes.util.ts(252,43): error TS2339: Property 'canvas' does not exist on type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/shapes.util.ts(252,51): error TS2339: Property 'shapeRef' does not exist on type 'unknown'.
+@extension/content-ui:type-check: src/utils/annotation/shapes.util.ts(252,61): error TS2339: Property 'syncShapeInStorage' does not exist on type 'unknown'.
+@extension/content-ui:type-check: src/utils/recording/get-active-tab.util.ts(17,50): error TS2339: Property 'message' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/recording/rrweb-events-trim.util.ts(15,25): error TS2339: Property 'timestamp' does not exist on type 'object'.
+@extension/content-ui:type-check: src/utils/recording/rrweb-events-trim.util.ts(16,34): error TS2339: Property 'timestamp' does not exist on type 'object'.
+@extension/content-ui:type-check: src/utils/recording/rrweb-events-trim.util.ts(17,25): error TS2339: Property 'type' does not exist on type 'object'.
+@extension/content-ui:type-check: src/utils/recording/video-trim.util.ts(35,25): error TS2339: Property 'message' does not exist on type 'unknown'.
+@extension/content-ui:type-check: src/utils/recording/video-trim.util.ts(39,30): error TS2339: Property 'progress' does not exist on type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/build-records-file.util.ts(50,23): error TS18046: 'record' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/build-records-file.util.ts(51,20): error TS18046: 'record' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/build-records-file.util.ts(53,23): error TS18046: 'record' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/build-records-file.util.ts(53,67): error TS2339: Property 'status' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/slice/build-records-file.util.ts(53,85): error TS2339: Property 'statusCode' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/slice/build-records-file.util.ts(54,20): error TS18046: 'record' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/build-records-file.util.ts(60,42): error TS2345: Argument of type 'unknown[]' is not assignable to parameter of type 'AnyRecord[]'.
+@extension/content-ui:type-check: src/utils/slice/build-screenshot-file.util.ts(19,31): error TS2339: Property 'sizes' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/slice/build-screenshot-file.util.ts(20,30): error TS2339: Property 'sizes' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/slice/build-screenshot-file.util.ts(28,5): error TS2322: Type 'unknown[] | never[]' is not assignable to type 'FabricObject<Partial<FabricObjectProps>, SerializedObjectProps, ObjectEvents>[]'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(35,38): error TS18046: 'r' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(35,67): error TS18046: 'r' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(36,38): error TS18046: 'r' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(36,67): error TS18046: 'r' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(40,10): error TS18046: 'r' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(40,47): error TS18046: 'r' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(40,72): error TS18046: 'r' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(40,98): error TS18046: 'r' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(44,10): error TS18046: 'r' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(44,47): error TS18046: 'r' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(47,48): error TS2339: Property 'timestamp' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(47,70): error TS2339: Property 'timestamp' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/slice/prepare-bundle.util.ts(52,65): error TS18046: 'e' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/records.util.ts(14,48): error TS2339: Property 'message' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/slice/records.util.ts(30,51): error TS2339: Property 'message' does not exist on type '{}'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(7,7): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(9,19): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(13,7): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(14,9): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(16,21): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(19,9): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(21,21): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(24,9): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(26,21): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(31,7): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(31,61): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(32,7): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/report-to-text.util.ts(32,61): error TS18046: 'report' is of type 'unknown'.
+@extension/content-ui:type-check: src/utils/slice/to-array.util.ts(15,23): error TS2769: No overload matches this call.

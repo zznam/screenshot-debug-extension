@@ -1,0 +1,542 @@
+
+> brie-extension@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension
+> turbo lint --continue
+
+• Packages in scope: @extension/content-runtime-script, @extension/content-script, @extension/content-ui, @extension/dev-utils, @extension/e2e, @extension/env, @extension/hmr, @extension/i18n, @extension/mic-permission, @extension/popup, @extension/shared, @extension/storage, @extension/store, @extension/tailwindcss-config, @extension/tsconfig, @extension/ui, @extension/vite-config, @extension/zipper, screenshot-debug-extension
+• Running lint in 19 packages
+• Remote caching disabled
+@extension/store:lint: cache bypass, force executing 61e59c9c397a6d47
+@extension/mic-permission:lint: cache bypass, force executing 6babafe7f7d35769
+@extension/storage:lint: cache bypass, force executing 340feb17691f2335
+@extension/env:lint: cache bypass, force executing 1d461f3453f8a0d5
+@extension/zipper:lint: cache bypass, force executing 0812b8ad720f193b
+@extension/shared:lint: cache bypass, force executing 2b9548db7040022e
+@extension/hmr:lint: cache bypass, force executing 707608c74d1193bd
+@extension/popup:lint: cache bypass, force executing 9a3f57ec80840b34
+@extension/content-script:lint: cache bypass, force executing 7d14eeac75c578b9
+@extension/ui:lint: cache bypass, force executing 7d91f9de55a886ce
+@extension/store:lint: 
+@extension/store:lint: > @extension/store@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension/packages/store
+@extension/store:lint: > eslint .
+@extension/store:lint: 
+@extension/mic-permission:lint: 
+@extension/mic-permission:lint: > @extension/mic-permission@0.6.60 lint /Users/zznakan/workspace/screenshot-debug-extension/pages/mic-permission
+@extension/mic-permission:lint: > eslint .
+@extension/mic-permission:lint: 
+@extension/hmr:lint: 
+@extension/hmr:lint: > @extension/hmr@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension/packages/hmr
+@extension/hmr:lint: > eslint .
+@extension/hmr:lint: 
+@extension/env:lint: 
+@extension/env:lint: > @extension/env@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension/packages/env
+@extension/env:lint: > eslint .
+@extension/env:lint: 
+@extension/content-script:lint: 
+@extension/content-script:lint: > @extension/content-script@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension/pages/content
+@extension/content-script:lint: > eslint .
+@extension/content-script:lint: 
+@extension/shared:lint: 
+@extension/shared:lint: > @extension/shared@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension/packages/shared
+@extension/shared:lint: > eslint .
+@extension/shared:lint: 
+@extension/storage:lint: 
+@extension/storage:lint: > @extension/storage@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension/packages/storage
+@extension/storage:lint: > eslint .
+@extension/storage:lint: 
+@extension/ui:lint: 
+@extension/ui:lint: > @extension/ui@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension/packages/ui
+@extension/ui:lint: > eslint .
+@extension/ui:lint: 
+@extension/popup:lint: 
+@extension/popup:lint: > @extension/popup@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension/pages/popup
+@extension/popup:lint: > eslint .
+@extension/popup:lint: 
+@extension/zipper:lint: 
+@extension/zipper:lint: > @extension/zipper@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension/packages/zipper
+@extension/zipper:lint: > eslint .
+@extension/zipper:lint: 
+@extension/mic-permission:lint: 
+@extension/mic-permission:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/mic-permission/src/mic-permission.tsx
+@extension/mic-permission:lint:   20:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/mic-permission:lint: 
+@extension/mic-permission:lint: ✖ 1 problem (1 error, 0 warnings)
+@extension/mic-permission:lint: 
+@extension/mic-permission:lint:  ELIFECYCLE  Command failed with exit code 1.
+@extension/env:lint: 
+@extension/env:lint: /Users/zznakan/workspace/screenshot-debug-extension/packages/env/lib/index.ts
+@extension/env:lint:   3:10  error  'CLI_ENV' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/env:lint: 
+@extension/env:lint: ✖ 1 problem (1 error, 0 warnings)
+@extension/env:lint: 
+@extension/content-runtime-script:lint: cache bypass, force executing fa4d22ac68ba1984
+@extension/env:lint:  ELIFECYCLE  Command failed with exit code 1.
+@extension/content-ui:lint: cache bypass, force executing 99b67c85ec5a7cbd
+@extension/content-runtime-script:lint: 
+@extension/content-runtime-script:lint: > @extension/content-runtime-script@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension/pages/content-runtime
+@extension/content-runtime-script:lint: > eslint .
+@extension/content-runtime-script:lint: 
+@extension/content-ui:lint: 
+@extension/content-ui:lint: > @extension/content-ui@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui
+@extension/content-ui:lint: > eslint .
+@extension/content-ui:lint: 
+screenshot-debug-extension:lint: cache bypass, force executing 2bd60fc5210d127b
+@extension/i18n:lint: cache bypass, force executing cde674792bec1173
+screenshot-debug-extension:lint: 
+screenshot-debug-extension:lint: > screenshot-debug-extension@0.0.1 lint /Users/zznakan/workspace/screenshot-debug-extension/chrome-extension
+screenshot-debug-extension:lint: > eslint .
+screenshot-debug-extension:lint: 
+@extension/storage:lint: 
+@extension/storage:lint: /Users/zznakan/workspace/screenshot-debug-extension/packages/storage/lib/factories/annotation-storage.factory.ts
+@extension/storage:lint:   13:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/storage:lint: 
+@extension/storage:lint: ✖ 1 problem (1 error, 0 warnings)
+@extension/storage:lint: 
+@extension/storage:lint:  ELIFECYCLE  Command failed with exit code 1.
+@extension/shared:lint: 
+@extension/shared:lint: /Users/zznakan/workspace/screenshot-debug-extension/packages/shared/lib/utils/redact-sensitive-info.util.ts
+@extension/shared:lint:   119:73  error  Replace `·?·(input·as·Record<string,·unknown>).name` with `⏎········?·(input·as·Record<string,·unknown>).name⏎·······`    prettier/prettier
+@extension/shared:lint:   120:75  error  Replace `·?·(input·as·Record<string,·unknown>).label` with `⏎········?·(input·as·Record<string,·unknown>).label⏎·······`  prettier/prettier
+@extension/shared:lint:   121:73  error  Replace `·?·(input·as·Record<string,·unknown>).type` with `⏎········?·(input·as·Record<string,·unknown>).type⏎·······`    prettier/prettier
+@extension/shared:lint: 
+@extension/shared:lint: ✖ 3 problems (3 errors, 0 warnings)
+@extension/shared:lint:   3 errors and 0 warnings potentially fixable with the `--fix` option.
+@extension/shared:lint: 
+@extension/shared:lint:  ELIFECYCLE  Command failed with exit code 1.
+@extension/dev-utils:lint: cache bypass, force executing f5c4abe3862a25e2
+@extension/i18n:lint: 
+@extension/i18n:lint: > @extension/i18n@0.6.60 lint /Users/zznakan/workspace/screenshot-debug-extension/packages/i18n
+@extension/i18n:lint: > eslint .
+@extension/i18n:lint: 
+@extension/dev-utils:lint: 
+@extension/dev-utils:lint: > @extension/dev-utils@0.5.27 lint /Users/zznakan/workspace/screenshot-debug-extension/packages/dev-utils
+@extension/dev-utils:lint: > eslint .
+@extension/dev-utils:lint: 
+@extension/store:lint: 
+@extension/store:lint: /Users/zznakan/workspace/screenshot-debug-extension/packages/store/lib/services/api.service.ts
+@extension/store:lint:    4:10  error  'toast' is defined but never used. Allowed unused vars must match /^_/u                  @typescript-eslint/no-unused-vars
+@extension/store:lint:    7:15  error  'Tokens' is defined but never used. Allowed unused vars must match /^_/u                 @typescript-eslint/no-unused-vars
+@extension/store:lint:    7:23  error  'UserAndTokensResponse' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/store:lint:   11:7   error  'baseQuery' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+@extension/store:lint:   27:3   error  'args' is defined but never used. Allowed unused args must match /^_/u                   @typescript-eslint/no-unused-vars
+@extension/store:lint:   28:3   error  'api' is defined but never used. Allowed unused args must match /^_/u                    @typescript-eslint/no-unused-vars
+@extension/store:lint:   29:3   error  'extraOptions' is defined but never used. Allowed unused args must match /^_/u           @typescript-eslint/no-unused-vars
+@extension/store:lint: 
+@extension/store:lint: /Users/zznakan/workspace/screenshot-debug-extension/packages/store/lib/store/ai/ai.api.ts
+@extension/store:lint:    3:29  error  'GenerateResponse' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/store:lint:   12:38  error  Unexpected any. Specify a different type                                            @typescript-eslint/no-explicit-any
+@extension/store:lint:   12:43  error  Unexpected any. Specify a different type                                            @typescript-eslint/no-explicit-any
+@extension/store:lint: 
+@extension/store:lint: /Users/zznakan/workspace/screenshot-debug-extension/packages/store/lib/store/overview/overview.api.ts
+@extension/store:lint:   12:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/store:lint: 
+@extension/store:lint: /Users/zznakan/workspace/screenshot-debug-extension/packages/store/lib/store/screenshot/screenshot.api.ts
+@extension/store:lint:   10:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/store:lint: 
+@extension/store:lint: /Users/zznakan/workspace/screenshot-debug-extension/packages/store/lib/store/spaces/spaces.api.ts
+@extension/store:lint:   12:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/store:lint: 
+@extension/store:lint: ✖ 13 problems (13 errors, 0 warnings)
+@extension/store:lint: 
+@extension/store:lint:  ELIFECYCLE  Command failed with exit code 1.
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/capture/rewind.capture.ts
+@extension/content-script:lint:   35:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/capture/screenshot.capture.ts
+@extension/content-script:lint:    78:7  error  'cleanCanvas' is assigned a value but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+@extension/content-script:lint:   266:7  error  'onTouchStart' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/capture/video.capture.ts
+@extension/content-script:lint:   234:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/event-listeners/window.event-listeners.ts
+@extension/content-script:lint:   29:88  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   75:14  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/interceptors/console/console.interceptor.ts
+@extension/content-script:lint:   21:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   21:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   32:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   40:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   72:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/interceptors/network/fetch.interceptor.ts
+@extension/content-script:lint:    61:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:    61:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   108:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   121:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   122:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   151:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   168:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/interceptors/network/xhr.interceptor.ts
+@extension/content-script:lint:    26:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:    34:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:    48:80  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   134:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/build-descriptor.util.ts
+@extension/content-script:lint:   69:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/element-clickable.util.ts
+@extension/content-script:lint:   19:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/find-clickable-element.util.ts
+@extension/content-script:lint:   24:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/find-react-prop.util.ts
+@extension/content-script:lint:   1:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   1:66  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/is-clickable.util.ts
+@extension/content-script:lint:   20:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/is-interactive.util.ts
+@extension/content-script:lint:    71:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   120:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/performance.observer.ts
+@extension/content-script:lint:    1:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   17:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   24:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   35:12  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/pick-attr.util.ts
+@extension/content-script:lint:   9:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/safe-css-escape.util.ts
+@extension/content-script:lint:   3:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   4:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/system-info/battery-info.util.ts
+@extension/content-script:lint:   6:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/system-info/incognito-status.util.ts
+@extension/content-script:lint:    5:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:    5:66  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   16:14  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/system-info/memory-info.util.ts
+@extension/content-script:lint:   5:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/system-info/network-info.util.ts
+@extension/content-script:lint:   6:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   6:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   6:88  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/events/system-info/user-agent.util.ts
+@extension/content-script:lint:    7:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   98:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint:   99:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content/src/utils/network/truncate-response.util.ts
+@extension/content-script:lint:   2:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-script:lint: 
+@extension/content-script:lint: ✖ 49 problems (49 errors, 0 warnings)
+@extension/content-script:lint: 
+@extension/content-script:lint:  ELIFECYCLE  Command failed with exit code 1.
+@extension/ui:lint: 
+@extension/ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/packages/ui/lib/components/ui/tag-input/tag-input.tsx
+@extension/ui:lint:   16:70  error  'ref' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/ui:lint: 
+@extension/ui:lint: ✖ 1 problem (1 error, 0 warnings)
+@extension/ui:lint: 
+@extension/ui:lint:  ELIFECYCLE  Command failed with exit code 1.
+@extension/popup:lint: 
+@extension/popup:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/popup/src/components/capture/screenshot-button.capture.tsx
+@extension/popup:lint:   231:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/popup:lint: 
+@extension/popup:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/popup/src/components/settings/settings.view.tsx
+@extension/popup:lint:   79:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/popup:lint: 
+@extension/popup:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/popup/src/guards/auth.guard.tsx
+@extension/popup:lint:   1:15  error  'PropsWithChildren' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/popup:lint: 
+@extension/popup:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/popup/src/utils/auth/wait-final-uri.util.ts
+@extension/popup:lint:   17:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/popup:lint: 
+@extension/popup:lint: ✖ 4 problems (4 errors, 0 warnings)
+@extension/popup:lint: 
+@extension/popup:lint:  ELIFECYCLE  Command failed with exit code 1.
+screenshot-debug-extension:lint: 
+screenshot-debug-extension:lint: /Users/zznakan/workspace/screenshot-debug-extension/chrome-extension/src/services/auth.service.ts
+screenshot-debug-extension:lint:   1:10  error  'identity' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+screenshot-debug-extension:lint: 
+screenshot-debug-extension:lint: /Users/zznakan/workspace/screenshot-debug-extension/chrome-extension/src/services/menus.service.ts
+screenshot-debug-extension:lint:   1:15  error  'ContextMenus' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+screenshot-debug-extension:lint: 
+screenshot-debug-extension:lint: /Users/zznakan/workspace/screenshot-debug-extension/chrome-extension/src/services/message.service.ts
+screenshot-debug-extension:lint:    39:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:    99:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   134:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   153:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   157:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   178:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   200:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   205:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint: 
+screenshot-debug-extension:lint: /Users/zznakan/workspace/screenshot-debug-extension/chrome-extension/src/services/tabs.service.ts
+screenshot-debug-extension:lint:   26:99  error  'tab' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+screenshot-debug-extension:lint: 
+screenshot-debug-extension:lint: /Users/zznakan/workspace/screenshot-debug-extension/chrome-extension/src/types/index.ts
+screenshot-debug-extension:lint:   29:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   30:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   34:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint: 
+screenshot-debug-extension:lint: /Users/zznakan/workspace/screenshot-debug-extension/chrome-extension/src/utils/har-builder.util.spec.ts
+screenshot-debug-extension:lint:   11:73  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint: 
+screenshot-debug-extension:lint: /Users/zznakan/workspace/screenshot-debug-extension/chrome-extension/src/utils/manage-records.util.ts
+screenshot-debug-extension:lint:    15:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:    47:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   127:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint: 
+screenshot-debug-extension:lint: /Users/zznakan/workspace/screenshot-debug-extension/chrome-extension/src/utils/report-builder.util.ts
+screenshot-debug-extension:lint:    8:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   28:86  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint: 
+screenshot-debug-extension:lint: /Users/zznakan/workspace/screenshot-debug-extension/chrome-extension/src/utils/rewind.util.ts
+screenshot-debug-extension:lint:   126:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   126:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   127:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   127:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   129:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   129:68  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   137:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   148:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   151:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   154:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint:   164:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+screenshot-debug-extension:lint: 
+screenshot-debug-extension:lint: ✖ 31 problems (31 errors, 0 warnings)
+screenshot-debug-extension:lint: 
+screenshot-debug-extension:lint:  ELIFECYCLE  Command failed with exit code 1.
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/App.tsx
+@extension/content-ui:lint:   69:6   warning  React Hook useEffect has missing dependencies: 'handleOnClose' and 'handleOnStoreScreenshot'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+@extension/content-ui:lint:   71:44  error    Unexpected any. Specify a different type                                                                                                          @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   76:43  error    Unexpected any. Specify a different type                                                                                                          @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   98:41  error    Unexpected any. Specify a different type                                                                                                          @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/components/annotation-view/canvas-container.view.tsx
+@extension/content-ui:lint:   162:41  error    Unexpected any. Specify a different type                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   162:68  error    Unexpected any. Specify a different type                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   229:53  error    Unexpected any. Specify a different type                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   274:20  error    Unexpected any. Specify a different type                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   287:49  error    Unexpected any. Specify a different type                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   363:43  error    Unexpected any. Specify a different type                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   420:6   warning  React Hook useEffect has missing dependencies: 'deleteAllShapes', 'dispatch', 'lastAction', 'redo', and 'undo'. Either include them or remove the dependency array                                                                                                 react-hooks/exhaustive-deps
+@extension/content-ui:lint:   582:36  error    'options' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:   678:31  warning  The ref value 'fabricRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'fabricRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+@extension/content-ui:lint:   687:6   warning  React Hook useEffect has missing dependencies: 'deleteShapeFromStorage', 'onChangeSelection', 'redo', 'restoreObjects', 'screenshot.src', 'syncShapeInStorage', and 'undo'. Either include them or remove the dependency array                                     react-hooks/exhaustive-deps
+@extension/content-ui:lint:   722:40  error    Unexpected any. Specify a different type                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   738:51  error    Unexpected any. Specify a different type                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   769:48  error    Unexpected any. Specify a different type                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/components/annotation-view/ui/footer.ui.tsx
+@extension/content-ui:lint:    1:10  error  'Button' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:    1:22  error  'Icon' is defined but never used. Allowed unused vars must match /^_/u              @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:   12:9   error  'incZoom' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:   13:9   error  'decZoom' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/components/annotation-view/ui/right-sidebar.ui.tsx
+@extension/content-ui:lint:     4:10  error    'AiGenerateType' is defined but never used. Allowed unused vars must match /^_/u                             @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:    28:3   error    'toast' is defined but never used. Allowed unused vars must match /^_/u                                      @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:    31:22  error    'GenerateDropdown' is defined but never used. Allowed unused vars must match /^_/u                           @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:    33:10  error    'getRecords' is defined but never used. Allowed unused vars must match /^_/u                                 @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:    33:22  error    'prepareBundle' is defined but never used. Allowed unused vars must match /^_/u                              @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:    33:37  error    'reportToText' is defined but never used. Allowed unused vars must match /^_/u                               @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:    41:23  error    Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   129:6   warning  React Hook useEffect has a missing dependency: 'setValue'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+@extension/content-ui:lint:   194:44  error    Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   279:45  error    Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/components/annotation-view/ui/toolbar.ui.tsx
+@extension/content-ui:lint:   27:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   32:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   32:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   36:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   48:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   77:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/components/dialog-view/add-to-space.ui.tsx
+@extension/content-ui:lint:   1:30  error  'workspaceId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:   1:43  error  'onChange' is defined but never used. Allowed unused args must match /^_/u     @typescript-eslint/no-unused-vars
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/components/dialog-view/create-dropdown.ui.tsx
+@extension/content-ui:lint:   54:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/components/dialog-view/minimized-preview.ui.tsx
+@extension/content-ui:lint:   25:14  error  'e' is defined but never used  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:   34:14  error  'e' is defined but never used  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/components/dialog-view/workspaces-dropdown.ui.tsx
+@extension/content-ui:lint:   5:38  error  'onChange' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/components/recording-view/views/rewind-player.view.tsx
+@extension/content-ui:lint:    32:23  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:    40:28  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:    53:28  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:    59:28  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:    73:37  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   239:6   warning  React Hook useEffect has a missing dependency: 'bounds'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+@extension/content-ui:lint:   262:18  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   377:26  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   472:33  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/content.tsx
+@extension/content-ui:lint:    3:10  error  't' is defined but never used. Allowed unused vars must match /^_/u               @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:   32:3   error  'idempotencyKey' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/hooks/use-draggable-toolbar.hook.ts
+@extension/content-ui:lint:   39:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/hooks/use-fit-canvas-size.hook.ts
+@extension/content-ui:lint:   33:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/hooks/use-recording-timer.hook.ts
+@extension/content-ui:lint:   86:6  warning  React Hook useEffect has a missing dependency: 'commitTick'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/hooks/use-trimmed-video.hook.ts
+@extension/content-ui:lint:   56:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/hooks/use-video-playback.hook.ts
+@extension/content-ui:lint:   167:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/models/annotation.model.ts
+@extension/content-ui:lint:   101:37  error  'T' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:   108:10  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   130:29  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   145:18  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   146:24  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   147:22  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   148:18  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   151:24  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   154:12  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   156:21  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   163:12  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   166:21  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   167:13  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   174:13  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   176:21  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   178:21  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   182:12  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   187:13  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   187:57  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   192:12  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   198:12  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   204:18  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   205:20  error  Unexpected any. Specify a different type                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/annotation/canvas.util.ts
+@extension/content-ui:lint:    96:95  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   161:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   296:66  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   335:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   362:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   386:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   442:66  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/annotation/controls.util.ts
+@extension/content-ui:lint:    22:5   error  'styleOverride' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:    22:20  error  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:    23:5   error  'fabricObject' is defined but never used. Allowed unused args must match /^_/u   @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:    23:19  error  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   125:41  error  'styleOverride' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:   125:56  error  'fabricObject' is defined but never used. Allowed unused args must match /^_/u   @typescript-eslint/no-unused-vars
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/annotation/create-annotations-file.util.ts
+@extension/content-ui:lint:   7:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/annotation/key-events.util.ts
+@extension/content-ui:lint:   16:85  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   51:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   73:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/annotation/merge-screenshot.util.ts
+@extension/content-ui:lint:   33:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   34:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   37:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   44:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   53:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/annotation/shapes.util.ts
+@extension/content-ui:lint:    26:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:    39:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:    51:8   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:    60:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:    96:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   156:97  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   205:8   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   252:83  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/create-json-file.util.ts
+@extension/content-ui:lint:   1:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/is-background-meta.util.ts
+@extension/content-ui:lint:   1:15  error  'BackgroundFitMeta' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:   3:40  error  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/recording/get-active-tab.util.ts
+@extension/content-ui:lint:   16:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/recording/rrweb-events-trim.util.ts
+@extension/content-ui:lint:   11:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/recording/video-trim.util.ts
+@extension/content-ui:lint:    35:36  error  Unexpected any. Specify a different type                                                    @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:    39:42  error  Unexpected any. Specify a different type                                                    @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   106:11  error  'argsAccurateMp4' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/records-to-timeline-events.util.ts
+@extension/content-ui:lint:   6:6  error  'TimelineType' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/slice/build-records-file.util.ts
+@extension/content-ui:lint:   18:18  error  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   35:40  error  'trim' is assigned a value but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:   36:28  error  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/slice/build-screenshot-file.util.ts
+@extension/content-ui:lint:   16:111  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/slice/filter-records-window.util.ts
+@extension/content-ui:lint:   4:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/slice/prepare-bundle.util.ts
+@extension/content-ui:lint:   14:12  error  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   15:12  error  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   16:12  error  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   17:14  error  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   28:12  error  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   34:31  error  'envOverrides' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+@extension/content-ui:lint:   39:18  error  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   43:24  error  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   47:20  error  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   47:28  error  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/slice/records.util.ts
+@extension/content-ui:lint:    8:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   10:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   13:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   29:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/slice/report-to-text.util.ts
+@extension/content-ui:lint:    1:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:    9:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   16:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   21:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint:   26:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: /Users/zznakan/workspace/screenshot-debug-extension/pages/content-ui/src/utils/slice/to-array.util.ts
+@extension/content-ui:lint:   15:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+@extension/content-ui:lint: 
+@extension/content-ui:lint: ✖ 146 problems (139 errors, 7 warnings)
+@extension/content-ui:lint: 
+@extension/content-ui:lint:  ELIFECYCLE  Command failed with exit code 1.
+
+ Tasks:    5 successful, 15 total
+Cached:    0 cached, 15 total
+  Time:    23.486s 
+Failed:    @extension/content-script#lint, @extension/content-ui#lint, @extension/env#lint, @extension/mic-permission#lint, @extension/popup#lint, @extension/shared#lint, @extension/storage#lint, @extension/store#lint, @extension/ui#lint, screenshot-debug-extension#lint
+
+ ELIFECYCLE  Command failed with exit code 1.

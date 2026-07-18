@@ -32,10 +32,12 @@ const attachFfmpegListeners = (ffmpeg: FFmpeg, options: LoadOptions) => {
 
   listenersAttached = true;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ffmpeg.on?.('log', ({ message }: any) => {
     options.onLog?.(String(message ?? ''));
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ffmpeg.on?.('progress', ({ progress }: any) => {
     if (typeof progress === 'number') options.onProgress?.(progress);
   });
@@ -101,8 +103,10 @@ export const trimBlobWithFfmpeg = async (input: Blob, trim: TrimRange, options: 
       '6',
       '-c:a',
       'libopus',
+
       outName,
     ];
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const argsAccurateMp4 = [
       '-i',
       inputName,

@@ -5,7 +5,7 @@ import { useStorage } from '@extension/shared';
 import { captureStateStorage } from '@extension/storage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@extension/ui';
 
-import { CaptureScreenshotGroup, DebugToggle } from './components/capture';
+import { AiDebugButton, CaptureScreenshotGroup, DebugToggle } from './components/capture';
 import { RecordingControls } from './components/recording';
 import { SettingsButton, SettingsContent } from './components/settings';
 import { SlicesHistoryButton, SlicesHistoryContent } from './components/slices-history';
@@ -39,7 +39,12 @@ export const PopupContent = () => {
         </TabsList>
         <TabsContent value="screenshot">
           <CaptureScreenshotGroup />
-          {captureState === 'idle' && <DebugToggle />}
+          {captureState === 'idle' && (
+            <>
+              <DebugToggle />
+              <AiDebugButton />
+            </>
+          )}
         </TabsContent>
         <TabsContent value="record">
           <RecordingControls />

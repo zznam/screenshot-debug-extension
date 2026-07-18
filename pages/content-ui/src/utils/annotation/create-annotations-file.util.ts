@@ -4,6 +4,7 @@ import { annotationsStorage } from '@extension/storage';
 import { createJsonFile } from '../create-json-file.util';
 
 export const createAnnotationsJsonFile = async (screenshots: Screenshot[]): Promise<File> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const annotationsById: Record<string, any[]> = {};
 
   for (const shot of screenshots) {

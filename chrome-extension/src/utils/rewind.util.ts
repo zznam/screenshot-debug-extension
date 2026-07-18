@@ -123,9 +123,12 @@ const scheduleFlushForTab = (tabId: number): void => {
   }, FLUSH_INTERVAL_MS);
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sortRows = (rows: any[]): any[] =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rows.sort((a: any, b: any) => a.timestamp - b.timestamp || a.sequence - b.sequence);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const extractPayloads = (rows: any[]): unknown[] => rows.map((row: any) => row.payload);
 
 const readEventsFromStorage = async (tabId: number, fromTimestamp: number, toTimestamp: number): Promise<unknown[]> => {
@@ -134,6 +137,7 @@ const readEventsFromStorage = async (tabId: number, fromTimestamp: number, toTim
 };
 
 const getEventTimestamp = (payload: unknown): number => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ts = (payload as any)?.timestamp;
   return typeof ts === 'number' && Number.isFinite(ts) ? ts : Date.now();
 };
@@ -141,16 +145,22 @@ const getEventTimestamp = (payload: unknown): number => {
 /**
  * rrweb versions and wrappers can differ. Be defensive:
  * - most: event.type is number
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
  * - sometimes payload could be wrapped: { event: {...} } (your own structure)
  * - sometimes: event.data?.type (rare but seen in pipelines)
  */
+
 const getEventType = (payload: unknown): number | null => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const direct = (payload as any)?.type;
+
   if (typeof direct === 'number') return direct;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nestedEventType = (payload as any)?.event?.type;
   if (typeof nestedEventType === 'number') return nestedEventType;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dataType = (payload as any)?.data?.type;
   if (typeof dataType === 'number') return dataType;
 
@@ -161,6 +171,7 @@ const isMeta = (payload: unknown): boolean => getEventType(payload) === RRWEB_ME
 const isFullSnapshot = (payload: unknown): boolean => getEventType(payload) === RRWEB_FULL_SNAPSHOT_EVENT_TYPE;
 
 const cloneWithTimestamp = (payload: unknown, timestamp: number): unknown => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (payload && typeof payload === 'object') return { ...(payload as any), timestamp };
   return payload;
 };

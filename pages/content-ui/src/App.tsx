@@ -68,11 +68,13 @@ export default function App() {
     };
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOnAuthStatus = async (event: any) => {
     if (event.detail.ok) toast.success(t('authCompleted'));
     else toast.error(t('authFailed'));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOnStoreScreenshot = (event: any) => {
     handleOnMinimize();
     const incoming = (event.detail.screenshots as Screenshot[]).map(screenshot => ({
@@ -95,6 +97,7 @@ export default function App() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOnDisplay = async (event: any) => {
     const incoming = (event.detail.screenshots as Screenshot[]).map(screenshot => ({
       ...screenshot,

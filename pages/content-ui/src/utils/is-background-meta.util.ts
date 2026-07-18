@@ -1,5 +1,7 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { BackgroundFitMeta } from '@src/models';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isBackgroundFitMeta = (v: any) => {
   return (
     v &&

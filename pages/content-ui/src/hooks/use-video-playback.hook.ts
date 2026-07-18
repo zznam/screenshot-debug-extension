@@ -164,6 +164,7 @@ export const useVideoPlayback = ({ blob, durationMs }: UseVideoPlaybackArgs) => 
           // Don't swallow unexpected errors silently in dev.
           // Autoplay restrictions are common and not actionable here.
           if (process.env.NODE_ENV !== 'production') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const msg = String((err as any)?.message ?? err);
             if (!msg.toLowerCase().includes('play') && !msg.toLowerCase().includes('autoplay')) {
               console.warn('[useVideoPlayback] play() failed:', err);

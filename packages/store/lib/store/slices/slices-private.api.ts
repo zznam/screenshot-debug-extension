@@ -12,13 +12,13 @@ import type {
 
 import { baseQueryWithReauth } from '../../services/index.js';
 
-export const attachmentUrlPath = (a: Slice) => {
-  const uploadPaths = {
+export const attachmentUrlPath = (a: Slice['attachments'][0]) => {
+  const uploadPaths: Record<string, string> = {
     'image/jpeg': 'images/slices',
     default: 'records',
   };
 
-  const uploadPath = (uploadPaths as any)[a.type] || uploadPaths.default;
+  const uploadPath = uploadPaths[a.type] || uploadPaths.default;
   return `/uploads/${uploadPath}/${a.externalId}`; // Offline placeholder
 };
 
@@ -52,7 +52,7 @@ export const slicesPrivateAPI = createApi({
         items: response.items.map((i: Slice) => ({
           ...i,
           labels: typeof i.labels === 'string' ? JSON.parse(i.labels) : i.labels,
-          attachments: i.attachments.map((a: any) => ({
+          attachments: i.attachments.map((a: Slice['attachments'][0]) => ({
             ...a,
             preview: attachmentUrlPath(a),
           })),

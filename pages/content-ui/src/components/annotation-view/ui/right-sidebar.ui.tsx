@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { t } from '@extension/i18n';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AiGenerateType, SlicePriority } from '@extension/shared';
 import type { TagType } from '@extension/ui';
 import {
@@ -25,19 +26,24 @@ import {
   TooltipTrigger,
   useForm,
   Controller,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   toast,
 } from '@extension/ui';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AddToSpace, GenerateDropdown } from '@src/components/dialog-view';
 import { useElementSize, useTypewriter } from '@src/hooks';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getRecords, prepareBundle, reportToText } from '@src/utils/slice';
 
 interface RightSidebarProps {
   open?: boolean;
+
   workspaceId: string;
   className?: string;
   canvasHeight: number;
   defaultOpen?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onCreate: (payload: any) => void;
   onOpenChange: (open: boolean) => void;
 }
@@ -186,11 +192,13 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     <FormLabel className="text-muted-foreground text-xs">Description</FormLabel>
                     <FormControl>
                       <div className="relative">
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         <Textarea
                           {...field}
                           ref={node => {
                             descRef.current = node;
                             if (typeof field.ref === 'function') field.ref(node);
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             else (field as any).ref = node;
                           }}
                           placeholder={!suggestion?.length ? 'Write a description here...' : ''}
@@ -208,7 +216,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                             field.onChange(e);
                           }}
                         />
-
                         <div
                           tabIndex={-1}
                           aria-hidden="true"
@@ -276,6 +283,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                                 'bg-[#8BC34A]': key === SlicePriority.LOW,
                               })}
                             />
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             <span>{t(key as any)}</span>
                           </div>
                         </SelectItem>

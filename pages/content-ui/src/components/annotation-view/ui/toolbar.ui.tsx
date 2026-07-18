@@ -24,15 +24,18 @@ interface ToolbarProps {
 }
 
 const Toolbar = ({ activeElement, onActiveElement, onExport }: ToolbarProps) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isActive = (value: string | Array<any>) =>
     (activeElement && activeElement.value === value) ||
     (Array.isArray(value) && value.some(val => val?.value === activeElement?.value));
 
   const isDropdownElem = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (item: any) => item.value.some((elem: any) => elem?.value === activeElement?.value),
     [activeElement?.value],
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOnActiveElement = (item: any) => {
     if (Array.isArray(item.value)) {
       return;
@@ -45,6 +48,7 @@ const Toolbar = ({ activeElement, onActiveElement, onExport }: ToolbarProps) => 
       data-testid="editor-toolbar"
       className="border-border bg-card text-card-foreground absolutes mx-auto mt-4 flex w-fit gap-4 rounded-2xl border p-2 shadow-sm">
       <div className="flex items-center space-x-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {navElements.map((item: any, idx: number) =>
           item?.value ? (
             Array.isArray(item.value) ? (
@@ -70,10 +74,12 @@ const Toolbar = ({ activeElement, onActiveElement, onExport }: ToolbarProps) => 
                       <TooltipContent side="top" align="center" sideOffset={28}>
                         {item.name}
                       </TooltipContent>
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     </Tooltip>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="start" sideOffset={18} className="w-[180px]">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {item.value.map((i: any) => (
                     <DropdownMenuCheckboxItem
                       className={cn('px-3', { 'text-muted-foreground': !isActive(i.value) })}

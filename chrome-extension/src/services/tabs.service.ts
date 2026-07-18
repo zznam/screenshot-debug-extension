@@ -4,9 +4,12 @@ import { annotationsRedoStorage, annotationsStorage, captureStateStorage, captur
 
 import { deleteRecords } from '@src/utils';
 
+import { detachAiDebugSessionsFromTab } from './ai-debug-indexed-db.service';
+
 export const handleOnTabRemoved = async (tabId: number) => {
   try {
     await deleteRecords(tabId);
+    await detachAiDebugSessionsFromTab(tabId);
     console.log('handleOnTabRemoved: records deleted ');
 
     const captureTabId = await captureTabStorage.getCaptureTabId();
@@ -23,6 +26,7 @@ export const handleOnTabRemoved = async (tabId: number) => {
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const handleOnTabUpdated = async (tabId: number, changeInfo: Tabs.OnUpdatedChangeInfoType, tab: Tabs.Tab) => {
   try {
     if (changeInfo.status !== 'loading') return;

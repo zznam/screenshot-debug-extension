@@ -4,6 +4,8 @@ import { isDevToolsOpen, isLikelyEmulated } from './detect-emulation.util';
 import { getBrowserZoomLevel } from './zoom-level.util';
 
 const userAgent = navigator.userAgent.toLowerCase();
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const uaData = (navigator as any).userAgentData || {};
 const platform = userAgent || '';
 let browserName = 'Unknown';
@@ -94,8 +96,11 @@ export const parseUserAgent = async (): Promise<{ browser: BrowserInfo; os: OSIn
   // Chromium-based browsers (Chrome, Edge, Brave, Opera)
   if (browserName === 'Unknown' && browserVersion === 'Unknown') {
     const brands = uaData.brands || [];
+
     const brandInfo =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       brands.find((b: any) => /chrome|chromium|edge|opera|brave/i.test(b.brand)) ||
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       brands.find((b: any) => b.brand !== 'Not)A;Brand'); // fallback
 
     browserName = brandInfo?.brand || 'Chromium';

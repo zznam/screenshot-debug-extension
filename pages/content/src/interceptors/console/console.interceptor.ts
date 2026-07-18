@@ -18,6 +18,7 @@ export const interceptConsole = () => {
     return { parsed: caller, raw: error.stack };
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sanitizeArg = (arg: any): any => {
     if (arg instanceof HTMLElement) {
       return {
@@ -29,6 +30,7 @@ export const interceptConsole = () => {
     return safeStructuredClone(arg);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const captureLog = (method: string, args: any[]): void => {
     try {
       const timestamp = Date.now();
@@ -37,6 +39,7 @@ export const interceptConsole = () => {
 
       const sanitizedArgs = args.map(sanitizeArg);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const logData: Record<string, any> = {
         type: 'log',
         recordType: 'console',
@@ -69,6 +72,7 @@ export const interceptConsole = () => {
       configurable: true,
       enumerable: true,
       writable: true,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       value: function (...args: any[]) {
         try {
           captureLog(method, args);

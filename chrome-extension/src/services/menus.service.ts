@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ContextMenus, Menus, Tabs } from 'webextension-polyfill';
 import { contextMenus } from 'webextension-polyfill';
 

@@ -29,6 +29,7 @@ type VisibleEvent = RecordLike & {
   absTs: number;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PlayerInstance = any;
 
 type RrwebEvent = eventWithTime & { type: number; timestamp: number };
@@ -37,6 +38,7 @@ const RRWEB_META_EVENT_TYPE = 4;
 const RRWEB_FULL_SNAPSHOT_EVENT_TYPE = 2;
 
 const getRecordAbsTs = (record: RecordLike): number | null => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const anyRec = record as any;
 
   // pick one that exists in your data; keep this strict
@@ -50,12 +52,14 @@ const getRecordAbsTs = (record: RecordLike): number | null => {
 };
 
 const getRecordUuid = (record: RecordLike, fallback: string): string => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const anyRec = record as any;
   const id = anyRec.uuid ?? anyRec.id ?? anyRec._id;
   return typeof id === 'string' && id.length ? id : fallback;
 };
 
 const getRecordType = (record: RecordLike): string => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const anyRec = record as any;
   return String(anyRec.recordType ?? anyRec.type ?? 'event');
 };
@@ -66,10 +70,12 @@ const msToLabel = (ms: number) => {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
+
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 };
 
 const safeIsRrwebEvent = (candidate: unknown): candidate is RrwebEvent => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const anyCandidate = candidate as any;
   return (
     !!anyCandidate &&
@@ -259,6 +265,7 @@ export const RewindPlayer = ({
       if (absTs < fromTs || absTs > toTs) continue;
 
       out.push({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ...(r as any),
         absTs,
         uuid: getRecordUuid(r, `${getRecordType(r)}-${absTs}-${i}`),
@@ -374,6 +381,7 @@ export const RewindPlayer = ({
     // fallback patterns (depends on rrweb build)
     try {
       const meta = typeof replayer.getMeta === 'function' ? replayer.getMeta() : null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const t = (meta as any)?.currentTime;
       if (typeof t === 'number' && Number.isFinite(t)) return t;
     } catch {
@@ -462,6 +470,7 @@ export const RewindPlayer = ({
 
   const mountPlayer = (width: number, height: number) => {
     const mount = mountRef.current;
+
     if (!mount) return;
 
     destroyPlayer();
@@ -469,6 +478,7 @@ export const RewindPlayer = ({
     playerRef.current = new rrwebPlayer({
       target: mount,
       props: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         events: eventsToPlay as any[],
         width,
         height,

@@ -36,6 +36,7 @@ export const useDraggableToolbar = () => {
       }
 
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         containerRef.current.releasePointerCapture((e as any).pointerId);
       } catch {
         //

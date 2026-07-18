@@ -7,6 +7,7 @@ export const screenshotAPI = createApi({
   baseQuery: baseQueryWithReauth,
 
   endpoints: build => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getFullScreenshot: build.query<any, { url: string }>({
       query: ({ url }) => ({
         url: '/screenshots',

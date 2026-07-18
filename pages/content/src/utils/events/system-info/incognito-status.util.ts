@@ -2,6 +2,7 @@
 export const isIncognito = async (): Promise<boolean> => {
   return new Promise(resolve => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const fs = (window as any).RequestFileSystem || (window as any).webkitRequestFileSystem;
       if (!fs) {
         resolve(false);
@@ -13,6 +14,7 @@ export const isIncognito = async (): Promise<boolean> => {
         () => resolve(false),
         () => resolve(true),
       );
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       resolve(true);
     }

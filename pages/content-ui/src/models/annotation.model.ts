@@ -98,13 +98,16 @@ export type ActiveElement = {
   payload?: { color?: string };
 } | null;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface CustomFabricObject<T extends FabricObject> extends FabricObject {
   objectId?: string;
 }
 
 export type ModifyShape = {
   canvas: Canvas;
+
   property: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any;
   activeObjectRef: RefObject<FabricObject | null>;
   syncShapeInStorage: (shape: FabricObject) => void;
@@ -125,8 +128,10 @@ export type RightSidebarProps = {
   elementAttributes: Attributes;
   setElementAttributes: Dispatch<SetStateAction<Attributes>>;
   fabricRef: RefObject<Canvas | null>;
+
   activeObjectRef: RefObject<FabricObject | null>;
   isEditingRef: RefObject<boolean>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   syncShapeInStorage: (obj: any) => void;
 };
 
@@ -139,31 +144,47 @@ export type AnnotationSidebarProps = {
 export type ShapesMenuProps = {
   item: {
     name: string;
+
     icon: string;
+
     value: Array<ActiveElement>;
   };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   activeElement: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleActiveElement: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleImageUpload: any;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   imageInputRef: any;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Presence = any;
 
 export type CanvasMouseDown = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options: any;
   canvas: Canvas;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   selectedShapeRef: any;
+
   isDrawing: RefObject<boolean>;
   shapeRef: RefObject<FabricObject | null>;
   currentColorRef: RefObject<string>;
 };
 
 export type CanvasMouseMove = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options: any;
   canvas: Canvas;
+
   isDrawing: RefObject<boolean>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   selectedShapeRef: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   shapeRef: any;
   syncShapeInStorage: (shape: FabricObject) => void;
 };
@@ -171,37 +192,48 @@ export type CanvasMouseMove = {
 export type CanvasMouseUp = {
   canvas: Canvas;
   isDrawing: RefObject<boolean>;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   shapeRef: any;
   activeObjectRef: RefObject<FabricObject | null>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   selectedShapeRef: any;
+
   syncShapeInStorage: (shape: FabricObject) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setActiveElement: any;
 };
 
 export type CanvasObjectModified = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options: any;
   syncShapeInStorage: (shape: FabricObject) => void;
 };
 
 export type CanvasPathCreated = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options: (any & { path: CustomFabricObject<Path> }) | any;
   syncShapeInStorage: (shape: FabricObject) => void;
 };
 
 export type CanvasSelectionCreated = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options: any;
   isEditingRef: RefObject<boolean>;
   setElementAttributes: Dispatch<SetStateAction<Attributes>>;
 };
 
 export type CanvasObjectScaling = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options: any;
   setElementAttributes: Dispatch<SetStateAction<Attributes>>;
 };
 
 export type RenderCanvas = {
   fabricRef: RefObject<Canvas | null>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   canvasObjects: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   activeObjectRef: any;
 };
 

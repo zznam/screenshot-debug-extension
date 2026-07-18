@@ -11,7 +11,7 @@ export interface Organization {
   email: string | null;
   phone?: string;
   name?: string;
-  addresses: any[];
+  addresses: unknown[];
   logo?: string;
   subscriptionId: string;
   subscription: Subscription;

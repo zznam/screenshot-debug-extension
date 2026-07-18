@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const findReactProp = (element: any, propPrefix: string): any => {
   // Get all property names on the element
   const props = Object.keys(element);

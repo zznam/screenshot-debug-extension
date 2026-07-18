@@ -53,6 +53,8 @@ export const useVideoTrimmer = (sourceBlob: Blob) => {
 
         const typed = out.type ? out : new Blob([out], { type: mime });
         return typed.type === mime ? typed : new Blob([typed], { type: mime });
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         if (e?.name !== 'AbortError') {
           setLastError(e?.message ?? 'Trim failed');

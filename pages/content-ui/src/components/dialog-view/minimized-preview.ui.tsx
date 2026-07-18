@@ -22,6 +22,8 @@ export const MinimizedPreview: FC<MinimizedPreviewProps> = ({ screenshots, unsav
     try {
       await saveBase64Image(lastImage.src, lastImage.name);
       toast.info(t('imagePreparing'));
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       toast.error(t('imagePreparingFailed'));
     }
@@ -30,7 +32,9 @@ export const MinimizedPreview: FC<MinimizedPreviewProps> = ({ screenshots, unsav
   const handleOnCopy = async () => {
     try {
       await copyBase64ImageToClipboard(lastImage.src);
+
       toast.success(t('imageCopied'));
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       toast.error(t('imageCopiedFailed'));
     }

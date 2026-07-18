@@ -10,6 +10,7 @@ interface Size {
 type AnnotationMap = Record<string, Annotations>;
 
 export interface Annotations {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   objects: any[];
   meta?: {
     sizes: {

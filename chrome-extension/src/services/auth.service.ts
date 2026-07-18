@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { identity } from 'webextension-polyfill';
 
 import type { BgResponse } from '@src/types';

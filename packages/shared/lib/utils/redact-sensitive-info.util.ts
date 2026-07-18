@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { isNonProduction } from './is-non-production.util.js';
 import { REDACTED_KEYWORD } from '../constants/redacted-keyword.constants.js';
 import { EXEMPT_KEYS, keyMatches, NON_SENSITIVE_KEYS, STRONG_KEYS } from '../constants/sensitive-keywords.constants.js';
@@ -84,11 +83,13 @@ const redactPossiblyJsonString = (
  * @param obj - The object to inspect.
  * @returns True if the context suggests sensitive data.
  */
-const shouldRedactByNameValueContext = (obj: any): boolean => {
-  const name = typeof obj?.name === 'string' ? obj.name : undefined;
-  const key = typeof obj?.key === 'string' ? obj.key : undefined;
+const shouldRedactByNameValueContext = (obj: unknown): boolean => {
+  const name =
+    typeof (obj as Record<string, unknown>)?.name === 'string' ? (obj as Record<string, unknown>).name : undefined;
+  const key =
+    typeof (obj as Record<string, unknown>)?.key === 'string' ? (obj as Record<string, unknown>).key : undefined;
 
-  return keyMatches(name, STRONG_KEYS) || keyMatches(key, STRONG_KEYS);
+  return keyMatches(name as string | undefined, STRONG_KEYS) || keyMatches(key as string | undefined, STRONG_KEYS);
 };
 
 /**
@@ -97,7 +98,7 @@ const shouldRedactByNameValueContext = (obj: any): boolean => {
  * @param shouldSkipRedaction - If true, redaction is bypassed entirely.
  * @param ctx - Optional context (derived from key/name/label/type).
  */
-const deepRedactInternal = (input: any, shouldSkipRedaction: boolean, ctx?: { strength: Strength }): any => {
+const deepRedactInternal = (input: unknown, shouldSkipRedaction: boolean, ctx?: { strength: Strength }): unknown => {
   if (shouldSkipRedaction || input === null || input === undefined) return input;
 
   if (typeof input === 'string') {
@@ -110,14 +111,20 @@ const deepRedactInternal = (input: any, shouldSkipRedaction: boolean, ctx?: { st
 
   if (typeof input !== 'object') return input;
 
-  const result: Record<string, any> = {};
+  const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(input)) {
     // Build field-level context
     const fieldCtx = {
       key,
-      name: typeof (input as any).name === 'string' ? (input as any).name : undefined,
-      label: typeof (input as any).label === 'string' ? (input as any).label : undefined,
-      type: typeof (input as any).type === 'string' ? (input as any).type : undefined,
+      name: (typeof (input as Record<string, unknown>).name === 'string'
+        ? (input as Record<string, unknown>).name
+        : undefined) as string | undefined,
+      label: (typeof (input as Record<string, unknown>).label === 'string'
+        ? (input as Record<string, unknown>).label
+        : undefined) as string | undefined,
+      type: (typeof (input as Record<string, unknown>).type === 'string'
+        ? (input as Record<string, unknown>).type
+        : undefined) as string | undefined,
     };
     const strength = classifyField(fieldCtx); // 'strong' | 'allow' | 'unknown'
 
@@ -125,8 +132,8 @@ const deepRedactInternal = (input: any, shouldSkipRedaction: boolean, ctx?: { st
     if (key === 'value' && typeof value === 'string') {
       const nameKeyStrong =
         shouldRedactByNameValueContext(input) ||
-        keyMatches((input as any).key, STRONG_KEYS) ||
-        keyMatches((input as any).name, STRONG_KEYS);
+        keyMatches((input as Record<string, unknown>).key as string | undefined, STRONG_KEYS) ||
+        keyMatches((input as Record<string, unknown>).name as string | undefined, STRONG_KEYS);
 
       if (nameKeyStrong) {
         result[key] = REDACTED_KEYWORD;
@@ -168,10 +175,13 @@ const deepRedactInternal = (input: any, shouldSkipRedaction: boolean, ctx?: { st
  * @param url - Optional URL to determine if redaction should apply (e.g. non-prod).
  * @returns Redacted copy of the input.
  */
-export const deepRedactSensitiveInfo = (input: any, url?: string): any => {
-  const nonProd = isNonProduction(url);
+export const deepRedactSensitiveInfo = <T>(input: T, tabUrl?: string): T => {
+  if (!input) return input;
+  const nonProd = isNonProduction(tabUrl);
   const cacheKey =
-    input && typeof input === 'object' && input.uuid ? `${input.uuid}::${nonProd ? 'nonprod' : 'prod'}` : undefined;
+    input && typeof input === 'object' && (input as Record<string, unknown>).uuid
+      ? `${(input as Record<string, unknown>).uuid}::${nonProd ? 'nonprod' : 'prod'}`
+      : undefined;
 
   let shouldSkipRedaction = false;
 
@@ -187,5 +197,5 @@ export const deepRedactSensitiveInfo = (input: any, url?: string): any => {
     shouldSkipRedaction = nonProd;
   }
 
-  return deepRedactInternal(input, shouldSkipRedaction);
+  return deepRedactInternal(input, shouldSkipRedaction) as T;
 };

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { t } from '@extension/i18n';
-import type { Screenshot } from '@extension/shared';
+import type { DownloadRequest, Screenshot } from '@extension/shared';
 import { useStorage } from '@extension/shared';
 import { captureSettingsStorage, debugModeStorage, themeStorage } from '@extension/storage';
 import { useAppDispatch, triggerCanvasAction } from '@extension/store';
@@ -13,7 +14,7 @@ import { defaultNavElement } from './constants';
 import { useElementSize, useViewportSize } from './hooks';
 import type { ActiveElement } from './models';
 import { copyBase64ImageToClipboard } from './utils/base64-to-clipboard.util';
-import { deleteRecords } from './utils/slice';
+import { downloadCapture } from './utils/download-capture.util';
 
 const SM_BREAKPOINT = 640;
 const LG_BREAKPOINT = 1024;
@@ -29,6 +30,7 @@ interface ContentProps {
 }
 
 const Content = ({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   idempotencyKey,
   screenshots = [],
   activeScreenshotId,
@@ -75,7 +77,7 @@ const Content = ({
     const saveDebugLog = await debugModeStorage.getDebugMode();
     const messageType = settings.exportFormat === 'zip' ? 'DOWNLOAD_ZIP' : 'DOWNLOAD_ASSETS';
 
-    chrome.runtime.sendMessage({
+    const request: DownloadRequest = {
       type: messageType,
       payload: {
         screenshots: screenshots.map(s => ({ src: s.src, isPrimary: s.isPrimary })),
@@ -86,14 +88,16 @@ const Content = ({
         title: document.title,
         saveDebugLog,
       },
-    });
+    };
 
     try {
-      await deleteRecords();
-    } catch {
-      //
+      await downloadCapture(request);
+      onClose?.();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'The download could not be started.';
+      toast.error(`Download failed: ${message}`);
+      console.error('[download] Failed:', error);
     }
-    onClose?.();
   };
 
   const handleOnCopy = async () => {

@@ -228,8 +228,8 @@ export const CaptureScreenshotGroup = () => {
                   className={cn(
                     'hover:bg-accent hover:text-accent-foreground flex flex-col items-center justify-between rounded-md border border-transparent py-3 hover:cursor-pointer hover:border-slate-200 dark:border-0',
                   )}>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   <Icon name={type.icon as any} className="mb-3 size-5" strokeWidth={type.slug === 'area' ? 2 : 1.5} />
-
                   <span className="text-nowrap text-[11px]">{type.name}</span>
                 </Label>
               </div>

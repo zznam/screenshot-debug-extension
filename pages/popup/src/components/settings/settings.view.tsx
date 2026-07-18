@@ -76,6 +76,7 @@ export const SettingsContent = ({ onBack }: { onBack: () => void }) => {
           <select
             className="border-input bg-background ml-4 w-full rounded-md border px-3 py-2 text-sm"
             value={theme}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onChange={e => themeStorage.set(e.target.value as any)}>
             <option value="light">Light</option>
             <option value="dark">Dark</option>

@@ -15,7 +15,7 @@ export const DebugToggle = () => {
         <Label htmlFor="debug-toggle" className="text-[12px] font-medium">
           Debug Records
         </Label>
-        <span className="text-muted-foreground text-[10px]">Save JSON log with network requests</span>
+        <span className="text-muted-foreground text-[10px]">Include JSON debug report when downloading</span>
       </div>
       <Switch id="debug-toggle" checked={isDebugEnabled ?? false} onCheckedChange={handleToggle} />
     </div>

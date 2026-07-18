@@ -17,6 +17,8 @@ export const MicPermission = () => {
       await recordingSettingsStorage.setMicPermission('granted');
       setState('granted');
       setTimeout(() => window.close(), 2000);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.name === 'NotAllowedError') {
         await recordingSettingsStorage.setMicPermission('denied');

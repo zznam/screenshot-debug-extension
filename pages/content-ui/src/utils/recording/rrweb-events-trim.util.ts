@@ -8,6 +8,7 @@ export const RRWEB_META_EVENT_TYPE = 4;
 export const RRWEB_FULL_SNAPSHOT_EVENT_TYPE = 2;
 
 export const safeIsRrwebEvent = (candidate: unknown): candidate is RrwebEvent => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const anyCandidate = candidate as any;
   return (
     !!anyCandidate &&

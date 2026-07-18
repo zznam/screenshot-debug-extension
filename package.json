@@ -34,6 +34,7 @@
     "e2e": "pnpm build:chrome:local && pnpm -F @extension/e2e e2e",
     "test:unit": "vitest run",
     "test:e2e": "pnpm e2e",
+    "ai:helper": "pnpm -F @extension/ai-helper dev",
     "lint": "turbo lint --continue",
     "lint:fix": "turbo lint:fix --continue",
     "format": "turbo format --continue -- --cache --cache-location node_modules/.cache/.prettiercache",

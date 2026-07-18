@@ -66,6 +66,8 @@ export const buildDescriptor = (el?: Element | null): ElementDescriptor | null =
     method: isForm ? ((el as HTMLFormElement).method || '').toUpperCase() || null : pickAttr(el, ['method']),
     target: pickAttr(el, ['target']),
     className,
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     contentEditable: (el as any)?.isContentEditable,
     disabled,
     size: Number.isFinite(sizeAttr as number) ? (sizeAttr as number) : null,

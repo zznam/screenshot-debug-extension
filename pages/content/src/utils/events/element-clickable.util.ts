@@ -16,6 +16,8 @@ export const isClickableElement = (element: HTMLElement | null): boolean => {
   if (!element) return false;
 
   const hasRole = element instanceof HTMLElement && element?.getAttribute('role');
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const hasOnClick = typeof (element as any).onclick === 'function';
 
   return (

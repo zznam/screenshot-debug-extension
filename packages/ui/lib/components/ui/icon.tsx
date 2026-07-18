@@ -18,7 +18,10 @@ export type IconProps = {
 } & lucide.LucideProps;
 
 export const Icon: FC<IconProps> = ({ name, ...rest }) => {
-  const Component = (lucide as any)[name] ?? (radix as any)[name] ?? (customIcons as any)[name];
+  const Component =
+    (lucide as unknown as Record<string, FC<lucide.LucideProps>>)[name as string] ??
+    (radix as unknown as Record<string, FC<SVGProps<SVGSVGElement>>>)[name as string] ??
+    (customIcons as unknown as Record<string, FC<SVGProps<SVGSVGElement>>>)[name as string];
 
   if (!Component) {
     console.error(`Icon "${name}" does not exist.`);

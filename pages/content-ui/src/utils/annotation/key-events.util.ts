@@ -13,6 +13,8 @@ const isDomEditor = (el: EventTarget | null): el is HTMLElement =>
 /**
  * Returns `true` when a Fabric text object is currently being edited.
  */
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isFabricEditing = (canvas: Canvas): boolean => !!(canvas.getActiveObject() as any)?.isEditing;
 
 export const handleCopy = (canvas: Canvas) => {
@@ -47,7 +49,9 @@ export const handlePaste = (canvas: Canvas, syncShapeInStorage: (shape: FabricOb
             enlivenedObj.set({
               left: enlivenedObj.left || 0 + 20,
               top: enlivenedObj.top || 0 + 20,
+
               objectId: uuidv4(),
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as CustomFabricObject<any>);
 
             canvas.add(enlivenedObj);
@@ -70,6 +74,7 @@ export const handleDelete = (canvas: Canvas, deleteShapeFromStorage: (id: string
   }
 
   if (activeObjects.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     activeObjects.forEach((obj: CustomFabricObject<any>) => {
       if (!obj.objectId) {
         return;

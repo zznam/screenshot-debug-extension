@@ -1,4 +1,5 @@
 import type { Worker } from '@playwright/test';
+import { unzipSync } from 'fflate';
 
 import { expect, test } from '../fixtures/extension.js';
 
@@ -6,6 +7,8 @@ const targetUrl = 'http://127.0.0.1:4174/';
 const captureStateKey = 'capture-state-storage-key';
 const captureTabKey = 'capture-tab-storage-key';
 const themeKey = 'theme-storage-key';
+const debugModeKey = 'debug-mode-storage-key';
+const captureSettingsKey = 'capture-settings-storage-key';
 
 const rgbChannels = (color: string) =>
   color
@@ -47,6 +50,43 @@ const setScreenshotSession = async (
     },
     { captureStateKey, captureTabKey, state, tabId },
   );
+
+const startViewportCapture = async (serviceWorker: Worker, url: string) =>
+  serviceWorker.evaluate(async target => {
+    const tabs = await chrome.tabs.query({});
+    const tab = tabs.find(candidate => candidate.url === target);
+    if (!tab?.id) throw new Error('Capture target tab was not found.');
+
+    return chrome.tabs.sendMessage(tab.id, {
+      action: 'START_SCREENSHOT',
+      payload: { type: 'viewport' },
+    });
+  }, url);
+
+const resetDownloadObserver = async (serviceWorker: Worker) =>
+  serviceWorker.evaluate(() => {
+    type TestGlobal = typeof globalThis & { __testDownloadOptions?: chrome.downloads.DownloadOptions[] };
+    const testGlobal = globalThis as TestGlobal;
+    testGlobal.__testDownloadOptions = [];
+    const downloads = chrome.downloads as unknown as {
+      download: (options: chrome.downloads.DownloadOptions) => Promise<number>;
+    };
+    downloads.download = async options => {
+      testGlobal.__testDownloadOptions!.push(options);
+      return 9_000 + testGlobal.__testDownloadOptions!.length;
+    };
+  });
+
+const getObservedDownloads = async (serviceWorker: Worker) =>
+  serviceWorker.evaluate(() => {
+    const testGlobal = globalThis as typeof globalThis & {
+      __testDownloadOptions?: chrome.downloads.DownloadOptions[];
+    };
+    return (testGlobal.__testDownloadOptions ?? []).map(options => ({
+      filename: options.filename,
+      url: options.url,
+    }));
+  });
 
 test('starts the service worker and injects the page runtime idempotently', async ({
   context,
@@ -90,6 +130,51 @@ test('renders the popup and a friendly restricted-page error', async ({ context,
   expect(extensionErrors.filter(error => !error.includes('Open a regular HTTP'))).toEqual([]);
 });
 
+test('opens a persistent AI Debug session with screenshot and diagnostics', async ({
+  context,
+  extensionErrors,
+  extensionId,
+  serviceWorker,
+}) => {
+  const aiTargetUrl = `${targetUrl}?ai-debug`;
+  const target = await context.newPage();
+  await target.goto(aiTargetUrl);
+  await expect(target.locator('#brie-root')).toHaveCount(1);
+  await target.evaluate(async () => {
+    console.error('deterministic-ai-debug-error');
+    await fetch('/api/fail');
+  });
+  await target.bringToFront();
+
+  await serviceWorker.evaluate(
+    async ({ tokenKey, token }) => {
+      await chrome.storage.local.set({ [tokenKey]: token });
+    },
+    { tokenKey: 'ai-debug-helper-pairing-token', token: 'e2e-pair-token' },
+  );
+
+  const tabId = await getTabId(serviceWorker, aiTargetUrl);
+  expect(tabId).toBeTruthy();
+  const popup = await context.newPage();
+  await popup.goto(`chrome-extension://${extensionId}/popup/index.html`);
+  await target.bringToFront();
+  const aiPagePromise = context.waitForEvent('page', page => page.url().includes('/ai-debug/index.html'));
+  await popup.getByRole('button', { name: 'AI Debug' }).evaluate(button => (button as HTMLElement).click());
+  const aiPage = await aiPagePromise;
+  await aiPage.waitForLoadState();
+
+  await expect(aiPage.getByRole('heading', { name: 'Screenshot & Debug Test Page' })).toBeVisible();
+  await aiPage.getByText(/Debug context · \d+ records/).click();
+  await expect(aiPage.getByAltText('Captured source page')).toBeVisible();
+  await expect(aiPage.getByText(/Mock diagnosis for Screenshot & Debug Test Page/)).toBeVisible();
+
+  await aiPage.reload();
+  await expect(aiPage.getByText(/Mock diagnosis for Screenshot & Debug Test Page/)).toBeVisible();
+  await expect(aiPage.getByText('Helper connected')).toBeVisible();
+  expect(aiPage.url()).toContain(`chrome-extension://${extensionId}/ai-debug/index.html?session=`);
+  expect(extensionErrors.filter(error => !error.includes('deterministic-ai-debug-error'))).toEqual([]);
+});
+
 test('captures the viewport and opens the screenshot editor', async ({ context, extensionErrors, serviceWorker }) => {
   const target = await context.newPage();
   await target.goto(targetUrl);
@@ -109,6 +194,119 @@ test('captures the viewport and opens the screenshot editor', async ({ context, 
 
   expect(response).toEqual({ ok: true });
   await expect(target.locator('#brie-canvas')).toBeVisible();
+  expect(extensionErrors).toEqual([]);
+});
+
+test('downloads debug JSON in individual and ZIP exports before clearing records', async ({
+  context,
+  extensionErrors,
+  serviceWorker,
+}) => {
+  const downloadTargetUrl = `${targetUrl}?debug-download`;
+  const target = await context.newPage();
+  await target.goto(downloadTargetUrl);
+  await expect(target.locator('#brie-root')).toHaveCount(1);
+
+  const tabId = await getTabId(serviceWorker, downloadTargetUrl);
+  expect(tabId).toBeTruthy();
+  await serviceWorker.evaluate(
+    async ({ debugKey, settingsKey }) => {
+      await chrome.downloads.erase({});
+      await chrome.storage.local.set({
+        [debugKey]: true,
+        [settingsKey]: {
+          exportFormat: 'individual',
+          screenshotFormat: 'png',
+          screenshotQuality: 100,
+          includePerformance: false,
+          retentionMinutes: 0,
+          autoScreenshotOnError: false,
+        },
+      });
+    },
+    { debugKey: debugModeKey, settingsKey: captureSettingsKey },
+  );
+  await resetDownloadObserver(serviceWorker);
+
+  await target.evaluate(() => fetch('/debug-data?individual').then(response => response.text()));
+  await expect
+    .poll(async () => {
+      return serviceWorker.evaluate(async id => {
+        const request = indexedDB.open('screenshot_debug_records_v1', 1);
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        const transaction = db.transaction('records', 'readonly');
+        const records = transaction.objectStore('records').index('tabId').getAll(id!);
+        return new Promise<number>((resolve, reject) => {
+          records.onsuccess = () => resolve(records.result.length);
+          records.onerror = () => reject(records.error);
+        });
+      }, tabId);
+    })
+    .toBeGreaterThan(0);
+  const exportedRecordIds = await serviceWorker.evaluate(async id => {
+    const request = indexedDB.open('screenshot_debug_records_v1', 1);
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = db.transaction('records', 'readonly');
+    const records = transaction.objectStore('records').index('tabId').getAll(id!);
+    return new Promise<string[]>((resolve, reject) => {
+      records.onsuccess = () => resolve(records.result.map(record => record.uuid));
+      records.onerror = () => reject(records.error);
+    });
+  }, tabId);
+
+  expect(await startViewportCapture(serviceWorker, downloadTargetUrl)).toEqual({ ok: true });
+  await target.getByRole('button', { name: 'Download' }).click();
+  await expect(target.getByTestId('screenshot-editor')).toHaveCount(0);
+
+  await expect.poll(async () => (await getObservedDownloads(serviceWorker)).length).toBe(2);
+  const individualDownloads = await getObservedDownloads(serviceWorker);
+  const jsonDownload = individualDownloads.find(download => download.filename?.endsWith('.json'));
+  expect(jsonDownload).toBeTruthy();
+  const report = JSON.parse(atob(jsonDownload!.url.split(',')[1]));
+  expect(report.network.requests.length + report.console.errors.length + report.events.length).toBeGreaterThan(0);
+
+  await expect
+    .poll(async () => {
+      return serviceWorker
+        .evaluate(async id => {
+          const request = indexedDB.open('screenshot_debug_records_v1', 1);
+          const db = await new Promise<IDBDatabase>((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          });
+          const transaction = db.transaction('records', 'readonly');
+          const records = transaction.objectStore('records').index('tabId').getAll(id!);
+          return new Promise<string[]>((resolve, reject) => {
+            records.onsuccess = () => resolve(records.result.map(record => record.uuid));
+            records.onerror = () => reject(records.error);
+          });
+        }, tabId)
+        .then(ids => ids.filter(id => exportedRecordIds.includes(id)).length);
+    })
+    .toBe(0);
+
+  await serviceWorker.evaluate(async settingsKey => {
+    const stored = await chrome.storage.local.get(settingsKey);
+    await chrome.storage.local.set({ [settingsKey]: { ...stored[settingsKey], exportFormat: 'zip' } });
+    await chrome.downloads.erase({});
+  }, captureSettingsKey);
+  await resetDownloadObserver(serviceWorker);
+  await target.evaluate(() => fetch('/debug-data?zip').then(response => response.text()));
+  expect(await startViewportCapture(serviceWorker, downloadTargetUrl)).toEqual({ ok: true });
+
+  await target.getByRole('button', { name: 'Download' }).click();
+  await expect.poll(async () => (await getObservedDownloads(serviceWorker)).length).toBe(1);
+  const [zipDownload] = await getObservedDownloads(serviceWorker);
+  const entries = unzipSync(Uint8Array.from(atob(zipDownload.url.split(',')[1]), value => value.charCodeAt(0)));
+  expect(Object.keys(entries).some(filename => filename.endsWith('.png'))).toBe(true);
+  expect(Object.keys(entries).some(filename => filename.endsWith('.json'))).toBe(true);
+  expect(entries['network.har']).toBeTruthy();
   expect(extensionErrors).toEqual([]);
 });
 

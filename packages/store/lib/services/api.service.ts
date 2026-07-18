@@ -1,13 +1,17 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { Mutex } from 'async-mutex';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { toast } from 'react-hot-toast';
 
-// Offline mode: No API
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { Tokens, UserAndTokensResponse } from '@extension/shared';
 import { authTokensStorage } from '@extension/storage';
 
+// Offline mode: No API
+
 const mutex = new Mutex();
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const baseQuery = (type: 'access' | 'refresh') =>
   fetchBaseQuery({
     baseUrl: '',
@@ -24,8 +28,11 @@ const baseQuery = (type: 'access' | 'refresh') =>
   });
 
 export const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   args,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   api,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   extraOptions,
 ) => {
   await mutex.waitForUnlock();

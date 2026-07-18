@@ -21,6 +21,7 @@ export const findClickableParent = (element: HTMLElement | null, maxDepth: numbe
       // Check for React synthetic props but still return the DOM node
       const reactProp = findReactProp(current, '__reactProps$');
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return reactProp ? (current as any)[reactProp] : current; // Return the first clickable ancestor found
     }
 

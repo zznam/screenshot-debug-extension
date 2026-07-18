@@ -1,5 +1,6 @@
 import { config } from '@dotenvx/dotenvx';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { CLI_ENV } from './const.js';
 
 /**

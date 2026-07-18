@@ -1,0 +1,31 @@
+{
+  "name": "@extension/ai-helper",
+  "version": "0.5.27",
+  "description": "localhost OpenAI bridge for AI Debug",
+  "type": "module",
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "pnpm lint --fix",
+    "test": "vitest run",
+    "clean:bundle": "rimraf dist",
+    "clean:node_modules": "pnpx rimraf node_modules",
+    "clean:turbo": "rimraf .turbo",
+    "clean": "pnpm clean:bundle && pnpm clean:turbo && pnpm clean:node_modules"
+  },
+  "dependencies": {
+    "openai": "6.17.0"
+  },
+  "devDependencies": {
+    "@extension/shared": "workspace:*",
+    "@extension/tsconfig": "workspace:*",
+    "tsx": "4.20.6"
+  },
+  "engines": {
+    "node": ">=22.22.1"
+  }
+}

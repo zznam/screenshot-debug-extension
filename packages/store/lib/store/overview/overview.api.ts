@@ -9,6 +9,7 @@ export const overviewAPI = createApi({
   baseQuery: baseQueryWithReauth,
 
   endpoints: build => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getOverview: build.query<any, Pagination>({
       query: ({ limit, take, start, end }) => ({
         url: '/overview',

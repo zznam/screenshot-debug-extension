@@ -51,6 +51,7 @@ export const CreateDropdown = ({ isLoading, onChange }: { isLoading: boolean; on
 
       <DropdownMenuContent align="end" sideOffset={8} className="w-[200px]">
         <DropdownMenuRadioGroup value={activeActionKey || defaultAction?.key} onValueChange={setActiveActionKey}>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {createActions?.map((action: any) => (
             <DropdownMenuRadioItem
               key={action.key}
@@ -64,9 +65,7 @@ export const CreateDropdown = ({ isLoading, onChange }: { isLoading: boolean; on
               <span>{action.name}</span>
             </DropdownMenuRadioItem>
           ))}
-
           <DropdownMenuSeparator />
-
           <DropdownMenuLabel className="text-muted-foreground text-center text-[10px] font-normal">
             {t('moreIntegrationSoon')}
           </DropdownMenuLabel>

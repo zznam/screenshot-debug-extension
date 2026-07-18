@@ -5,6 +5,8 @@ export interface DebugReport {
     version: string;
     generatedAt: string;
     url: string;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   };
   screenshots: Array<{
@@ -25,6 +27,7 @@ export interface DebugReport {
   performance: ExtRecord[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const buildDebugReport = (records: ExtRecord[], metaOverrides: Record<string, any> = {}): DebugReport => {
   const networkRequests = records.filter(r => r.recordType === 'network');
   const networkErrors = networkRequests.filter(r => (r.status && r.status >= 400) || r.type === 'error');

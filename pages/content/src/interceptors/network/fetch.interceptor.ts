@@ -58,6 +58,8 @@ const previewRequestBodyFromInit = (body?: BodyInit | null): { text?: string; by
       if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
         try {
           const obj = JSON.parse(trimmed);
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const redact = (o: any): any =>
             Array.isArray(o)
               ? o.map(redact)
@@ -104,7 +106,9 @@ const previewRequestBodyFromInit = (body?: BodyInit | null): { text?: string; by
       return { text: truncate(joined), bytes: joined.length };
     }
     if (body instanceof Blob) return { text: `[blob:${body.size}B]`, bytes: body.size };
+
     if (body instanceof ArrayBuffer) return { text: `[arraybuffer:${body.byteLength}B]`, bytes: body.byteLength };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((body as any).stream) return { text: '[stream]' };
   } catch {
     /* ignore */
@@ -118,7 +122,9 @@ const isBinaryContentType = (ct: string | null) => {
 };
 
 export const interceptFetch = (): void => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if ((window as any).__BRIE_FETCH_PATCHED__) return;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).__BRIE_FETCH_PATCHED__ = true;
 
   const originalFetch = window.fetch;
@@ -148,6 +154,7 @@ export const interceptFetch = (): void => {
 
     // Skip non-http(s) & self endpoints
     if (!/^https?:\/\//i.test(urlStr) || SELF_ENDPOINT_REGEX.test(urlStr)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return originalFetch.apply(this, args as any);
     }
 
@@ -165,6 +172,7 @@ export const interceptFetch = (): void => {
 
     let response: Response;
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       response = await originalFetch.apply(this, args as any);
     } catch (err) {
       // Network error (no Response)

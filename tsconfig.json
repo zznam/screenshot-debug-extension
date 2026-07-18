@@ -3,7 +3,6 @@
   "display": "ESLint",
   "extends": "./packages/tsconfig/base.json",
   "compilerOptions": {
-    "noImplicitAny": false,
     "noEmit": false,
     "target": "ESNext"
   },

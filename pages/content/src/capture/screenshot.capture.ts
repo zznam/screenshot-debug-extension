@@ -75,6 +75,8 @@ const cropSelectedArea = (
 };
 
 // Function to remove the "Preparing Screenshot..." label from the screenshot
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const cleanCanvas = (canvas: HTMLCanvasElement, element: HTMLElement) => {
   const rect = element.getBoundingClientRect();
   const ctx = canvas.getContext('2d');
@@ -263,6 +265,7 @@ const onKeyDown = (e: KeyboardEvent) => {
 };
 
 // Start the selection process for touch
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const onTouchStart = (e: TouchEvent) => {
   isSelecting = true;
   startX = e.touches[0].pageX;

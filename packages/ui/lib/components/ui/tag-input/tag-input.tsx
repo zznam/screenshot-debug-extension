@@ -13,7 +13,8 @@ import { Input } from '../input';
 
 type OmittedInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'value'>;
 
-const TagInput = forwardRef<HTMLInputElement, TagInputProps>((props, _) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const TagInput = forwardRef<HTMLInputElement, TagInputProps>((props, ref) => {
   const {
     id,
     placeholder,

@@ -16,7 +16,7 @@ export const slicesPublicAPI = createApi({
       transformResponse: (slice: Slice) => ({
         ...slice,
         labels: typeof slice.labels === 'string' ? JSON.parse(slice.labels) : slice.labels,
-        attachments: slice.attachments.map((a: any) => ({
+        attachments: slice.attachments.map((a: Slice['attachments'][0]) => ({
           ...a,
           preview: attachmentUrlPath(a),
         })),

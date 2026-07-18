@@ -30,17 +30,23 @@ export const mergeScreenshot = async ({
   canvas.setViewportTransform([scale, 0, 0, scale, 0, 0]);
   canvas.backgroundImage = bg;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const blurRects = objects.filter((o: any) => o.shapeType === 'blur');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const normals = objects.filter((o: any) => o.shapeType !== 'blur');
+
   const enlivened = await FabricUtil.enlivenObjects(normals);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   enlivened.forEach((obj: any) => canvas.add(obj));
 
   for (const snap of blurRects) {
     const [rect] = (await FabricUtil.enlivenObjects([snap])) as [Rect];
+
     rect.absolutePositioned = true;
 
     const patch = bg.cloneAsImage({});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     patch.filters = [new FabricFilters.Blur({ blur: (snap as any).blurRadius ?? 12 })];
     patch.applyFilters();
     patch.clipPath = rect;
@@ -50,6 +56,7 @@ export const mergeScreenshot = async ({
 
   canvas.requestRenderAll();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const blob: any = await canvas.toBlob();
 
   canvas.dispose();

@@ -4,7 +4,7 @@ import { stripUnCloneable } from './strip-uncloneable.util.js';
  * Attempts a structured clone of an object. Falls back to shallow sanitization
  * by removing common non-serializable fields (like DOM nodes).
  */
-export const safeStructuredClone = (input: any) => {
+export const safeStructuredClone = (input: unknown) => {
   try {
     if (typeof structuredClone === 'function') {
       return structuredClone(input);
@@ -12,6 +12,6 @@ export const safeStructuredClone = (input: any) => {
 
     return JSON.parse(JSON.stringify(input));
   } catch {
-    return stripUnCloneable(input);
+    return stripUnCloneable(input as Record<string, unknown>);
   }
 };

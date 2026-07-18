@@ -9,6 +9,7 @@ export const spacesAPI = createApi({
   tagTypes: ['SPACES'],
   baseQuery: baseQueryWithReauth,
   endpoints: build => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createSpaces: build.mutation<Space[], Partial<any>>({
       invalidatesTags: ['SPACES'],
       query: body => ({

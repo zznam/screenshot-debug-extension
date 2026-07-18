@@ -3,6 +3,8 @@ import type { ConsoleRecord, NetworkRecord, RecordLike } from '@extension/shared
 import type { TimelineEvent } from '@src/models';
 
 type Severity = TimelineEvent['severity'];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type TimelineType = TimelineEvent['type'];
 
 type MapOptions = {

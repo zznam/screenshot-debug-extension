@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Button, cn, Icon } from '@extension/ui';
 
 interface FooterProps {
@@ -9,7 +10,9 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ className, tool, zoom, file, onZoomChange }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const incZoom = () => onZoomChange?.((zoom ?? 100) + 10);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const decZoom = () => onZoomChange?.((zoom ?? 100) - 10);
 
   return (

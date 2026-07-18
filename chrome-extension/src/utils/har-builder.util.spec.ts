@@ -8,6 +8,8 @@ describe('buildHarLog', () => {
   it('should filter non-network records', () => {
     const records: ExtRecord[] = [
       { id: '1', recordType: 'network', type: 'xmlhttprequest', url: 'https://api.example.com/data', method: 'GET' },
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { id: '2', recordType: 'console', url: 'https://example.com' } as any,
     ];
 

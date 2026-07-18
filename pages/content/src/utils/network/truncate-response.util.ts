@@ -1,4 +1,6 @@
 // Utility to truncate large responses
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const truncateResponse = (responseBody: any) => {
   return typeof responseBody === 'string' && responseBody.length > 1000
     ? responseBody.slice(0, 1000) + '... (truncated)'

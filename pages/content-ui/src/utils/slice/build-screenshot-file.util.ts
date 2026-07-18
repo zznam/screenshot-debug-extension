@@ -13,6 +13,7 @@ import { base64ToFile } from '../base64-to-file.util';
  * @returns Promise<File | null> - File if built, otherwise null.
  */
 export const buildScreenshotFile = async (screenshot: Screenshot, idx: number): Promise<File | null> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const annotations = (await annotationsStorage.getAnnotations(screenshot.id!)) ?? { objects: [], meta: {} as any };
   const { objects, meta } = annotations;
 

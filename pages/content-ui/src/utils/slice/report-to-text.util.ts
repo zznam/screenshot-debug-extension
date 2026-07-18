@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const reportToText = (report: any): string => {
   const lines: string[] = [];
   //   lines.push(`${report.title} [${report.severity}]`);
@@ -6,6 +7,7 @@ export const reportToText = (report: any): string => {
 
   if (report.steps?.length) {
     lines.push('Steps to Reproduce:');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     lines.push(...report.steps.map((s: any) => `- ${s}`));
     lines.push('');
   }
@@ -13,16 +15,20 @@ export const reportToText = (report: any): string => {
   if (report.evidence) {
     if (report.evidence.errors?.length) {
       lines.push('Errors:');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       lines.push(...report.evidence.errors.map((s: any) => `- ${s}`));
       lines.push('');
     }
     if (report.evidence.network?.length) {
       lines.push('Network:');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       lines.push(...report.evidence.network.map((s: any) => `- ${s}`));
+
       lines.push('');
     }
     if (report.evidence.console?.length) {
       lines.push('Console:');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       lines.push(...report.evidence.console.map((s: any) => `- ${s}`));
       lines.push('');
     }

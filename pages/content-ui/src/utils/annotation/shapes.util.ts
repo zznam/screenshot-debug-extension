@@ -23,6 +23,8 @@ export const createRectangle = (pointer: PointerEvent, stroke: string) => {
     objectId: uuidv4(),
     shapeType: 'rectangle',
     ...DEFAULT_SHAPE_OPTIONS,
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as CustomFabricObject<Rect> | any);
 
   return rect;
@@ -35,7 +37,9 @@ export const createTriangle = (pointer: PointerEvent, stroke: string) => {
     top: pointer.y,
     objectId: uuidv4(),
     shapeType: 'triangle',
+
     ...DEFAULT_SHAPE_OPTIONS,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as CustomFabricObject<Triangle> | any);
 };
 
@@ -46,17 +50,21 @@ export const createCircle = (pointer: PointerEvent, stroke: string) => {
     top: pointer.y,
     radius: 100,
     objectId: uuidv4(),
+
     shapeType: 'circle',
     ...DEFAULT_SHAPE_OPTIONS,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
 };
 
 export const createLine = (pointer: PointerEvent, stroke: string) => {
   return new Line([pointer.x, pointer.y, pointer.x + 100, pointer.y + 100], {
     stroke,
+
     objectId: uuidv4(),
     shapeType: 'line',
     ...DEFAULT_SHAPE_OPTIONS,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as CustomFabricObject<Line> | any);
 };
 
@@ -89,10 +97,12 @@ export const createArrow = (pointer: PointerEvent, stroke: string) => {
     originX: 'center',
     originY: 'center',
     width: 100 + triangle.width,
+
     height: Math.max(line.strokeWidth, triangle.height),
     shapeType: 'arrow',
     padding: 10,
     selectable: true,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as CustomFabricObject<Line> | any);
 
   arrowGroup.setCoords();
@@ -153,6 +163,7 @@ export const createBlur = (canvas: Canvas | undefined, pointer: PointerEvent): R
   return win;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createSuggestingBox = ({ boxLeft, boxWidth, boxTop, boxHeight, className, score }: any) => {
   const leftLine = new Line([boxLeft, boxTop, boxLeft, boxTop + boxHeight], {
     stroke: 'yellow',
@@ -202,6 +213,7 @@ export const createSuggestingBox = ({ boxLeft, boxWidth, boxTop, boxHeight, clas
     padding: 10,
     shapeType: 'suggestion',
     objectId: uuidv4(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
 };
 
@@ -249,6 +261,7 @@ export const createSpecificShape = (shapeType: string, pointer: PointerEvent, co
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const handleImageUpload = ({ file, canvas, shapeRef, syncShapeInStorage }: any) => {
   const reader = new FileReader();
 

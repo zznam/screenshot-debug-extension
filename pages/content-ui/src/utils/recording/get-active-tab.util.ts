@@ -13,6 +13,8 @@ export const requestActiveTab = async (): Promise<Tabs.Tab> => {
     const response: { tab: Tabs.Tab } = await runtime.sendMessage({ type: TAB.GET_ACTIVE });
 
     return response?.tab ?? {};
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     console.error('[getActiveTab] Failed:', err?.message || err);
     throw err;

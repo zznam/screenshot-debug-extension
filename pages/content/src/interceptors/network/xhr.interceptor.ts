@@ -23,6 +23,8 @@ export const interceptXHR = (): void => {
     this: ExtendedXMLHttpRequest,
     method: string,
     url: string | URL,
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...rest: any[]
   ): void {
     this._requestDetails = {
@@ -31,6 +33,7 @@ export const interceptXHR = (): void => {
       requestStart: new Date().toISOString(),
       requestBody: null,
     };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (originalOpen as any).apply(this, [method, url, ...rest]);
   };
 
@@ -45,6 +48,7 @@ export const interceptXHR = (): void => {
 
     const originalOnReadyStateChange = this.onreadystatechange;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.onreadystatechange = function (this: ExtendedXMLHttpRequest, ...args: any[]): void {
       if (this.readyState === 4 && this._requestDetails) {
         // Request completed
@@ -131,6 +135,7 @@ export const interceptXHR = (): void => {
 
       // Call the original onreadystatechange handler if defined
       if (originalOnReadyStateChange) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (originalOnReadyStateChange as any).apply(this, args);
       }
     };

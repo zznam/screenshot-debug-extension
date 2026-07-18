@@ -32,6 +32,7 @@ const isRestrictedScheme = (url: string): boolean =>
   url.startsWith('chrome-extension://');
 
 const getEventType = (eventPayload: unknown): number | null => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const typeValue = (eventPayload as any)?.type;
   return typeof typeValue === 'number' ? typeValue : null;
 };

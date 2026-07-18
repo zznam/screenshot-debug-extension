@@ -15,6 +15,7 @@ const estimateJsonSizeBytes = (data: unknown): number => {
 };
 
 export const getNormalizedRecords = async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const records: any = await getRecords().catch(() => []);
 
   return Array.isArray(records) ? records.flat() : [];
@@ -31,8 +32,12 @@ export const getNormalizedRecords = async () => {
  * @param trim - Whether to trim network records by time windows.
  *
  * @returns JSON File containing [] or filtered records.
+ // eslint-disable-next-line @typescript-eslint/no-unused-vars
  */
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const buildRecordsFile = async (trim: boolean = false): Promise<File> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const normalizedRecords: any[] = await getNormalizedRecords();
   const baseName = fileNameOr('records.json', 0);
 
