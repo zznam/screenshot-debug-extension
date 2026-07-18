@@ -5,7 +5,7 @@
   },
   "extensionName": {
     "description": "Extension name",
-    "message": "Brie - Bug Capture"
+    "message": "Screenshot & Debug"
   },
   "loading": {
     "message": "Naglo-load..."
@@ -71,7 +71,7 @@
     "message": "Lumabas sa Capture Screenshot"
   },
   "additionalInformation": {
-    "message": "Isasama ng Brie ang fullscreen screenshot, kasama ang mga detalye ng browser at OS, network requests, at console logs para matulungan ang mga developer na mag-debug nang epektibo."
+    "message": "Isasama ng Screenshot & Debug ang fullscreen screenshot, kasama ang mga detalye ng browser at OS, network requests, at console logs para matulungan ang mga developer na mag-debug nang epektibo."
   },
   "captureAndShare": {
     "message": "Capture at I-share"
@@ -203,7 +203,7 @@
     "message": "Created in $1"
   },
   "trackerSendFailedFallback": {
-    "message": "Slice saved. Couldn't send to $1 — opening Brie."
+    "message": "Slice saved. Couldn't send to $1 — opening Screenshot & Debug."
   },
   "rename": {
     "message": "Palitan ang pangalan"
@@ -440,7 +440,7 @@
     "message": "Tingnan ang source code sa GitHub"
   },
   "visitHomepage": {
-    "message": "Bisitahin ang homepage ng Brie"
+    "message": "Bisitahin ang homepage ng Screenshot & Debug"
   },
   "reportBugsHeading": {
     "message": "Mag-report ng mga bug sa ilang segundo"

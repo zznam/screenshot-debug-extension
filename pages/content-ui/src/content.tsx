@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { t } from '@extension/i18n';
 import type { Screenshot } from '@extension/shared';
 import { useStorage } from '@extension/shared';
-import { captureSettingsStorage, themeStorage } from '@extension/storage';
+import { captureSettingsStorage, debugModeStorage, themeStorage } from '@extension/storage';
 import { useAppDispatch, triggerCanvasAction } from '@extension/store';
-import { Dialog, DialogContent, cn, toast } from '@extension/ui';
+import { Dialog, DialogContent, DialogTitle, cn, toast } from '@extension/ui';
 
 import { CanvasContainerView } from './components/annotation-view';
 import { Footer, Header, LeftSidebar } from './components/annotation-view/ui';
@@ -72,6 +72,7 @@ const Content = ({
     const screenshotName = `${location.host}-${timestamp}`.replaceAll('.', '-');
 
     const settings = await captureSettingsStorage.get();
+    const saveDebugLog = await debugModeStorage.getDebugMode();
     const messageType = settings.exportFormat === 'zip' ? 'DOWNLOAD_ZIP' : 'DOWNLOAD_ASSETS';
 
     chrome.runtime.sendMessage({
@@ -83,7 +84,7 @@ const Content = ({
         host: location.host,
         url: location.href,
         title: document.title,
-        saveDebugLog: true,
+        saveDebugLog,
       },
     });
 
@@ -114,11 +115,12 @@ const Content = ({
   return (
     <Dialog open={isDialogOpen} onOpenChange={onClose} modal>
       <DialogContent
+        data-testid="screenshot-editor"
         aria-describedby="Annotation View"
         onEscapeKeyDown={e => e.preventDefault()}
         onPointerDownOutside={e => e.preventDefault()}
         className={cn(
-          'grid max-w-none grid-rows-[auto_minmax(0,1fr)_auto] !gap-0 border-none bg-[#FAF9F7] bg-repeat p-0',
+          'bg-background text-foreground grid max-w-none grid-rows-[auto_minmax(0,1fr)_auto] !gap-0 border-none bg-repeat p-0',
           {
             'size-full !rounded-none': isFullScreen,
             'h-[80vh] w-[90vw] overflow-hidden !rounded-[18px]': !isFullScreen,
@@ -128,6 +130,7 @@ const Content = ({
           backgroundImage: `url(${bg})`,
           backgroundSize: 10,
         }}>
+        <DialogTitle className="sr-only">{title}</DialogTitle>
         <Header
           id={activeScreenshotId || ''}
           onClose={onClose}

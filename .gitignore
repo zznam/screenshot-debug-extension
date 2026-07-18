@@ -3,6 +3,8 @@
 
 # testing
 **/coverage
+**/playwright-report
+**/test-results
 
 # build
 **/dist

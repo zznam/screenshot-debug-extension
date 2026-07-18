@@ -14,6 +14,7 @@ export type BgResponse =
   | { status: 'success' }
   | { status: 'error'; message: string }
   | { records: unknown[] }
+  | { tab: unknown }
   | { success: boolean; dataUrl?: string; message?: string }
   | { ok: boolean; error?: string }
   | { isAvailable: boolean };

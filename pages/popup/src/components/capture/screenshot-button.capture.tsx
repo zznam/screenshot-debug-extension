@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { t } from '@extension/i18n';
 import { useStorage } from '@extension/shared';
-import { captureStateStorage, captureTabStorage, pendingReloadTabsStorage } from '@extension/storage';
+import { captureStateStorage, captureTabStorage } from '@extension/storage';
 import {
   Alert,
   AlertDescription,
@@ -14,6 +14,13 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from '@extension/ui';
+
+import {
+  beginScreenshotCapture,
+  exitScreenshotCapture,
+  reconcileScreenshotCaptureOwner,
+  sendMessageToTab,
+} from '@src/utils';
 
 const captureTypes = [
   {
@@ -31,12 +38,12 @@ const captureTypes = [
 
 export const CaptureScreenshotGroup = () => {
   const captureModeAndState = useStorage(captureStateStorage);
-  const captureState = captureModeAndState?.state ?? 'idle';
+  const captureState = captureModeAndState?.mode === 'screenshot' ? captureModeAndState.state : 'idle';
   const captureTabId = useStorage(captureTabStorage);
-  const pendingReloadTabIds = useStorage(pendingReloadTabsStorage);
 
   const [activeTab, setActiveTab] = useState({ id: null as number | null, url: '' });
   const [currentActiveTab, setCurrentActiveTab] = useState<number>();
+  const [captureError, setCaptureError] = useState<string | null>(null);
 
   const isCaptureActive = useMemo(() => ['capturing', 'unsaved'].includes(captureState), [captureState]);
 
@@ -50,12 +57,23 @@ export const CaptureScreenshotGroup = () => {
         setActiveTab(prev => ({ ...prev, url: tabs[0].url! }));
         setCurrentActiveTab(tabs[0].id);
       }
+
+      if (captureState === 'capturing') {
+        try {
+          await reconcileScreenshotCaptureOwner(captureTabId);
+        } catch (error) {
+          setCaptureError(error instanceof Error ? error.message : String(error));
+        }
+      }
     };
 
     const handleEscapeKey = async (event: KeyboardEvent) => {
       if (event.key === 'Escape' && captureState === 'capturing') {
-        await updateCaptureState('idle');
-        await updateActiveTab(null);
+        try {
+          await exitScreenshotCapture(captureTabId);
+        } catch (error) {
+          setCaptureError(error instanceof Error ? error.message : String(error));
+        }
       }
     };
 
@@ -65,89 +83,74 @@ export const CaptureScreenshotGroup = () => {
     return () => window.removeEventListener('keydown', handleEscapeKey);
   }, [captureState, captureTabId]);
 
-  const updateCaptureState = useCallback(async (state: any) => {
-    await captureStateStorage.setCaptureState(state);
-  }, []);
-
-  const updateActiveTab = useCallback(async (tabId: number | null) => {
-    await captureTabStorage.setCaptureTabId(tabId);
-    setActiveTab(prev => ({ ...prev, id: tabId }));
-  }, []);
-
   const handleCaptureScreenshot = async (type?: 'full-page' | 'viewport' | 'area') => {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
 
     if (tabs[0]?.id && type) {
-      await updateCaptureState('capturing');
-      await updateActiveTab(tabs[0].id);
+      setCaptureError(null);
+      await beginScreenshotCapture(tabs[0].id);
+      setActiveTab(prev => ({ ...prev, id: tabs[0].id! }));
 
-      chrome.tabs.sendMessage(
-        tabs[0].id,
-        {
+      try {
+        const response = await sendMessageToTab<{ ok?: boolean; error?: string }>(tabs[0].id, {
           action: 'START_SCREENSHOT',
           payload: { type },
-        },
-        response => {
-          if (chrome.runtime.lastError) {
-            console.error('Error starting capture:', type, chrome.runtime.lastError.message);
-          } else {
-            console.log('Capture started:', type, response);
-          }
-        },
-      );
-    }
+        });
 
-    window.close();
+        if (!response?.ok) throw new Error(response?.error ?? 'Unable to start screenshot capture.');
+        window.close();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error('Error starting capture:', type, error);
+        setCaptureError(message);
+        try {
+          await exitScreenshotCapture(tabs[0].id);
+        } catch (cleanupError) {
+          setCaptureError(cleanupError instanceof Error ? cleanupError.message : String(cleanupError));
+        }
+        setActiveTab(prev => ({ ...prev, id: null }));
+      }
+    }
+  };
+
+  const exitMissingOwner = async (ownerTabId: number | null) => {
+    try {
+      await exitScreenshotCapture(ownerTabId);
+      setCaptureError('The original capture tab is no longer open. Screenshot capture was exited.');
+    } catch (error) {
+      setCaptureError(error instanceof Error ? error.message : String(error));
+    }
   };
 
   const handleGoToActiveTab = async () => {
-    if (activeTab.id) {
-      await chrome.tabs.update(activeTab.id, { active: true });
-      window.close();
+    if (!activeTab.id) {
+      await exitMissingOwner(null);
+      return;
     }
+
+    try {
+      await chrome.tabs.get(activeTab.id);
+    } catch {
+      await exitMissingOwner(activeTab.id);
+      return;
+    }
+
+    await chrome.tabs.update(activeTab.id, { active: true });
+    window.close();
   };
 
-  const handleOnRefreshPendingTab = async () => {
-    if (currentActiveTab) {
-      await chrome.tabs.reload(currentActiveTab);
-      await pendingReloadTabsStorage.remove(currentActiveTab);
+  const handleOnDiscard = async () => {
+    setCaptureError(null);
+
+    try {
+      await exitScreenshotCapture(activeTab.id);
+    } catch (error) {
+      setCaptureError(error instanceof Error ? error.message : String(error));
     }
-  };
-
-  const handleOnDiscard = async (activeTabId: number) => {
-    await updateCaptureState('idle');
-    await updateActiveTab(null);
-
-    chrome.tabs.sendMessage(activeTabId, { action: 'CLOSE_MODAL' }, response => {
-      if (chrome.runtime.lastError) {
-        console.error('Error stopping unsaved:', chrome.runtime.lastError.message);
-      } else {
-        console.log('Unsaved closed:', response);
-      }
-    });
   };
 
   const isInternalPage = activeTab.url.startsWith('about:') || activeTab.url.startsWith('chrome:');
   const showExitCapture = isCaptureActive && currentActiveTab !== activeTab.id;
-
-  if (currentActiveTab && pendingReloadTabIds?.includes(currentActiveTab)) {
-    return (
-      <>
-        <Alert className="text-center">
-          <AlertDescription className="text-[12px]">
-            {t('quickRefresh')} <br />
-            {t('readyToGo')}
-          </AlertDescription>
-        </Alert>
-
-        <div className="mt-4 flex gap-x-2">
-          <Button type="button" size="sm" className="w-full" onClick={handleOnRefreshPendingTab}>
-            {t('refreshPage')}
-          </Button>
-        </div>
-      </>
-    );
-  }
 
   if (isInternalPage && captureState !== 'unsaved' && currentActiveTab !== activeTab.id) {
     return (
@@ -168,12 +171,7 @@ export const CaptureScreenshotGroup = () => {
         </Alert>
 
         <div className="mt-4 flex gap-x-2">
-          <Button
-            variant="secondary"
-            type="button"
-            size="sm"
-            className="w-full"
-            onClick={() => activeTab?.id && handleOnDiscard(activeTab.id)}>
+          <Button variant="secondary" type="button" size="sm" className="w-full" onClick={handleOnDiscard}>
             {t('discard')}
           </Button>
           <Button type="button" size="sm" className="w-full" onClick={handleGoToActiveTab}>
@@ -189,7 +187,7 @@ export const CaptureScreenshotGroup = () => {
       <div className="border-muted grid w-full gap-4 rounded-xl border bg-slate-100/20 p-2">
         <button
           className="hover:bg-accent flex w-full items-center justify-center rounded-md border border-transparent py-4"
-          onClick={() => activeTab?.id && handleOnDiscard(activeTab.id)}>
+          onClick={handleOnDiscard}>
           <Icon name="X" size={20} strokeWidth={1.5} className="mr-1" />
           <span>{t('exitCaptureScreenshot')}</span>
         </button>
@@ -199,6 +197,11 @@ export const CaptureScreenshotGroup = () => {
 
   return (
     <>
+      {captureError && (
+        <Alert variant="destructive" className="mb-3">
+          <AlertDescription className="text-[12px]">{captureError}</AlertDescription>
+        </Alert>
+      )}
       <RadioGroup
         className={cn('border-muted grid w-full gap-4 rounded-xl border bg-slate-100/20 p-2', {
           'grid-cols-3': !showExitCapture,
@@ -206,7 +209,7 @@ export const CaptureScreenshotGroup = () => {
         {showExitCapture ? (
           <button
             className="hover:bg-accent flex w-full items-center justify-center rounded-md border border-transparent py-4"
-            onClick={() => activeTab?.id && handleOnDiscard(activeTab.id)}>
+            onClick={handleOnDiscard}>
             <Icon name="X" size={20} strokeWidth={1.5} className="mr-1" />
             <span>{t('exitCaptureScreenshot')}</span>
           </button>

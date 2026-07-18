@@ -13,12 +13,14 @@ export const Footer: React.FC<FooterProps> = ({ className, tool, zoom, file, onZ
   const decZoom = () => onZoomChange?.((zoom ?? 100) - 10);
 
   return (
-    <footer className={cn('rounded-b-[18px] border-t border-[#EDECE8] bg-white text-xs', className)}>
+    <footer
+      data-testid="editor-footer"
+      className={cn('border-border bg-card text-card-foreground rounded-b-[18px] border-t text-xs', className)}>
       <div className="flex items-center gap-x-4 px-6 py-1.5">
         {tool && (
           <div className="flex items-center gap-x-1">
             <span className="text-muted-foreground">Tool:</span>
-            <span className="text-primary">{tool}</span>
+            <span className="text-foreground">{tool}</span>
           </div>
         )}
 
@@ -34,7 +36,7 @@ export const Footer: React.FC<FooterProps> = ({ className, tool, zoom, file, onZ
               <Icon name="ChevronDownIcon" size={10} />
             </Button> */}
 
-            <span className="text-primary">{zoom}%</span>
+            <span className="text-foreground">{zoom}%</span>
 
             {/* <Button
               size="icon"
@@ -50,7 +52,7 @@ export const Footer: React.FC<FooterProps> = ({ className, tool, zoom, file, onZ
         {file && (
           <div className="flex items-center gap-x-1">
             <span className="text-muted-foreground">File:</span>
-            <span className="text-primary max-w-[10rem] truncate">{file}</span>
+            <span className="text-foreground max-w-[10rem] truncate">{file}</span>
           </div>
         )}
       </div>

@@ -1,9 +1,12 @@
 import { useState } from 'react';
 
+import { t } from '@extension/i18n';
 import { useStorage } from '@extension/shared';
 import { captureStateStorage } from '@extension/storage';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@extension/ui';
 
 import { CaptureScreenshotGroup, DebugToggle } from './components/capture';
+import { RecordingControls } from './components/recording';
 import { SettingsButton, SettingsContent } from './components/settings';
 import { SlicesHistoryButton, SlicesHistoryContent } from './components/slices-history';
 import { Header, BetaNotifier } from './components/ui';
@@ -29,8 +32,19 @@ export const PopupContent = () => {
   return (
     <>
       <Header />
-      <CaptureScreenshotGroup />
-      {captureState === 'idle' && <DebugToggle />}
+      <Tabs defaultValue={captureModeAndState?.mode === 'video' ? 'record' : 'screenshot'}>
+        <TabsList className="mb-2 grid w-full grid-cols-2">
+          <TabsTrigger value="screenshot">{t('screenshots')}</TabsTrigger>
+          <TabsTrigger value="record">{t('recordTab')}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="screenshot">
+          <CaptureScreenshotGroup />
+          {captureState === 'idle' && <DebugToggle />}
+        </TabsContent>
+        <TabsContent value="record">
+          <RecordingControls />
+        </TabsContent>
+      </Tabs>
       {captureState === 'idle' && <SlicesHistoryButton onClick={() => setShowSlicesHistory(true)} />}
       {captureState === 'idle' && <SettingsButton onClick={() => setShowSettings(true)} />}
       <BetaNotifier />

@@ -6,6 +6,7 @@ import type { BaseStorage } from '../../base/types.js';
 export interface RewindSettings {
   rewind: {
     enabled: boolean;
+    consentVersion: number;
     /**
      * User-level per-host overrides.
      * If a host is here, rewind capture should be disabled even if globally enabled.
@@ -17,9 +18,30 @@ export interface RewindSettings {
 
 const defaultRewindSettings: RewindSettings = {
   rewind: {
-    enabled: true, // default ON (risky, but you chose it)
+    enabled: false,
+    consentVersion: 1,
     disabledHosts: [],
   },
+};
+
+type LegacyRewindSettings = {
+  rewind?: {
+    enabled?: boolean;
+    consentVersion?: number;
+    disabledHosts?: string[];
+  };
+};
+
+export const migrateRewindSettings = (settings?: LegacyRewindSettings): RewindSettings => {
+  const hasCurrentConsent = settings?.rewind?.consentVersion === defaultRewindSettings.rewind.consentVersion;
+
+  return {
+    rewind: {
+      enabled: hasCurrentConsent ? Boolean(settings?.rewind?.enabled) : false,
+      consentVersion: defaultRewindSettings.rewind.consentVersion,
+      disabledHosts: Array.isArray(settings?.rewind?.disabledHosts) ? settings.rewind.disabledHosts : [],
+    },
+  };
 };
 
 const baseStorage = createStorage<RewindSettings>('rewind-settings', defaultRewindSettings, {
@@ -39,10 +61,24 @@ export type RewindSettingsStorage = BaseStorage<RewindSettings> & {
 
 const normalizeHost = (host: string): string => host.trim().toLowerCase();
 
+const getMigratedSettings = async (): Promise<RewindSettings> => {
+  const settings = (await baseStorage.get()) ?? defaultRewindSettings;
+
+  // Existing builds enabled rewind without explicit consent. Migrate those
+  // values once and require the user to opt in from the popup.
+  if (settings.rewind?.consentVersion !== defaultRewindSettings.rewind.consentVersion) {
+    const migrated = migrateRewindSettings(settings);
+    await baseStorage.set(migrated);
+    return migrated;
+  }
+
+  return settings;
+};
+
 export const rewindSettingsStorage: RewindSettingsStorage = {
   ...baseStorage,
-
-  getSettings: async () => (await baseStorage.get()) ?? defaultRewindSettings,
+  get: getMigratedSettings,
+  getSettings: getMigratedSettings,
 
   isRewindEnabled: async () => {
     const settings = await rewindSettingsStorage.getSettings();
@@ -108,3 +144,5 @@ export const rewindSettingsStorage: RewindSettingsStorage = {
     return disabledHosts.includes(normalizedHost);
   },
 };
+
+void getMigratedSettings();

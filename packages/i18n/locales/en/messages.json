@@ -5,7 +5,7 @@
   },
   "extensionName": {
     "description": "Extension name",
-    "message": "Brie - Bug Capture"
+    "message": "Screenshot & Debug"
   },
   "loading": {
     "message": "Is loading..."
@@ -71,7 +71,7 @@
     "message": "Exit Capture Screenshot"
   },
   "additionalInformation": {
-    "message": "Brie will include a fullscreen screenshot, along with browser and OS details, network requests, and console logs to assist developers in debugging effectively."
+    "message": "Screenshot & Debug will include a fullscreen screenshot, along with browser and OS details, network requests, and console logs to assist developers in debugging effectively."
   },
   "captureAndShare": {
     "message": "Capture & Share"
@@ -203,7 +203,7 @@
     "message": "Created in $1"
   },
   "trackerSendFailedFallback": {
-    "message": "Slice saved. Couldn't send to $1 — opening Brie."
+    "message": "Slice saved. Couldn't send to $1 — opening Screenshot & Debug."
   },
   "rename": {
     "message": "Rename"
@@ -440,7 +440,7 @@
     "message": "View the source code on GitHub"
   },
   "visitHomepage": {
-    "message": "Visit the Brie homepage"
+    "message": "Visit the Screenshot & Debug homepage"
   },
   "reportBugsHeading": {
     "message": "Report bugs in seconds"

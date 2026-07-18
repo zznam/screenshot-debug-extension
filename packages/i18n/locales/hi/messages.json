@@ -5,7 +5,7 @@
   },
   "extensionName": {
     "description": "Extension name",
-    "message": "Brie - बग कैप्चर"
+    "message": "Screenshot & Debug"
   },
   "loading": {
     "message": "लोड हो रहा है..."
@@ -71,7 +71,7 @@
     "message": "स्क्रीनशॉट कैप्चर से बाहर निकलें"
   },
   "additionalInformation": {
-    "message": "Brie डेवलपर्स को प्रभावी डीबगिंग में सहायता के लिए पूर्ण स्क्रीन स्क्रीनशॉट, ब्राउज़र और OS विवरण, नेटवर्क अनुरोध, और कंसोल लॉग शामिल करेगा।"
+    "message": "Screenshot & Debug डेवलपर्स को प्रभावी डीबगिंग में सहायता के लिए पूर्ण स्क्रीन स्क्रीनशॉट, ब्राउज़र और OS विवरण, नेटवर्क अनुरोध, और कंसोल लॉग शामिल करेगा।"
   },
   "captureAndShare": {
     "message": "कैप्चर करें और शेयर करें"
@@ -203,7 +203,7 @@
     "message": "Created in $1"
   },
   "trackerSendFailedFallback": {
-    "message": "Slice saved. Couldn't send to $1 — opening Brie."
+    "message": "Slice saved. Couldn't send to $1 — opening Screenshot & Debug."
   },
   "rename": {
     "message": "नाम बदलें"
@@ -440,7 +440,7 @@
     "message": "GitHub पर सोर्स कोड देखें"
   },
   "visitHomepage": {
-    "message": "Brie होमपेज पर जाएं"
+    "message": "Screenshot & Debug होमपेज पर जाएं"
   },
   "reportBugsHeading": {
     "message": "सेकंडों में बग रिपोर्ट करें"

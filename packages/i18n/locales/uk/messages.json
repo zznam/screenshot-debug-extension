@@ -5,7 +5,7 @@
   },
   "extensionName": {
     "description": "Назва розширення",
-    "message": "Brie - Виявлення помилок"
+    "message": "Screenshot & Debug"
   },
   "loading": {
     "message": "Завантаження..."
@@ -71,7 +71,7 @@
     "message": "Вийти з режиму знімка"
   },
   "additionalInformation": {
-    "message": "Brie додасть скріншот на весь екран, а також інформацію про браузер, ОС, мережеві запити й журнали консолі, щоб допомогти розробникам із налагодженням."
+    "message": "Screenshot & Debug додасть скріншот на весь екран, а також інформацію про браузер, ОС, мережеві запити й журнали консолі, щоб допомогти розробникам із налагодженням."
   },
   "captureAndShare": {
     "message": "Зняти і поділитися"
@@ -203,7 +203,7 @@
     "message": "Created in $1"
   },
   "trackerSendFailedFallback": {
-    "message": "Slice saved. Couldn't send to $1 — opening Brie."
+    "message": "Slice saved. Couldn't send to $1 — opening Screenshot & Debug."
   },
   "rename": {
     "message": "Перейменувати"
@@ -440,7 +440,7 @@
     "message": "Переглянути вихідний код на GitHub"
   },
   "visitHomepage": {
-    "message": "Відвідати домашню сторінку Brie"
+    "message": "Відвідати домашню сторінку Screenshot & Debug"
   },
   "reportBugsHeading": {
     "message": "Повідомляйте про помилки за секунди"

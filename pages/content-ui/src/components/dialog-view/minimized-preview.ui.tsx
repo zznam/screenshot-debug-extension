@@ -42,7 +42,7 @@ export const MinimizedPreview: FC<MinimizedPreviewProps> = ({ screenshots, unsav
       id="brie-minimized-preview"
       className={cn(
         'group fixed bottom-4 right-4 z-[2000000] h-[180px] w-[230px]',
-        'overflow-hidden rounded-lg border border-[#EDECE8] shadow-2xl hover:bg-black',
+        'border-border overflow-hidden rounded-lg border shadow-2xl hover:bg-black',
         'transition-transform duration-200 focus-within:scale-105 hover:scale-105 focus:scale-105 focus-visible:scale-105',
         'focus-visible:ring-primary focus-visible:outline-none focus-visible:ring-2',
       )}>
@@ -71,7 +71,7 @@ export const MinimizedPreview: FC<MinimizedPreviewProps> = ({ screenshots, unsav
             variant="secondary"
             aria-label={t('edit')}
             onClick={onEdit}
-            className="dark:bg-primary w-[90px] space-x-2 bg-white/30 text-white backdrop-blur-sm hover:bg-white/10">
+            className="w-[90px] space-x-2 bg-white/30 text-white backdrop-blur-sm hover:bg-white/10">
             <Icon name="FilePenLineIcon" size={14} /> <span>{t('edit')}</span>
           </Button>
 
@@ -81,7 +81,7 @@ export const MinimizedPreview: FC<MinimizedPreviewProps> = ({ screenshots, unsav
             variant="destructive"
             aria-label={t('discard')}
             onClick={onDiscard}
-            className="dark:bg-primary w-[90px] space-x-2 bg-white/30 text-white backdrop-blur-sm hover:bg-white/10">
+            className="w-[90px] space-x-2 bg-white/30 text-white backdrop-blur-sm hover:bg-white/10">
             <Icon name="Trash2Icon" size={14} /> <span>{t('discard')}</span>
           </Button>
         </div>
@@ -93,7 +93,7 @@ export const MinimizedPreview: FC<MinimizedPreviewProps> = ({ screenshots, unsav
             variant="secondary"
             aria-label={t('save')}
             onClick={handleOnSave}
-            className="dark:bg-primary w-[90px] space-x-2 bg-white/30 text-white backdrop-blur-sm hover:bg-white/10">
+            className="w-[90px] space-x-2 bg-white/30 text-white backdrop-blur-sm hover:bg-white/10">
             <Icon name="DownloadIcon" size={14} /> <span>{t('save')}</span>
           </Button>
 
@@ -103,7 +103,7 @@ export const MinimizedPreview: FC<MinimizedPreviewProps> = ({ screenshots, unsav
             variant="secondary"
             aria-label={t('copy')}
             onClick={handleOnCopy}
-            className="dark:bg-primary w-[90px] space-x-2 bg-white/30 text-white backdrop-blur-sm hover:bg-white/10">
+            className="w-[90px] space-x-2 bg-white/30 text-white backdrop-blur-sm hover:bg-white/10">
             <Icon name="CopyIcon" size={14} /> <span>{t('copy')}</span>
           </Button>
         </div>

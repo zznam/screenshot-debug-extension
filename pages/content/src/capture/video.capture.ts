@@ -1,11 +1,7 @@
-import type { Segment } from '@extension/shared';
+import type { CaptureOptions, Segment } from '@extension/shared';
 import { RECORDING, UI, VIDEO } from '@extension/shared';
 import { captureStateStorage, recordingSettingsStorage } from '@extension/storage';
 import type { VideoRecordingState } from '@extension/storage';
-
-type CaptureOptions = {
-  captureType: 'tab' | 'desktop';
-};
 
 const MAX_RECORDED_MS = 5 * 60 * 1000;
 
@@ -133,13 +129,17 @@ export const startCaptureNow = async () => {
   if (recordingState !== 'preparing') return;
 
   try {
-    const { mic } = await recordingSettingsStorage.getSettings();
-    const wantMic = !!mic.enabled && mic.permission === 'granted';
-
     const captureType = pendingOptions?.captureType ?? 'tab';
-    const captureOptions = { captureType, hasMic: wantMic };
     const constraints = buildDisplayMediaConstraints(captureType);
     const mimeOptions = pickMimeType();
+
+    // Invoke getDisplayMedia synchronously from the page-button gesture. Storage
+    // reads can resolve while Chrome's native source chooser is open.
+    const displayStreamPromise = navigator.mediaDevices.getDisplayMedia(constraints);
+    const settingsPromise = recordingSettingsStorage.getSettings();
+    const [displayStream, { mic }] = await Promise.all([displayStreamPromise, settingsPromise]);
+    const wantMic = !!mic.enabled && mic.permission === 'granted';
+    const captureOptions = { captureType, hasMic: wantMic };
 
     window.dispatchEvent(
       new CustomEvent(VIDEO.METADATA, {
@@ -151,7 +151,7 @@ export const startCaptureNow = async () => {
       }),
     );
 
-    stream = await navigator.mediaDevices.getDisplayMedia(constraints);
+    stream = displayStream;
 
     // Remove any unexpected audio tracks from the display stream
     stream.getAudioTracks().forEach(t => t.stop());

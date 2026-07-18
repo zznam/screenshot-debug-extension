@@ -5,7 +5,7 @@
   },
   "extensionName": {
     "description": "Extension name",
-    "message": "Brie - Captură erori"
+    "message": "Screenshot & Debug"
   },
   "loading": {
     "message": "Se încarcă..."
@@ -71,7 +71,7 @@
     "message": "Ieși din capturarea screenshot-ului"
   },
   "additionalInformation": {
-    "message": "Brie va include o captură de ecran pe întreaga pagină, împreună cu detalii ale browserului și ale sistemului de operare, cereri de rețea și jurnale de consolă pentru a ajuta dezvoltatorii să depaneze eficient."
+    "message": "Screenshot & Debug va include o captură de ecran pe întreaga pagină, împreună cu detalii ale browserului și ale sistemului de operare, cereri de rețea și jurnale de consolă pentru a ajuta dezvoltatorii să depaneze eficient."
   },
   "captureAndShare": {
     "message": "Capturează & Partajează"
@@ -203,7 +203,7 @@
     "message": "Created in $1"
   },
   "trackerSendFailedFallback": {
-    "message": "Slice saved. Couldn't send to $1 — opening Brie."
+    "message": "Slice saved. Couldn't send to $1 — opening Screenshot & Debug."
   },
   "rename": {
     "message": "Redenumește"
@@ -440,7 +440,7 @@
     "message": "Vezi codul sursă pe GitHub"
   },
   "visitHomepage": {
-    "message": "Vizitează pagina Brie"
+    "message": "Vizitează pagina Screenshot & Debug"
   },
   "reportBugsHeading": {
     "message": "Raportează bug-uri în câteva secunde"

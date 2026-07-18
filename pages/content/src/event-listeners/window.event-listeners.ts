@@ -1,12 +1,16 @@
 import { RECORDING } from '@extension/shared';
 import { captureSettingsStorage } from '@extension/storage';
 
-import { pauseRecording, resumeRecording, stopRecording, toggleMic } from '../capture';
+import { pauseRecording, resumeRecording, startCaptureNow, stopRecording, toggleMic } from '../capture';
 import { startPerformanceObserver } from '../utils/events/performance.observer';
 
 let lastAutoScreenshotTime = 0;
 
 export const addWindowEventListeners = () => {
+  window.addEventListener(RECORDING.COUNTDOWN_FINISHED, () => {
+    void startCaptureNow();
+  });
+
   window.addEventListener('message', event => {
     if (event.source !== window || !event.data.type) return;
 

@@ -5,7 +5,7 @@
   },
   "extensionName": {
     "description": "Название расширения",
-    "message": "Brie - Захват ошибок"
+    "message": "Screenshot & Debug"
   },
   "loading": {
     "message": "Загрузка..."
@@ -71,7 +71,7 @@
     "message": "Выйти из режима захвата скриншота"
   },
   "additionalInformation": {
-    "message": "Brie добавит скриншот на весь экран, а также данные о браузере и ОС, сетевые запросы и логи консоли, чтобы помочь разработчикам в отладке."
+    "message": "Screenshot & Debug добавит скриншот на весь экран, а также данные о браузере и ОС, сетевые запросы и логи консоли, чтобы помочь разработчикам в отладке."
   },
   "captureAndShare": {
     "message": "Захватить и поделиться"
@@ -203,7 +203,7 @@
     "message": "Created in $1"
   },
   "trackerSendFailedFallback": {
-    "message": "Slice saved. Couldn't send to $1 — opening Brie."
+    "message": "Slice saved. Couldn't send to $1 — opening Screenshot & Debug."
   },
   "rename": {
     "message": "Переименовать"
@@ -440,7 +440,7 @@
     "message": "Посмотреть исходный код на GitHub"
   },
   "visitHomepage": {
-    "message": "Посетить домашнюю страницу Brie"
+    "message": "Посетить домашнюю страницу Screenshot & Debug"
   },
   "reportBugsHeading": {
     "message": "Сообщайте об ошибках за секунды"

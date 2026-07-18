@@ -68,20 +68,16 @@ export const Header: React.FC<EditorHeaderProps> = ({
 
   return (
     <header
+      data-testid="editor-header"
       className={cn(
-        'grid grid-cols-2 items-center rounded-t-[18px] border-b border-[#EDECE8] bg-white p-4 sm:grid-cols-3',
+        'border-border bg-card text-card-foreground grid grid-cols-2 items-center rounded-t-[18px] border-b p-4 sm:grid-cols-3',
         className,
       )}>
       <div className="flex items-center gap-[14px]">
         <div className="flex items-center">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="destructive"
-                onClick={onClose}
-                className="dark:bg-primary size-[35px] dark:text-white"
-                aria-label="Close">
+              <Button size="icon" variant="destructive" onClick={onClose} className="size-[35px]" aria-label="Close">
                 <Icon name="X" size={16} />
               </Button>
             </TooltipTrigger>
@@ -92,12 +88,7 @@ export const Header: React.FC<EditorHeaderProps> = ({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={onMinimize}
-                className="dark:bg-primary size-[35px] dark:text-white"
-                aria-label="Minimize">
+              <Button size="icon" variant="ghost" onClick={onMinimize} className="size-[35px]" aria-label="Minimize">
                 <Icon name="MinusIcon" size={16} />
               </Button>
             </TooltipTrigger>
@@ -112,7 +103,7 @@ export const Header: React.FC<EditorHeaderProps> = ({
                 size="icon"
                 variant="ghost"
                 onClick={onToggleFullScreen}
-                className="dark:bg-primary hidden size-[35px] sm:flex dark:text-white"
+                className="hidden size-[35px] sm:flex"
                 aria-label={isFullScreen ? 'Exit full screen' : 'Enter full screen'}>
                 <Icon name={isFullScreen ? 'MinimizeIcon' : 'MaximizeIcon'} size={14} />
               </Button>
@@ -135,7 +126,7 @@ export const Header: React.FC<EditorHeaderProps> = ({
                 size="icon"
                 variant="ghost"
                 onClick={onUndo}
-                className="dark:bg-primary size-[35px] dark:text-white"
+                className="size-[35px]"
                 aria-label="Undo">
                 <Icon name="Undo2Icon" size={16} />
               </Button>
@@ -152,7 +143,7 @@ export const Header: React.FC<EditorHeaderProps> = ({
                 size="icon"
                 variant="ghost"
                 onClick={onRedo}
-                className="dark:bg-primary size-[35px] dark:text-white"
+                className="size-[35px]"
                 aria-label="Redo">
                 <Icon name="Redo2Icon" size={16} />
               </Button>
@@ -165,11 +156,7 @@ export const Header: React.FC<EditorHeaderProps> = ({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              disabled={!canStartOver}
-              variant="destructive"
-              onClick={onStartOver}
-              className="dark:bg-primary h-[35px] px-[10px] dark:text-white">
+            <Button disabled={!canStartOver} variant="destructive" onClick={onStartOver} className="h-[35px] px-[10px]">
               <span className="font-normal leading-normal">Start over</span>
             </Button>
           </TooltipTrigger>
@@ -190,7 +177,9 @@ export const Header: React.FC<EditorHeaderProps> = ({
           <Icon name="CopyIcon" size={16} />
           <span>Copy</span>
         </Button>
-        <Button onClick={onDownload} className="bg-gradient-overlay flex h-[35px] min-w-[120px] justify-center gap-x-2">
+        <Button
+          onClick={onDownload}
+          className="bg-gradient-overlay flex h-[35px] min-w-[120px] justify-center gap-x-2 text-white hover:text-white">
           <Icon name="DownloadIcon" size={16} />
           <span>Download</span>
         </Button>

@@ -28,7 +28,7 @@ export const ColorPalette = ({
           type="button"
           size="icon"
           disabled={open && isActive}
-          className="hidden shadow-none disabled:cursor-not-allowed sm:flex dark:hover:bg-black"
+          className="hidden shadow-none disabled:cursor-not-allowed sm:flex"
           variant="ghost">
           <div className={`group size-4 rounded-full ${HEX_COLORS[selectedColor]}`} />
         </Button>

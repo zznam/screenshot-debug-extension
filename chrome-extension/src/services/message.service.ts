@@ -2,7 +2,7 @@ import { strToU8, zipSync } from 'fflate';
 import type { Runtime } from 'webextension-polyfill';
 import { tabs } from 'webextension-polyfill';
 
-import { REWIND } from '@extension/shared';
+import { REWIND, TAB } from '@extension/shared';
 import {
   annotationsRedoStorage,
   annotationsStorage,
@@ -58,6 +58,11 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
       case 'AUTH_START':
         return handleOnAuthStart();
 
+      case TAB.GET_ACTIVE: {
+        const [tab] = await tabs.query({ active: true, currentWindow: true });
+        return { tab: tab ?? {} } as BgResponse;
+      }
+
       case REWIND.EVENT_BATCH: {
         const events = Array.isArray(message.events) ? (message.events as unknown[]) : [];
 
@@ -66,7 +71,7 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
       }
 
       case REWIND.FREEZE: {
-        const tabId = message?.tabId as number | undefined;
+        const tabId = (message?.tabId as number | undefined) ?? sender.tab?.id;
 
         if (typeof tabId !== 'number') return { status: 'error', message: 'Invalid tabId' };
 
@@ -97,7 +102,7 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
       }
 
       case REWIND.GET_FROZEN: {
-        const tabId = sender.tab?.id;
+        const tabId = (message?.tabId as number | undefined) ?? sender.tab?.id;
 
         if (!tabId) return { status: 'error', message: 'Invalid tabId' };
 
@@ -114,13 +119,16 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
       }
 
       case REWIND.DELETE_TAB: {
-        const tabId = sender.tab?.id;
+        const tabId = (message?.tabId as number | undefined) ?? sender.tab?.id;
 
         if (!tabId) return { status: 'error', message: 'Invalid tabId' };
 
         await rewindService.deleteTab(tabId);
         return { status: 'success' };
       }
+
+      case REWIND.BLOCKED:
+        return { status: 'success' };
 
       case 'DOWNLOAD_ASSETS': {
         const payload = message.payload as any;
@@ -248,5 +256,6 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
     }
   } catch (e) {
     console.error('[background] onMessage error:', e);
+    return { status: 'error', message: (e as Error)?.message ?? String(e) };
   }
 };

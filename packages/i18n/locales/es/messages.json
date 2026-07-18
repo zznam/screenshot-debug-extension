@@ -5,7 +5,7 @@
   },
   "extensionName": {
     "description": "Nombre de extensión",
-    "message": "Brie - Captura de errores"
+    "message": "Screenshot & Debug"
   },
   "loading": {
     "message": "Cargando..."
@@ -71,7 +71,7 @@
     "message": "Salir de captura de pantalla"
   },
   "additionalInformation": {
-    "message": "Brie incluirá una captura de pantalla de pantalla completa, junto con detalles del navegador y del sistema operativo, solicitudes de red y registros de consola para ayudar a los desarrolladores a depurar de manera efectiva."
+    "message": "Screenshot & Debug incluirá una captura de pantalla de pantalla completa, junto con detalles del navegador y del sistema operativo, solicitudes de red y registros de consola para ayudar a los desarrolladores a depurar de manera efectiva."
   },
   "captureAndShare": {
     "message": "Capturar y Compartir"
@@ -203,7 +203,7 @@
     "message": "Created in $1"
   },
   "trackerSendFailedFallback": {
-    "message": "Slice saved. Couldn't send to $1 — opening Brie."
+    "message": "Slice saved. Couldn't send to $1 — opening Screenshot & Debug."
   },
   "rename": {
     "message": "Renombrar"
@@ -440,7 +440,7 @@
     "message": "Ver el código fuente en GitHub"
   },
   "visitHomepage": {
-    "message": "Visitar la página de Brie"
+    "message": "Visitar la página de Screenshot & Debug"
   },
   "reportBugsHeading": {
     "message": "Reporta errores en segundos"

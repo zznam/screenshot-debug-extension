@@ -21,4 +21,3 @@ export type {
 
 export * from './theme.storage.js';
 export * from './user-uuid.storage.js';
-export * from './pending-reload-tabs.storage.js';

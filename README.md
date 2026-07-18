@@ -1,63 +1,114 @@
-# Screenshot & Debug Extension
+# Screenshot & Debug
 
-A powerful and privacy-focused Chrome extension for capturing screenshots and generating debug logs instantly.
+A privacy-focused Chrome extension for capturing screenshots, recording a tab or desktop, and exporting browser debugging context. Captures stay on your device and do not require an account.
 
 ## Features
 
-- **Immediate Capture**: Automatically saves full-page, viewport, or selected area screenshots.
-- **Debug Logs**: Generates a detailed JSON log file with every screenshot, including:
-  - Network requests
-  - Console logs
-  - Browser & OS details
-  - Metadata
-- **Privacy First**: No server uploads. All data is saved locally to your downloads folder.
-- **No Login Required**: Ready to use immediately.
+- Capture a selected area, the visible viewport, or a full page.
+- Review and annotate screenshots before downloading them.
+- Export screenshots with console, network, browser, operating-system, and page metadata.
+- Record a browser tab or desktop, with optional microphone audio.
+- Pause, resume, review, trim, and export recordings.
+- Opt in to Rewind to review recent page activity. Rewind is disabled by default.
+- Run locally without login or server uploads.
 
-## Installation from Source
+## Requirements
 
-1. Clone this repository.
-2. Install dependencies:
+- [Node.js 22.22.1](https://nodejs.org/)
+- [pnpm 9.15.1](https://pnpm.io/installation)
+- Google Chrome or another Chromium-based browser
 
-    ```bash
-    pnpm install
-    ```
+The repository pins Node in `.nvmrc`. With `nvm` installed:
 
-3. Build the extension:
+```bash
+nvm install
+nvm use
+corepack enable
+corepack prepare pnpm@9.15.1 --activate
+```
 
-    ```bash
-    pnpm build:chrome:local
-    ```
+## Install and build
 
-4. Load into Chrome:
-    - Open `chrome://extensions/`
-    - Enable **Developer mode** (top right).
-    - Click **Load unpacked**.
-    - Select the `chrome-extension/dist` (or `dist` depending on output) directory.
+```bash
+git clone https://github.com/zznam/screenshot-debug-extension.git
+cd screenshot-debug-extension
+pnpm install
+pnpm build:chrome:local
+```
+
+The unpacked extension is generated in `dist/`.
+
+## Load in Chrome
+
+1. Open `chrome://extensions/`.
+2. Enable **Developer mode**.
+3. Click **Load unpacked**.
+4. Select this repository's `dist/` directory.
+5. Pin **Screenshot & Debug** from Chrome's Extensions menu if desired.
+
+After rebuilding, return to `chrome://extensions/` and click the extension's reload button. Chrome internal pages such as `chrome://extensions/` cannot be captured; test on a regular `http://` or `https://` page.
 
 ## Usage
 
-1. Right-click on any page.
-2. Select **Screenshot & Debug** > **Area** (or Viewport/Full Page).
-3. The screenshot (`.png`) and log (`.json`) will be downloaded immediately.
+### Screenshots
+
+1. Open the extension popup and select the **Screenshot** tab.
+2. Choose area, viewport, or full-page capture.
+3. Review and annotate the result in the page editor.
+4. Download the screenshot, debug report, or ZIP from the editor.
+
+### Recordings
+
+1. Open the **Record** tab.
+2. Choose **Record Tab** or **Record Desktop**.
+3. Click **Start** in the page overlay and select what Chrome should share.
+4. Use the overlay or popup to pause, resume, or stop.
+5. Review, trim, and export the captured video.
+
+Microphone access is optional. The first time it is enabled, the extension opens its microphone permission page.
+
+### Rewind
+
+Rewind is disabled by default and only begins collecting recent page activity after you enable it from the **Record** tab. Select **Capture Last Minute** to freeze and review the buffered activity.
 
 ## Development
 
-- Run dev server: `pnpm run:chrome:local`
-- Lint: `pnpm lint`
+```bash
+# Start Chrome development mode with hot reload
+pnpm run:chrome:local
+
+# Build an unpacked local Chrome extension
+pnpm build:chrome:local
+
+# Run validation
+pnpm test:unit
+pnpm type-check
+pnpm lint
+
+# Install Chromium once, then run extension E2E tests
+pnpm -F @extension/e2e exec playwright install --no-shell chromium
+pnpm e2e
+
+# Build and package a production Chrome extension
+pnpm zip
+```
+
+The Husky pre-commit hook runs the repository's installed `lint-staged` executable. Run `pnpm install` after switching Node versions so the hook does not fall back to downloading a different release.
+
+## Project structure
+
+- `chrome-extension/` — manifest and background service worker
+- `pages/popup/` — extension popup
+- `pages/content/` — capture and recording runtime
+- `pages/content-ui/` — screenshot editor and recording review UI
+- `packages/` — shared storage, UI, translations, and build tooling
+- `tests/e2e/` — WebdriverIO browser tests
+- `dist/` — generated unpacked extension
 
 ## Acknowledgments
 
-This project is built upon the excellent [Brie Extension](https://github.com/briehq/brie-extension) by the Brie team.
-
-**Special thanks to:**
-
-- [Ion Leu](mailto:ion@brie.io) — Co-founder & Developer
-- [Luminita Leu](mailto:luminita@brie.io) — Co-founder & Developer
-
-The original Brie extension provides a full-featured bug reporting solution with server-side integration. This fork strips away the server components to create a purely local, privacy-focused screenshot and debugging tool.
-
-If you need a complete bug reporting workflow with team collaboration features, check out the original project at [brie.io](https://brie.io).
+This project is based on the original [Brie Extension](https://github.com/briehq/brie-extension), created by Ion Leu and Luminita Leu. Screenshot & Debug is a local-first fork focused on capture, recording, and debugging exports without Brie server integration.
 
 ## License
 
-Apache-2.0 — See [LICENSE](LICENSE) for details.
+Apache-2.0. See [LICENSE](LICENSE).

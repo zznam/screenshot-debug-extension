@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
+const packageJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '..', 'package.json'), 'utf8'));
 
 /**
  * @prop default_locale
@@ -33,7 +34,16 @@ const manifest = {
   version: packageJson.version,
   description: '__MSG_extensionDescription__',
   host_permissions: ['<all_urls>'],
-  permissions: ['webRequest', 'webNavigation', 'storage', 'tabs', 'activeTab', 'contextMenus', 'downloads'],
+  permissions: [
+    'webRequest',
+    'webNavigation',
+    'storage',
+    'tabs',
+    'activeTab',
+    'contextMenus',
+    'downloads',
+    'scripting',
+  ],
   background: {
     service_worker: 'background.js',
     type: 'module',

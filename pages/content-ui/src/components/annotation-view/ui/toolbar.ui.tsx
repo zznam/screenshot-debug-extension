@@ -41,7 +41,9 @@ const Toolbar = ({ activeElement, onActiveElement, onExport }: ToolbarProps) => 
   };
 
   return (
-    <div className="dark:bg-primary absolutes mx-auto mt-4 flex w-fit gap-4 rounded-2xl border border-[#EDECE8] bg-white p-2 shadow-sm">
+    <div
+      data-testid="editor-toolbar"
+      className="border-border bg-card text-card-foreground absolutes mx-auto mt-4 flex w-fit gap-4 rounded-2xl border p-2 shadow-sm">
       <div className="flex items-center space-x-2">
         {navElements.map((item: any, idx: number) =>
           item?.value ? (
@@ -97,10 +99,8 @@ const Toolbar = ({ activeElement, onActiveElement, onExport }: ToolbarProps) => 
                       size="icon"
                       disabled={isActive(item.value)}
                       className={cn(
-                        'shadow-none disabled:cursor-not-allowed dark:hover:bg-black',
-                        isActive(item.value)
-                          ? 'bg-gradient-overlay text-white disabled:opacity-100 dark:hover:bg-black'
-                          : '',
+                        'shadow-none disabled:cursor-not-allowed',
+                        isActive(item.value) ? 'bg-gradient-overlay text-white disabled:opacity-100' : '',
                       )}
                       variant="ghost"
                       onClick={() => handleOnActiveElement(item)}>
@@ -114,7 +114,7 @@ const Toolbar = ({ activeElement, onActiveElement, onExport }: ToolbarProps) => 
               </Tooltip>
             )
           ) : (
-            <div key={idx} className="hidden h-[20px] w-[1px] bg-slate-300 sm:flex" />
+            <div key={idx} className="bg-border hidden h-[20px] w-px sm:flex" />
           ),
         )}
       </div>

@@ -1,22 +1,11 @@
 import type { Tabs } from 'webextension-polyfill';
 
-import {
-  annotationsRedoStorage,
-  annotationsStorage,
-  captureStateStorage,
-  captureTabStorage,
-  pendingReloadTabsStorage,
-} from '@extension/storage';
+import { annotationsRedoStorage, annotationsStorage, captureStateStorage, captureTabStorage } from '@extension/storage';
 
 import { deleteRecords } from '@src/utils';
 
 export const handleOnTabRemoved = async (tabId: number) => {
   try {
-    const pendingTabIds = await pendingReloadTabsStorage.getAll();
-    if (pendingTabIds.includes(tabId)) {
-      await pendingReloadTabsStorage.remove(tabId);
-    }
-
     await deleteRecords(tabId);
     console.log('handleOnTabRemoved: records deleted ');
 
@@ -36,14 +25,6 @@ export const handleOnTabRemoved = async (tabId: number) => {
 
 export const handleOnTabUpdated = async (tabId: number, changeInfo: Tabs.OnUpdatedChangeInfoType, tab: Tabs.Tab) => {
   try {
-    if (changeInfo.status === 'complete') {
-      const pendingTabIds = await pendingReloadTabsStorage.getAll();
-
-      if (pendingTabIds.includes(tabId)) {
-        await pendingReloadTabsStorage.remove(tabId);
-      }
-    }
-
     if (changeInfo.status !== 'loading') return;
 
     const [state, capturedTabId] = await Promise.all([

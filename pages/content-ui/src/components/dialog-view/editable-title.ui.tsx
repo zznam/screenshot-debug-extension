@@ -52,7 +52,7 @@ export const EditableTitle = ({ value, onChange, className }: EditableTitleProps
           onChange={e => setDraft(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className="text-primary h-8 w-auto border-none bg-transparent px-1 py-0 font-normal not-italic leading-normal shadow-none focus-visible:ring-0"
+          className="text-foreground h-8 w-auto border-none bg-transparent px-1 py-0 font-normal not-italic leading-normal shadow-none focus-visible:ring-0"
         />
       ) : (
         <Tooltip>

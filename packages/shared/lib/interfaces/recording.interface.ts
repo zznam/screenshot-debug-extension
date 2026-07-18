@@ -10,6 +10,10 @@ export interface RecordingSession {
   error?: string;
 }
 
+export interface CaptureOptions {
+  captureType: 'tab' | 'desktop';
+}
+
 export interface VideoMeta {
   tabId: number;
   durationMs: number;
@@ -20,7 +24,7 @@ export interface VideoMeta {
 }
 
 export type PopupToBgMessage =
-  | { type: typeof RECORDING.START; tabId: number }
+  | { type: typeof RECORDING.START; tabId: number; options: CaptureOptions }
   | { type: typeof RECORDING.PAUSE; tabId: number }
   | { type: typeof RECORDING.RESUME; tabId: number }
   | { type: typeof RECORDING.STOP; tabId: number }

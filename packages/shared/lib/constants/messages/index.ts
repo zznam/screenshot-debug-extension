@@ -9,3 +9,4 @@ export { RECORD, type RecordMsg } from './record.message.js';
 export { TAB, type TabMsg } from './tab.message.js';
 export { UI, type UiMsg } from './ui.message.js';
 export { CANVAS_ACTION, type CanvasAction } from './canvas.message.js';
+export { CONTENT_SCRIPT, type ContentScriptMsg } from './content-script.message.js';

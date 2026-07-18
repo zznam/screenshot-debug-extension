@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { t } from '@extension/i18n';
 import type { Screenshot } from '@extension/shared';
-import { debugModeStorage } from '@extension/storage';
 
 let lastPointerX = 0;
 let lastPointerY = 0;
@@ -548,26 +547,21 @@ const processScreenshot = async ({
 
 // Save and notify with screenshots
 const saveAndNotify = async ({ screenshots, mode }: { screenshots: Screenshot[]; mode: 'single' | 'multiple' }) => {
-  const timestamp = Date.now();
-  const screenshotName: string = `${location.host}-${timestamp}`.replaceAll('.', '-');
+  const normalizedScreenshots = screenshots
+    .filter(screenshot => Boolean(screenshot.src))
+    .map((screenshot, index) => ({
+      ...screenshot,
+      id: screenshot.id ?? uuidv4(),
+      isPrimary: screenshot.isPrimary ?? index === 0,
+    }));
 
-  // Get debug mode state
-  const saveDebugLog = await debugModeStorage.getDebugMode();
+  if (normalizedScreenshots.length === 0) throw new Error('No screenshot was captured.');
 
-  // Send message to background to download assets immediately
-  chrome.runtime.sendMessage({
-    type: 'DOWNLOAD_ASSETS',
-    payload: {
-      screenshots,
-      mode,
-      name: screenshotName,
-      timestamp,
-      host: location.host,
-      url: location.href,
-      title: document.title,
-      saveDebugLog,
-    },
-  });
+  window.dispatchEvent(
+    new CustomEvent('DISPLAY_MODAL', {
+      detail: { screenshots: normalizedScreenshots, mode },
+    }),
+  );
 };
 
 // Initialization
@@ -594,6 +588,7 @@ export const startScreenshotCapture = async ({
       height: document.documentElement.scrollHeight,
       ignoreElements: (element: Element) => {
         return [
+          'brie-root',
           'brie-minimized-preview',
           'screenshot-overlay',
           'selection-box',
@@ -603,14 +598,14 @@ export const startScreenshotCapture = async ({
       },
     });
 
-    saveAndNotify({ screenshots: [{ src: fullCanvas.toDataURL('image/png', 1.0) }], mode });
+    await saveAndNotify({ screenshots: [{ src: fullCanvas.toDataURL('image/png', 1.0), isPrimary: true }], mode });
     return;
   }
 
   if (type === 'viewport') {
     const viewport = await captureTab();
 
-    saveAndNotify({ screenshots: [{ src: viewport }], mode });
+    await saveAndNotify({ screenshots: [{ src: viewport, isPrimary: true }], mode });
 
     return;
   }

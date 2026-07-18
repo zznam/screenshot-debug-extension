@@ -31,8 +31,7 @@
     "base-dev": "pnpm clean:bundle && turbo ready && turbo watch dev --concurrency 20",
     "zip": "pnpm build:chrome:production && pnpm -F zipper zip",
     "zip:firefox": "pnpm build:firefox:production && pnpm -F zipper zip",
-    "e2e": "pnpm zip && turbo e2e",
-    "e2e:firefox": "pnpm zip:firefox && turbo e2e",
+    "e2e": "pnpm build:chrome:local && pnpm -F @extension/e2e e2e",
     "test:unit": "vitest run",
     "test:e2e": "pnpm e2e",
     "lint": "turbo lint --continue",
@@ -120,6 +119,6 @@
   },
   "packageManager": "pnpm@9.15.1",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.22.1"
   }
 }
