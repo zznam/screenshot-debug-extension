@@ -65,7 +65,17 @@ export const createStorage = <D = string>(key: string, fallback: D, config?: Sto
   const liveUpdate = config?.liveUpdate ?? false;
 
   const serialize = config?.serialization?.serialize ?? ((v: D) => v);
-  const deserialize = config?.serialization?.deserialize ?? (v => v as D);
+  const deserialize = (value: unknown): D => {
+    if (value === undefined) {
+      return fallback;
+    }
+    if (config?.serialization?.deserialize) {
+      return typeof value === 'string'
+        ? config.serialization.deserialize(value)
+        : config.serialization.deserialize(JSON.stringify(value));
+    }
+    return value as D;
+  };
 
   // Set global session storage access level for StoryType.Session, only when not already done but needed.
   if (
@@ -90,11 +100,11 @@ export const createStorage = <D = string>(key: string, fallback: D, config?: Sto
     checkStoragePermission(storageEnum);
     const value = await chrome?.storage[storageEnum].get([key]);
 
-    if (!value) {
+    if (!value || value[key] === undefined) {
       return fallback;
     }
 
-    return deserialize(value[key]) ?? fallback;
+    return deserialize(value[key]);
   };
 
   const _emitChange = () => {
