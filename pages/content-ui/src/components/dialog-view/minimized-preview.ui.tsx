@@ -10,12 +10,11 @@ import { copyBase64ImageToClipboard, saveBase64Image } from '@src/utils';
 
 interface MinimizedPreviewProps {
   screenshots: Screenshot[];
-  unsaved?: boolean;
   onEdit: () => void;
   onDiscard: () => void;
 }
 
-export const MinimizedPreview: FC<MinimizedPreviewProps> = ({ screenshots, unsaved = false, onEdit, onDiscard }) => {
+export const MinimizedPreview: FC<MinimizedPreviewProps> = ({ screenshots, onEdit, onDiscard }) => {
   const lastImage: Screenshot = screenshots[screenshots.length - 1];
 
   const handleOnSave = async () => {
@@ -50,7 +49,7 @@ export const MinimizedPreview: FC<MinimizedPreviewProps> = ({ screenshots, unsav
         'transition-transform duration-200 focus-within:scale-105 hover:scale-105 focus:scale-105 focus-visible:scale-105',
         'focus-visible:ring-primary focus-visible:outline-none focus-visible:ring-2',
       )}>
-      {unsaved && screenshots?.length && (
+      {screenshots?.length > 0 && (
         <span
           className={cn(
             'absolute left-2 top-2 flex h-4 w-4 items-center justify-center rounded-full',

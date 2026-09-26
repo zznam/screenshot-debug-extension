@@ -45,7 +45,7 @@ export const CaptureScreenshotGroup = () => {
   const [currentActiveTab, setCurrentActiveTab] = useState<number>();
   const [captureError, setCaptureError] = useState<string | null>(null);
 
-  const isCaptureActive = useMemo(() => ['capturing', 'unsaved'].includes(captureState), [captureState]);
+  const isCaptureActive = useMemo(() => captureState === 'capturing', [captureState]);
 
   useEffect(() => {
     const initializeState = async () => {
@@ -152,7 +152,7 @@ export const CaptureScreenshotGroup = () => {
   const isInternalPage = activeTab.url.startsWith('about:') || activeTab.url.startsWith('chrome:');
   const showExitCapture = isCaptureActive && currentActiveTab !== activeTab.id;
 
-  if (isInternalPage && captureState !== 'unsaved' && currentActiveTab !== activeTab.id) {
+  if (isInternalPage && captureState !== 'capturing' && currentActiveTab !== activeTab.id) {
     return (
       <Alert className="text-center">
         <AlertDescription className="text-[12px]">{t('navigateToWebsite')}</AlertDescription>
@@ -160,14 +160,12 @@ export const CaptureScreenshotGroup = () => {
     );
   }
 
-  if (captureState === 'unsaved' && currentActiveTab !== activeTab.id) {
+  if (captureState === 'capturing' && currentActiveTab !== activeTab.id) {
     return (
       <>
         <Alert className="text-center">
-          <AlertTitle className="text-[14px]">{t('saveOrDiscardChanges')}</AlertTitle>
-          <AlertDescription className="text-[12px]">
-            {t('unsavedChanges')} <br /> {t('inAnotherTab')}
-          </AlertDescription>
+          <AlertTitle className="text-[14px]">{t('capturingInProgress')}</AlertTitle>
+          <AlertDescription className="text-[12px]">{t('capturingInAnotherTab')}</AlertDescription>
         </Alert>
 
         <div className="mt-4 flex gap-x-2">
@@ -182,7 +180,7 @@ export const CaptureScreenshotGroup = () => {
     );
   }
 
-  if (captureState === 'unsaved' && currentActiveTab === activeTab.id) {
+  if (captureState === 'capturing' && currentActiveTab === activeTab.id) {
     return (
       <div className="border-muted grid w-full gap-4 rounded-xl border bg-slate-100/20 p-2">
         <button
@@ -238,7 +236,7 @@ export const CaptureScreenshotGroup = () => {
         )}
       </RadioGroup>
 
-      {activeTab.id !== currentActiveTab && ['capturing', 'unsaved'].includes(captureState) && (
+      {activeTab.id !== currentActiveTab && captureState === 'capturing' && (
         <Button type="button" variant="link" size="sm" className="w-full" onClick={handleGoToActiveTab}>
           {t('openActiveTab')}
         </Button>

@@ -39,8 +39,6 @@ import { exportRecordingVideo } from './utils/recording';
 
 export default function App() {
   const captureNotifyState = useStorage(captureNotifyStorage);
-  const captureModeAndState = useStorage(captureStateStorage);
-  const captureState = captureModeAndState?.state ?? 'idle';
   const theme = useStorage(themeStorage);
   const [minimized, setMinimized] = useState(true);
   const [video, setVideo] = useState<VideoSource>();
@@ -212,8 +210,6 @@ export default function App() {
     await captureStateStorage.setScreenshotState('unsaved');
   };
 
-  const capturing = captureState === 'capturing';
-
   return (
     <div id="brie-content" className={cn(theme, 'relative')}>
       <ToasterProvider theme={theme} />
@@ -258,12 +254,7 @@ export default function App() {
 
           {!!screenshots?.length &&
             (minimized ? (
-              <MinimizedPreview
-                screenshots={screenshots}
-                onEdit={handleOnEdit}
-                unsaved={capturing}
-                onDiscard={handleOnClose}
-              />
+              <MinimizedPreview screenshots={screenshots} onEdit={handleOnEdit} onDiscard={handleOnClose} />
             ) : (
               <Content
                 idempotencyKey={idempotencyKey}

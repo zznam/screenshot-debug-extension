@@ -31,14 +31,7 @@ export const handleOnTabUpdated = async (tabId: number, changeInfo: Tabs.OnUpdat
   try {
     if (changeInfo.status !== 'loading') return;
 
-    const [state, capturedTabId] = await Promise.all([
-      captureStateStorage.getCaptureState(),
-      captureTabStorage.getCaptureTabId(),
-    ]);
-
-    if (!capturedTabId && state === 'unsaved') {
-      await captureStateStorage.setCaptureState('idle');
-    }
+    const capturedTabId = await captureTabStorage.getCaptureTabId();
 
     if (tabId === capturedTabId) {
       await Promise.all([

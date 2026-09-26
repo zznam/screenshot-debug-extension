@@ -1,7 +1,7 @@
 import type { AiDebugRequest, AiDebugResponse, DownloadRequest, DownloadResponse } from '@extension/shared';
 
 export type CaptureType = 'area' | 'viewport' | 'full-page';
-export type CaptureState = 'idle' | 'capturing' | 'unsaved';
+export type CaptureState = 'idle' | 'capturing';
 
 export type BgMessage =
   | { type: 'EXIT_CAPTURE' }

@@ -52,14 +52,11 @@
   "navigateToWebsite": {
     "message": "Navigate to any website to start capturing bugs."
   },
-  "saveOrDiscardChanges": {
-    "message": "Save or discard your changes"
+  "capturingInProgress": {
+    "message": "Capture in progress"
   },
-  "unsavedChanges": {
-    "message": "It seems like you have an unsaved draft open"
-  },
-  "inAnotherTab": {
-    "message": "in another tab."
+  "capturingInAnotherTab": {
+    "message": "You have an active capture session in another tab."
   },
   "discard": {
     "message": "Discard"
