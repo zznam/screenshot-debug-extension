@@ -1,6 +1,7 @@
 import type { Worker } from '@playwright/test';
 import { unzipSync } from 'fflate';
 
+import packageJson from '../../../package.json' with { type: 'json' };
 import { expect, test } from '../fixtures/extension.js';
 
 const targetUrl = 'http://127.0.0.1:4174/';
@@ -100,7 +101,7 @@ test('starts the service worker and injects the page runtime idempotently', asyn
 
   await expect(target.locator('html')).toHaveAttribute('data-brie-extend', 'true');
   await expect(target.locator('#brie-root')).toHaveCount(1);
-  await expect(target.locator('#brie-root')).toHaveAttribute('data-screenshot-debug-version', '0.5.27');
+  await expect(target.locator('#brie-root')).toHaveAttribute('data-screenshot-debug-version', packageJson.version);
 
   const tabId = await serviceWorker.evaluate(async url => {
     const tabs = await chrome.tabs.query({});
@@ -402,7 +403,8 @@ test('downloads debug JSON in individual and ZIP exports before clearing records
 
   await serviceWorker.evaluate(async settingsKey => {
     const stored = await chrome.storage.local.get(settingsKey);
-    await chrome.storage.local.set({ [settingsKey]: { ...stored[settingsKey], exportFormat: 'zip' } });
+    const settings = stored[settingsKey] as Record<string, unknown> | undefined;
+    await chrome.storage.local.set({ [settingsKey]: { ...settings, exportFormat: 'zip' } });
     await chrome.downloads.erase({});
   }, captureSettingsKey);
   await resetDownloadObserver(serviceWorker);
@@ -532,7 +534,7 @@ test('exits screenshot capture from another tab and cleans the owner page', asyn
 
   const popup = await context.newPage();
   await popup.goto(`chrome-extension://${extensionId}/popup/index.html`);
-  const exitButton = popup.getByRole('button', { name: 'Exit Capture Screenshot' });
+  const exitButton = popup.getByRole('button', { name: 'Discard', exact: true });
   await expect(exitButton).toBeVisible();
   await exitButton.click();
 

@@ -9,8 +9,6 @@ import {
 
 type Strength = 'strong' | 'allow' | 'unknown';
 
-const redactSkipCache = new Map<string, boolean>();
-
 const classifyField = (ctx: {
   key?: string;
   name?: string;
@@ -33,28 +31,25 @@ const classifyField = (ctx: {
 const redactString = (value: string, ctxStrength: Strength): string => {
   if (!value || ctxStrength === 'allow') return value;
 
-  const pass = (patterns: { pattern: RegExp; groupIndex?: number }[]) => {
+  const pass = (input: string, patterns: { pattern: RegExp; groupIndex?: number }[]) => {
+    let output = input;
     for (const { pattern, groupIndex } of patterns) {
-      const out = value.replace(pattern, (...args) => {
+      output = output.replace(pattern, (...args) => {
         if (groupIndex !== undefined && args[groupIndex]) {
           const full = args[0];
           return full.replace(args[groupIndex], REDACTED_KEYWORD);
         }
         return REDACTED_KEYWORD;
       });
-      if (out !== value) return out;
     }
-    return value;
+    return output;
   };
 
-  let out = pass(highRiskValuePatterns);
-  if (out !== value) return out;
-
-  out = pass(keyedSecretPatterns);
-  if (out !== value) return out;
+  let out = pass(value, highRiskValuePatterns);
+  out = pass(out, keyedSecretPatterns);
 
   if (ctxStrength === 'strong') {
-    out = pass(optionalPiiPatterns);
+    out = pass(out, optionalPiiPatterns);
   }
   return out;
 };
@@ -113,6 +108,11 @@ const deepRedactInternal = (input: unknown, shouldSkipRedaction: boolean, ctx?: 
 
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(input)) {
+    if (keyMatches(key, STRONG_KEYS)) {
+      result[key] = REDACTED_KEYWORD;
+      continue;
+    }
+
     // Build field-level context
     const fieldCtx = {
       key,
@@ -129,13 +129,13 @@ const deepRedactInternal = (input: unknown, shouldSkipRedaction: boolean, ctx?: 
     const strength = classifyField(fieldCtx); // 'strong' | 'allow' | 'unknown'
 
     // CASE 1: value in { key: "secret", value: "..." }
-    if (key === 'value' && typeof value === 'string') {
+    if (key === 'value') {
       const nameKeyStrong =
         shouldRedactByNameValueContext(input) ||
         keyMatches((input as Record<string, unknown>).key as string | undefined, STRONG_KEYS) ||
         keyMatches((input as Record<string, unknown>).name as string | undefined, STRONG_KEYS);
 
-      if (nameKeyStrong) {
+      if (nameKeyStrong || strength === 'strong') {
         result[key] = REDACTED_KEYWORD;
         continue;
       }
@@ -145,10 +145,6 @@ const deepRedactInternal = (input: unknown, shouldSkipRedaction: boolean, ctx?: 
 
     // CASE 2: key-value pairs like { secret: "..." }
     if (typeof key === 'string' && typeof value === 'string') {
-      if (keyMatches(key, STRONG_KEYS)) {
-        result[key] = REDACTED_KEYWORD;
-        continue;
-      }
       if (keyMatches(key, EXEMPT_KEYS) || keyMatches(key, NON_SENSITIVE_KEYS)) {
         // explicitly allowed by name
         result[key] = value;
@@ -169,7 +165,6 @@ const deepRedactInternal = (input: unknown, shouldSkipRedaction: boolean, ctx?: 
 /**
  * Deeply redacts sensitive information from an input structure.
  * Automatically skips redaction in non-production environments.
- * Uses cache when `uuid` is available on the object.
  *
  * @param input - Any value (object, array, string, etc.) to redact.
  * @param url - Optional URL to determine if redaction should apply (e.g. non-prod).
@@ -177,25 +172,5 @@ const deepRedactInternal = (input: unknown, shouldSkipRedaction: boolean, ctx?: 
  */
 export const deepRedactSensitiveInfo = <T>(input: T, tabUrl?: string): T => {
   if (!input) return input;
-  const nonProd = isNonProduction(tabUrl);
-  const cacheKey =
-    input && typeof input === 'object' && (input as Record<string, unknown>).uuid
-      ? `${(input as Record<string, unknown>).uuid}::${nonProd ? 'nonprod' : 'prod'}`
-      : undefined;
-
-  let shouldSkipRedaction = false;
-
-  if (cacheKey) {
-    const cached = redactSkipCache.get(cacheKey);
-    if (cached !== undefined) {
-      shouldSkipRedaction = cached;
-    } else {
-      shouldSkipRedaction = nonProd;
-      redactSkipCache.set(cacheKey, shouldSkipRedaction);
-    }
-  } else {
-    shouldSkipRedaction = nonProd;
-  }
-
-  return deepRedactInternal(input, shouldSkipRedaction) as T;
+  return deepRedactInternal(input, isNonProduction(tabUrl)) as T;
 };

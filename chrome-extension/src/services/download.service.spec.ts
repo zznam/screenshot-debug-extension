@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { strToU8, unzipSync } from 'fflate';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

@@ -1,15 +1,12 @@
-import { nonProductionKeywords } from '../constants/index.js';
+import { nonProductionKeywords } from '../constants/non-production-keywords.constants.js';
 
-/**
- * Check if the given URL belongs to a non-production environment.
- *
- * @param {string} url - The URL to check.
- * @returns {boolean} - Returns true if the URL contains any non-production keywords.
- */
+/** Match development hosts, never text in a remote URL's path or query. */
 export const isNonProduction = (url?: string): boolean => {
-  if (!url) {
-    url = typeof window !== 'undefined' ? window?.location?.href.toLowerCase() : '';
+  const candidate = url ?? (typeof window !== 'undefined' ? window.location.href : '');
+  try {
+    const hostname = new URL(candidate).hostname.toLowerCase();
+    return nonProductionKeywords.some(keyword => hostname === keyword || hostname.endsWith(`.${keyword}`));
+  } catch {
+    return false;
   }
-
-  return nonProductionKeywords.some(env => url.includes(env.toLowerCase()));
 };

@@ -1,7 +1,7 @@
 /* global process */
 import { createServer } from 'node:http';
 
-import { createHelperServer } from '../../../packages/ai-helper/dist/server.js';
+import { createHelperServer } from '../../../packages/ai-helper/src/server.ts';
 
 const html = `<!doctype html>
 <html lang="en">

@@ -98,6 +98,10 @@ export default config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     },
   },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: node },
+  },
   // Overrides Rules
   {
     files: ['**/packages/dev-utils/**/*.ts'],

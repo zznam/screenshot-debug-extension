@@ -1,4 +1,4 @@
-/* eslint-disable no-empty-pattern, react-hooks/rules-of-hooks */
+/* eslint-disable react-hooks/rules-of-hooks */
 import { resolve } from 'node:path';
 
 import { chromium, test as base } from '@playwright/test';
@@ -15,15 +15,18 @@ const extensionPath = resolve(import.meta.dirname, '../../..', 'dist');
 const ignoredShadowDomWarnings = ['`DialogContent` requires a `DialogTitle`'];
 
 export const test = base.extend<ExtensionFixtures>({
-  context: async ({}, use) => {
+  context: async ({ headless }, use) => {
     const context = await chromium.launchPersistentContext('', {
       channel: 'chromium',
-      headless: true,
+      headless,
       args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`],
     });
 
-    await use(context);
-    await context.close();
+    try {
+      await use(context);
+    } finally {
+      await context.close();
+    }
   },
 
   serviceWorker: async ({ context }, use) => {

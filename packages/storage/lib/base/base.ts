@@ -8,33 +8,6 @@ import type { BaseStorage, StorageConfig, ValueOrUpdate } from './types.js';
 const chrome = globalThis.chrome;
 
 /**
- * Sets or updates an arbitrary cache with a new value or the result of an update function.
- */
-const updateCache = async <D>(valueOrUpdate: ValueOrUpdate<D>, cache: D | null): Promise<D> => {
-  // Type guard to check if our value or update is a function
-  const isFunction = <D>(value: ValueOrUpdate<D>): value is (prev: D) => D | Promise<D> => {
-    return typeof value === 'function';
-  };
-
-  // Type guard to check in case of a function, if its a Promise
-  const returnsPromise = <D>(func: (prev: D) => D | Promise<D>): func is (prev: D) => Promise<D> => {
-    // Use ReturnType to infer the return type of the function and check if it's a Promise
-    return (func as (prev: D) => Promise<D>) instanceof Promise;
-  };
-
-  if (isFunction(valueOrUpdate)) {
-    // Check if the function returns a Promise
-    if (returnsPromise(valueOrUpdate)) {
-      return valueOrUpdate(cache as D);
-    } else {
-      return valueOrUpdate(cache as D);
-    }
-  } else {
-    return valueOrUpdate;
-  }
-};
-
-/**
  * If one session storage needs access from content scripts, we need to enable it globally.
  * @default false
  */
@@ -58,7 +31,8 @@ const checkStoragePermission = (storageEnum: StorageEnum): void => {
  */
 export const createStorage = <D = string>(key: string, fallback: D, config?: StorageConfig<D>): BaseStorage<D> => {
   let cache: D | null = null;
-  let initedCache = false;
+  let revision = 0;
+  let pendingWrite: Promise<void> = Promise.resolve();
   let listeners: Array<() => void> = [];
 
   const storageEnum = config?.storageEnum ?? StorageEnum.Local;
@@ -111,14 +85,23 @@ export const createStorage = <D = string>(key: string, fallback: D, config?: Sto
     listeners.forEach(listener => listener());
   };
 
-  const set = async (valueOrUpdate: ValueOrUpdate<D>) => {
-    if (!initedCache) {
-      cache = await get();
-    }
-    cache = await updateCache(valueOrUpdate, cache);
-
-    await chrome?.storage[storageEnum].set({ [key]: serialize(cache) });
-    _emitChange();
+  const set = (valueOrUpdate: ValueOrUpdate<D>): Promise<void> => {
+    const write = pendingWrite.then(async () => {
+      // Read the persisted value for each queued update, including changes from
+      // other extension contexts. Chrome storage does not offer cross-context CAS.
+      const current = await get();
+      const next =
+        typeof valueOrUpdate === 'function'
+          ? await (valueOrUpdate as (previous: D) => D | Promise<D>)(current)
+          : valueOrUpdate;
+      await chrome?.storage[storageEnum].set({ [key]: serialize(next) });
+      cache = next;
+      revision += 1;
+      _emitChange();
+    });
+    // A failed write rejects its caller without poisoning subsequent updates.
+    pendingWrite = write.catch(() => undefined);
+    return write;
   };
 
   const subscribe = (listener: () => void) => {
@@ -133,23 +116,28 @@ export const createStorage = <D = string>(key: string, fallback: D, config?: Sto
     return cache;
   };
 
-  get().then(data => {
-    cache = data;
-    initedCache = true;
-    _emitChange();
-  });
+  const initialRevision = revision;
+  get()
+    .then(data => {
+      // An onChanged event or completed write can arrive before this initial read.
+      if (revision !== initialRevision) return;
+      cache = data;
+      _emitChange();
+    })
+    .catch(error => {
+      if (revision === initialRevision) {
+        cache = fallback;
+        _emitChange();
+      }
+      console.warn('Could not initialize extension storage:', error);
+    });
 
-  // Listener for live updates from the browser
-  const _updateFromStorageOnChanged = async (changes: { [key: string]: chrome.storage.StorageChange }) => {
-    // Check if the key we are listening for is in the changes object
+  const _updateFromStorageOnChanged = (changes: { [key: string]: chrome.storage.StorageChange }) => {
     if (changes[key] === undefined) return;
-
-    const valueOrUpdate: ValueOrUpdate<D> = deserialize(changes[key].newValue);
-
-    if (cache === valueOrUpdate) return;
-
-    cache = await updateCache(valueOrUpdate, cache);
-
+    revision += 1;
+    const next = deserialize(changes[key].newValue);
+    if (cache === next) return;
+    cache = next;
     _emitChange();
   };
 

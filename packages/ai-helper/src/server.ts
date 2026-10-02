@@ -74,7 +74,11 @@ const readJsonBody = async (request: IncomingMessage): Promise<unknown> => {
     if (size > MAX_BODY_BYTES) throw Object.assign(new Error('Debug context is too large.'), { statusCode: 413 });
     chunks.push(buffer);
   }
-  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  } catch {
+    throw Object.assign(new Error('Invalid JSON request body.'), { statusCode: 400 });
+  }
 };
 
 const isMessage = (value: unknown): value is AiDebugMessage => {
@@ -84,7 +88,18 @@ const isMessage = (value: unknown): value is AiDebugMessage => {
 
 const isContext = (value: unknown): value is AiDebugContext => {
   const context = value as Partial<AiDebugContext>;
-  return Boolean(context && typeof context.sourceUrl === 'string' && Array.isArray(context.records));
+  return Boolean(
+    context &&
+      typeof context.sourceUrl === 'string' &&
+      typeof context.sourceTitle === 'string' &&
+      typeof context.capturedAt === 'number' &&
+      Number.isFinite(context.capturedAt) &&
+      !Number.isNaN(new Date(context.capturedAt).getTime()) &&
+      (context.screenshotDataUrl === null ||
+        (typeof context.screenshotDataUrl === 'string' &&
+          /^data:image\/(?:png|jpe?g|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(context.screenshotDataUrl))) &&
+      Array.isArray(context.records),
+  );
 };
 
 const validatePayload = (value: unknown): AiHelperResponseRequest => {
@@ -157,9 +172,18 @@ const createHelperServer = (config: HelperConfig) =>
       return;
     }
 
+    const controller = new AbortController();
+    const onClose = () => {
+      if (!response.writableEnded) controller.abort();
+    };
+    response.on('close', onClose);
+
     try {
       const payload = validatePayload(await readJsonBody(request));
-      const result = await config.createResponse(payload, AbortSignal.timeout(60_000));
+      const result = await config.createResponse(
+        payload,
+        AbortSignal.any([controller.signal, AbortSignal.timeout(60_000)]),
+      );
       sendJson(
         response,
         200,
@@ -172,9 +196,12 @@ const createHelperServer = (config: HelperConfig) =>
         corsOrigin,
       );
     } catch (error) {
+      if (controller.signal.aborted) return;
       const statusCode = Number((error as { statusCode?: number }).statusCode) || 502;
       const message = statusCode < 500 ? (error as Error).message : 'The OpenAI request failed. Try again.';
       sendJson(response, statusCode, { status: 'error', code: 'AI_REQUEST_FAILED', message }, corsOrigin);
+    } finally {
+      response.off('close', onClose);
     }
   });
 

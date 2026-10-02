@@ -35,6 +35,8 @@ const checkHelper = async (): Promise<{ state: HelperState; model?: string }> =>
     const helperUrl = await readHelperUrl();
     const response = await fetch(`${helperUrl}/health`, {
       headers: { [EXTENSION_ID_HEADER]: chrome.runtime.id },
+      signal: AbortSignal.timeout(5_000),
+      redirect: 'error',
     });
     if (!response.ok) return { state: 'offline' };
     const data = (await response.json()) as { keyConfigured?: boolean; model?: string };
@@ -56,6 +58,8 @@ const requestAiResponse = async (session: AiDebugSession): Promise<AiHelperRespo
   };
   const response = await fetch(`${helperUrl}/v1/debug/responses`, {
     method: 'POST',
+    signal: AbortSignal.timeout(65_000),
+    redirect: 'error',
     headers: {
       'content-type': 'application/json',
       authorization: `Bearer ${token}`,

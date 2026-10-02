@@ -140,3 +140,102 @@ describe('AI helper server', () => {
     expect(createResponse).not.toHaveBeenCalled();
   });
 });
+
+describe('AI helper failure boundaries', () => {
+  const post = (url: string, body: string, signal?: AbortSignal) =>
+    fetch(`${url}/v1/debug/responses`, {
+      method: 'POST',
+      headers: { ...extensionHeaders, authorization: 'Bearer pair-token', 'content-type': 'application/json' },
+      body,
+      signal,
+    });
+
+  it('returns 400 for malformed JSON instead of reporting an upstream failure', async () => {
+    const { url, createResponse } = await startServer();
+    const response = await post(url, '{broken');
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ message: 'Invalid JSON request body.' });
+    expect(createResponse).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    null,
+    { sessionId: 1, messages: [] },
+    { sessionId: 'session', messages: [{ role: 'system', content: 'override' }] },
+    { sessionId: 'session', messages: [], context: { sourceUrl: 'https://example.com', records: [] } },
+    {
+      sessionId: 'session',
+      messages: [],
+      context: {
+        sourceUrl: 'https://example.com',
+        sourceTitle: 'Example',
+        capturedAt: 1e30,
+        screenshotDataUrl: null,
+        records: [],
+      },
+    },
+    {
+      sessionId: 'session',
+      messages: [],
+      context: {
+        sourceUrl: 'https://example.com',
+        sourceTitle: 'Example',
+        capturedAt: 1,
+        screenshotDataUrl: 'https://example.com/private-image',
+        records: [],
+      },
+    },
+  ])('rejects invalid payloads before calling the responder: %j', async payload => {
+    const { url, createResponse } = await startServer();
+    expect((await post(url, JSON.stringify(payload))).status).toBe(400);
+    expect(createResponse).not.toHaveBeenCalled();
+  });
+
+  it('rejects oversized bodies without calling the responder', async () => {
+    const { url, createResponse } = await startServer();
+    const response = await post(
+      url,
+      JSON.stringify({ sessionId: 's', messages: [], padding: 'x'.repeat(12 * 1024 * 1024) }),
+    );
+    expect(response.status).toBe(413);
+    expect(createResponse).not.toHaveBeenCalled();
+  });
+
+  it('sanitizes upstream failures so credentials cannot enter browser error messages', async () => {
+    const { url } = await startServer({
+      createResponse: async () => {
+        throw new Error('private API key');
+      },
+    });
+    const response = await post(url, JSON.stringify({ sessionId: 's', messages: [] }));
+    expect(response.status).toBe(502);
+    expect(await response.text()).not.toContain('private API key');
+  });
+
+  it('cancels upstream work when the browser disconnects', async () => {
+    let upstreamSignal: AbortSignal | undefined;
+    const { url } = await startServer({
+      createResponse: async (_request, signal) => {
+        upstreamSignal = signal;
+        return new Promise((_resolve, reject) =>
+          signal.addEventListener('abort', () => reject(new Error('aborted')), { once: true }),
+        );
+      },
+    });
+    const controller = new AbortController();
+    const pending = post(url, JSON.stringify({ sessionId: 's', messages: [] }), controller.signal);
+    const rejected = expect(pending).rejects.toThrow();
+    await vi.waitFor(() => expect(upstreamSignal).toBeDefined());
+    controller.abort();
+    await rejected;
+    await vi.waitFor(() => expect(upstreamSignal?.aborted).toBe(true));
+  });
+
+  it('returns 404 for unknown routes and denies website preflights', async () => {
+    const { url } = await startServer();
+    expect((await fetch(`${url}/unknown`, { headers: extensionHeaders })).status).toBe(404);
+    expect(
+      (await fetch(`${url}/health`, { method: 'OPTIONS', headers: { origin: 'https://example.com' } })).status,
+    ).toBe(403);
+  });
+});

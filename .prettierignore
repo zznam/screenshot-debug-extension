@@ -1,7 +1,6 @@
 dist
 node_modules
 .gitignore
-.github
 .husky
 .nvmrc
 .prettierignore
@@ -11,3 +10,9 @@ pnpm-lock.yaml
 chrome-extension/manifest.js
 packages/i18n/lib/i18n.ts
 .turbo
+
+**/coverage
+**/playwright-report
+**/test-results
+**/dist
+**/node_modules

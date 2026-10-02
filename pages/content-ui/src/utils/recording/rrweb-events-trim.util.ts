@@ -41,12 +41,12 @@ export const findLastAnchorBeforeOrAt = (
 };
 
 export const trimRrwebEvents = (events: eventWithTime[] | null | undefined, range: TrimRange | null) => {
-  if (!Array.isArray(events) || !range) {
+  if (!Array.isArray(events) || !range || !Number.isFinite(range.start) || !Number.isFinite(range.end)) {
     return { trimmedEvents: [] as RrwebEvent[], fromTimestamp: 0, toTimestamp: 0 };
   }
 
   const allSorted = events.filter(safeIsRrwebEvent).slice().sort(sortByTime);
-  if (allSorted.length === 0) return { trimmedEvents: [] as RrwebEvent[], start: 0, end: 0 };
+  if (allSorted.length === 0) return { trimmedEvents: [] as RrwebEvent[], fromTimestamp: 0, toTimestamp: 0 };
 
   const start = Math.min(range.start, range.end);
   const end = Math.max(range.start, range.end);
@@ -62,13 +62,16 @@ export const trimRrwebEvents = (events: eventWithTime[] | null | undefined, rang
   const snapshot = findLastAnchorBeforeOrAt(allSorted, RRWEB_FULL_SNAPSHOT_EVENT_TYPE, start);
   if (snapshot) prefix.push(snapshot);
 
-  // de-dupe by object identity isn’t enough; timestamps can match.
-  // Do a cheap stable dedupe by (type,timestamp) only for anchors.
-  const combined = [...prefix, ...windowEvents].sort(sortByTime).filter((e, i, arr) => {
-    if (i === 0) return true;
-    const prev = arr[i - 1]!;
-    return !(prev.type === e.type && prev.timestamp === e.timestamp);
+  // Only anchors are duplicated by the prefix. Distinct incremental events can
+  // share both type and timestamp and must all survive for replay to be correct.
+  const anchors = new Set<string>();
+  const combined = [...prefix, ...windowEvents].sort(sortByTime).filter(event => {
+    if (event.type !== RRWEB_META_EVENT_TYPE && event.type !== RRWEB_FULL_SNAPSHOT_EVENT_TYPE) return true;
+    const key = `${event.type}:${event.timestamp}`;
+    if (anchors.has(key)) return false;
+    anchors.add(key);
+    return true;
   });
 
-  return { trimmedEvents: combined, start, end };
+  return { trimmedEvents: combined, fromTimestamp: start, toTimestamp: end };
 };

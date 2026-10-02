@@ -1,99 +1,58 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Default values
 CLI_DEV=false
 CLI_FIREFOX=false
-CLI_ENV="development"
+CLI_ENV=development
+cli_values=()
 
-validate_is_boolean() {
-  if [[ "$1" != "true" && "$1" != "false" ]]; then
-    echo "Invalid value for <$2>. Use 'true' or 'false'."
+for arg in "$@"; do
+  if [[ "$arg" != *=* ]]; then
+    echo "Expected KEY=value: $arg" >&2
     exit 1
   fi
-}
-
-validate_key() {
-  local key="$1"
-  local is_editable="${2:-false}" 
-  if [[ -n "$key" && ! "$key" =~ ^# ]]; then
-    if [[ "$is_editable" == false && ! "$key" =~ ^CLI_ ]]; then
-      echo "Invalid key: <$key>. Must start with 'CLI_'."
-      exit 1
-    fi
+  key="${arg%%=*}"
+  value="${arg#*=}"
+  if [[ ! "$key" =~ ^CLI_[A-Z0-9_]+$ || "$value" == *$'\n'* || "$value" == *$'\r'* ]]; then
+    echo "Invalid CLI setting: $key" >&2
+    exit 1
   fi
-}
+  case "$key" in
+    CLI_DEV|CLI_FIREFOX)
+      if [[ "$value" != true && "$value" != false ]]; then
+        echo "Invalid value for $key. Use true or false." >&2
+        exit 1
+      fi
+      if [[ "$key" == CLI_DEV ]]; then CLI_DEV="$value"; else CLI_FIREFOX="$value"; fi
+      ;;
+    CLI_ENV)
+      if [[ "$value" != development && "$value" != production ]]; then
+        echo 'CLI_ENV must be development or production.' >&2
+        exit 1
+      fi
+      CLI_ENV="$value"
+      ;;
+    *) cli_values+=("$key=$value") ;;
+  esac
+done
 
-parse_arguments() {
-  for arg in "$@"; do
-    key="${arg%%=*}"
-    value="${arg#*=}"
+# A clean checkout has no ignored environment files. Use the tracked defaults.
+env_source=".env.$CLI_ENV"
+if [[ ! -f "$env_source" ]]; then env_source=.example.env; fi
+if [[ ! -f "$env_source" ]]; then
+  echo "Missing environment defaults: $env_source" >&2
+  exit 1
+fi
 
-    validate_key "$key"
-
-    case $key in
-      CLI_DEV)
-        CLI_DEV="$value"
-        validate_is_boolean "$CLI_DEV" "CLI_DEV"
-        ;;
-      CLI_FIREFOX)
-        CLI_FIREFOX="$value"
-        validate_is_boolean "$CLI_FIREFOX" "CLI_FIREFOX"
-        ;;
-      CLI_ENV)
-        CLI_ENV="$value"
-        ;;
-      *)
-        cli_values+=("$key=$value")
-        ;;
-    esac
+env_temp=$(mktemp .env.tmp.XXXXXX)
+trap 'rm -f "$env_temp"' EXIT
+{
+  printf '# Generated build settings\nCLI_DEV=%s\nCLI_FIREFOX=%s\nCLI_ENV=%s\n' "$CLI_DEV" "$CLI_FIREFOX" "$CLI_ENV"
+  for value in "${cli_values[@]+${cli_values[@]}}"; do
+    if [[ -n "$value" ]]; then printf '%s\n' "$value"; fi
   done
-}
-
-load_env_base() {
-  ENV_FILE=".env.$CLI_ENV"
-
-  if [[ -f "$ENV_FILE" ]]; then
-    echo "Using environment: $ENV_FILE"
-    cp "$ENV_FILE" .env
-  else
-    echo "Missing env file: $ENV_FILE"
-    exit 1
-  fi
-}
-
-validate_env_keys() {
-  editable_section_starts=false
-
-  while IFS= read -r line; do
-    key="${line%%=*}"
-    if [[ "$key" =~ ^CLI_ ]]; then
-      editable_section_starts=true
-    elif $editable_section_starts; then
-      validate_key "$key" true
-    fi
-  done < .env
-}
-
-create_new_file() {
-  temp_file=$(mktemp)
-
-  {
-    echo "# DO NOT EDIT CLI VALUES BELOW MANUALLY"
-    echo "CLI_DEV=$CLI_DEV"
-    echo "CLI_FIREFOX=$CLI_FIREFOX"
-    for value in "${cli_values[@]}"; do
-      echo "$value"
-    done
-    echo ""
-    echo "# Editable values (copied from .env.$CLI_ENV)"
-    grep -Ev '^\s*#|^\s*$' .env
-  } > "$temp_file"
-
-  mv "$temp_file" .env
-}
-
-# Main flow
-parse_arguments "$@"
-load_env_base
-validate_env_keys
-create_new_file
+  printf '\n# Values from %s\n' "$env_source"
+  # Caller-provided build flags take precedence over stale values in local files.
+  awk '!/^[[:space:]]*(export[[:space:]]+)?CLI_[A-Z0-9_]+[[:space:]]*=/' "$env_source"
+} > "$env_temp"
+mv "$env_temp" .env

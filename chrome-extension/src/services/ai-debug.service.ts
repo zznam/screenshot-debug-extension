@@ -88,7 +88,14 @@ const startAiDebug = async (tabId: number, preparedScreenshotDataUrl?: string): 
 
   if (!screenshotDataUrl) {
     try {
-      screenshotDataUrl = await tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 80 });
+      // captureVisibleTab captures whichever tab is active in the window. Reject
+      // a switched or navigated source instead of attaching another page's pixels.
+      const before = await tabs.get(tabId);
+      if (!before.active || before.url !== tab.url) throw new Error('Source tab changed.');
+      const captured = await tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 80 });
+      const after = await tabs.get(tabId);
+      if (!after.active || after.url !== tab.url) throw new Error('Source tab changed.');
+      screenshotDataUrl = captured;
     } catch {
       captureError = 'Could not capture the page. Return to the source tab and retry.';
     }

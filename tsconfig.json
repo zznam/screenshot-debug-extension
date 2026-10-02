@@ -6,5 +6,5 @@
     "noEmit": false,
     "target": "ESNext"
   },
-  "include": ["eslint.config.ts", "vitest.config.ts"]
+  "include": ["eslint.config.ts", "vitest.config.ts", "tests/unit/**/*.ts"]
 }

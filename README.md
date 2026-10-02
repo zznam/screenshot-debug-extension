@@ -10,7 +10,7 @@ A privacy-focused Chrome extension for capturing screenshots, recording a tab or
 - Record a browser tab or desktop, with optional microphone audio.
 - Pause, resume, review, trim, and export recordings.
 - Opt in to Rewind to review recent page activity. Rewind is disabled by default.
-- Open a persistent AI Debug session with a redacted viewport screenshot and browser diagnostics.
+- Open a persistent AI Debug session with a viewport screenshot and redacted browser diagnostics.
 - Run locally without login or server uploads.
 
 ## Requirements
@@ -115,10 +115,11 @@ pnpm run:chrome:local
 pnpm build:chrome:local
 
 # Run validation
+pnpm validate
+
+# Run the unit suite or collect coverage (no extension build required)
 pnpm test:unit
-pnpm -F @extension/ai-helper test
-pnpm type-check
-pnpm lint
+pnpm test:coverage
 
 # Install Chromium once, then run extension E2E tests
 pnpm -F @extension/e2e exec playwright install --no-shell chromium
@@ -129,6 +130,16 @@ pnpm zip
 ```
 
 The Husky pre-commit hook runs the repository's installed `lint-staged` executable. Run `pnpm install` after switching Node versions so the hook does not fall back to downloading a different release.
+
+## Continuous integration and coverage
+
+`Extension CI` runs on pull requests, pushes to `main`, and manual dispatch. It uses the pinned Node/pnpm versions and frozen lockfile, checks formatting and lint, type-checks all workspaces (including browser tests), and runs unit tests with coverage. A separate job builds the production Chrome extension and checks its manifest assets. Chromium tests run against that exact build with a local mock AI responder; no API key or paid API calls are needed. The installable ZIP is published as a workflow artifact only after the quality and browser jobs pass. No store submission or automatic deployment occurs.
+
+Failed runs retain HTML coverage reports and Playwright reports, screenshots, and traces for 14 days. Dependency updates cover both npm packages and pinned GitHub Actions. The old workflow that automatically retargeted pull requests to `develop` has been removed; this fork uses `main`.
+
+Coverage includes untested runtime source, so the overall percentage is deliberately honest about the remaining UI and recording gaps. The global floor is 10% for lines, statements, functions, and branches. Redaction, base storage, the AI helper server/client, and AI session orchestration each require 90% on all four metrics. Reports are written to `coverage/index.html` and `coverage/lcov.info`. See [testing notes](docs/TESTING.md) for scope and limitations.
+
+Build commands use `.env.development` or `.env.production` when present and otherwise fall back to tracked `.example.env`, so a fresh checkout builds without private configuration. Generated CLI flags take precedence over stale flags in those files.
 
 ## Project structure
 
@@ -148,4 +159,4 @@ This project is based on the original [Brie Extension](https://github.com/briehq
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE).
+Apache-2.0. See [LICENSE](LICENSE.md).

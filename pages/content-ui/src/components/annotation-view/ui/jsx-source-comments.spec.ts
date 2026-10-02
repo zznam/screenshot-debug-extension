@@ -10,7 +10,12 @@ const sourceRoot = resolve(import.meta.dirname, '../../../../../..');
 
 describe('rendered JSX labels', () => {
   it('does not render source comments as visible text', async () => {
-    const files = await fg(['pages/**/*.tsx', 'packages/**/*.tsx'], { cwd: sourceRoot, absolute: true });
+    const files = await fg(['pages/**/*.tsx', 'packages/**/*.tsx'], {
+      cwd: sourceRoot,
+      absolute: true,
+      ignore: ['**/node_modules/**', '**/dist/**'],
+      followSymbolicLinks: false,
+    });
     const leaks: string[] = [];
 
     for (const file of files) {

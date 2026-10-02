@@ -10,7 +10,9 @@
     "e2e:headed": "playwright test --headed",
     "clean:node_modules": "pnpx rimraf node_modules",
     "clean:turbo": "pnpx rimraf .turbo",
-    "clean": "pnpm clean:turbo && pnpm clean:node_modules"
+    "clean": "pnpm clean:turbo && pnpm clean:node_modules",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "devDependencies": {
     "@extension/tsconfig": "workspace:*",
