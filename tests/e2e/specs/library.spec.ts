@@ -3,8 +3,9 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { chromium } from '@playwright/test';
-import type { BrowserContext, Page, Worker } from '@playwright/test';
+import type { BrowserContext, Worker } from '@playwright/test';
 
+import { drawRectangle } from '../fixtures/annotations.js';
 import { expect, test } from '../fixtures/extension.js';
 
 const captureViewport = async (context: BrowserContext, worker: Worker, suffix: string) => {
@@ -21,20 +22,6 @@ const captureViewport = async (context: BrowserContext, worker: Worker, suffix: 
   return page;
 };
 
-const annotate = async (page: Page) => {
-  await page.getByRole('button', { name: 'Rectangle', exact: true }).click();
-  await page.getByRole('menuitemcheckbox', { name: 'Rectangle', exact: true }).click();
-  const canvas = page.locator('canvas.upper-canvas');
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error('Canvas missing');
-  await canvas.click({ trial: true, position: { x: box.width * 0.2, y: box.height * 0.2 } });
-  await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.2);
-  await page.mouse.down();
-  await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.4, { steps: 8 });
-  await page.mouse.up();
-  await expect(page.getByRole('button', { name: 'Start over' })).toBeEnabled();
-};
-
 test('saves annotated evidence, reopens after the source closes, and searches renamed captures', async ({
   context,
   serviceWorker,
@@ -43,7 +30,7 @@ test('saves annotated evidence, reopens after the source closes, and searches re
 }, testInfo) => {
   const page = await captureViewport(context, serviceWorker, 'manual');
   await page.getByRole('button', { name: 'Save manually', exact: true }).click();
-  await annotate(page);
+  await drawRectangle(page);
   await page.getByRole('button', { name: 'Save to library', exact: true }).click();
   await expect(page.getByText('Saved to your local library.', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Minimize', exact: true }).click();
@@ -61,7 +48,7 @@ test('saves annotated evidence, reopens after the source closes, and searches re
   await expect(library.locator('.library-card')).toHaveCount(1);
   await library.getByRole('searchbox', { name: 'Search' }).focus();
   await library.keyboard.press('Tab');
-  await expect(library.getByLabel('Domain', { exact: true })).toBeFocused();
+  await expect(library.getByRole('combobox', { name: 'Domain', exact: true })).toBeFocused();
   await library.locator('.library-card').focus();
   await library.keyboard.press('Enter');
   await expect(library.getByRole('img', { name: /screenshot 1/ })).toBeVisible();
@@ -129,7 +116,7 @@ test('automatically saves once, updates annotations, and keeps capture data acro
     const page = await captureViewport(context, worker, 'automatic');
     await page.getByRole('button', { name: 'Save automatically', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Saved', exact: true })).toBeVisible();
-    await annotate(page);
+    await drawRectangle(page);
     await expect(page.getByRole('button', { name: 'Saved', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Minimize', exact: true }).click();
     await page.locator('#brie-minimized-preview').waitFor();

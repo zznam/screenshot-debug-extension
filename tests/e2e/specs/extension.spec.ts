@@ -2,6 +2,7 @@ import type { Worker } from '@playwright/test';
 import { unzipSync } from 'fflate';
 
 import packageJson from '../../../package.json' with { type: 'json' };
+import { drawRectangle } from '../fixtures/annotations.js';
 import { expect, test } from '../fixtures/extension.js';
 
 const targetUrl = 'http://127.0.0.1:4174/';
@@ -222,43 +223,7 @@ test('starts AI Debug from the current annotated screenshot', async ({ context, 
   expect(await startViewportCapture(serviceWorker, annotatedTargetUrl)).toEqual({ ok: true });
   await expect(target.getByTestId('screenshot-editor')).toBeVisible();
 
-  await expect
-    .poll(() =>
-      serviceWorker.evaluate(async () => {
-        const stored = await chrome.storage.local.get('annotations-storage-key');
-        const annotations = stored['annotations-storage-key'] as Record<string, { objects?: unknown[] }> | undefined;
-        return Object.keys(annotations ?? {}).length;
-      }),
-    )
-    .toBeGreaterThan(0);
-
-  await serviceWorker.evaluate(async () => {
-    const key = 'annotations-storage-key';
-    const stored = await chrome.storage.local.get(key);
-    const annotations = stored[key] as Record<string, { objects?: unknown[] }>;
-    const screenshotId = Object.keys(annotations)[0];
-    annotations[screenshotId] = {
-      ...annotations[screenshotId],
-      objects: [
-        {
-          type: 'Rect',
-          version: '6.7.1',
-          left: 40,
-          top: 40,
-          width: 120,
-          height: 70,
-          fill: 'transparent',
-          stroke: '#ef4444',
-          strokeWidth: 5,
-          objectId: 'e2e-annotation',
-          shapeType: 'rectangle',
-        },
-      ],
-    };
-    await chrome.storage.local.set({ [key]: annotations });
-  });
-
-  await expect(target.getByRole('button', { name: 'Start over' })).toBeEnabled();
+  await drawRectangle(target);
   await target.getByRole('button', { name: 'Minimize' }).click();
   await expect(target.getByTestId('screenshot-editor')).toHaveCount(0);
   await target.getByRole('button', { name: 'Edit' }).click();

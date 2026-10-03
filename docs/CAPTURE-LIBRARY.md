@@ -27,3 +27,7 @@ The thumbnail-history interaction is adapted from Brie, replacing its authentica
 ## Verification
 
 Unit tests exercise upload ordering and ownership, frozen metadata, revision conflicts, atomic asset replacement, invalid inputs, staging cleanup, search filters, and redaction. Chromium tests cover real annotated capture saving, reopening after the source tab closes, tags/search/deletion, responsive layouts, automatic updates, and a complete browser restart.
+
+The production bundle passed all 18 integration scenarios in Linux with Playwright 1.61.1, including the existing capture, image-export, Settings, and AI Debug regressions. Annotation scenarios draw through the editor rather than injecting state during canvas initialization.
+
+Screenshots from the browser tests: [desktop](images/capture-library/desktop.png), [tablet](images/capture-library/tablet.png), [mobile](images/capture-library/mobile.png), and [restored annotated capture](images/capture-library/restored-capture.png).
