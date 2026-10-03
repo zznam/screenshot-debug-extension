@@ -42,36 +42,29 @@ for (const format of ['png', 'jpeg']) {
       .poll(async () =>
         serviceWorker.evaluate(async () => {
           const stored = await chrome.storage.local.get('annotations-storage-key');
-          return Object.keys((stored['annotations-storage-key'] as Record<string, unknown>) ?? {}).length;
+          const annotations = stored['annotations-storage-key'] as
+            | Record<string, { meta?: { sizes?: { natural?: { width?: number } } } }>
+            | undefined;
+          return Object.values(annotations ?? {}).filter(
+            annotation => (annotation.meta?.sizes?.natural?.width ?? 0) > 0,
+          ).length;
         }),
       )
       .toBeGreaterThan(0);
-    await serviceWorker.evaluate(async () => {
-      const key = 'annotations-storage-key';
-      const stored = await chrome.storage.local.get(key);
-      const annotations = stored[key] as Record<string, { objects?: unknown[] }>;
-      const id = Object.keys(annotations)[0];
-      annotations[id].objects = [
-        {
-          type: 'Rect',
-          version: '6.7.1',
-          left: 40,
-          top: 40,
-          width: 120,
-          height: 70,
-          fill: '#ef4444',
-          stroke: '#ef4444',
-          strokeWidth: 5,
-          objectId: 'export-test',
-          shapeType: 'rectangle',
-        },
-      ];
-      await chrome.storage.local.set({ [key]: annotations });
+    await page.getByRole('button', { name: 'Rectangle', exact: true }).click();
+    await page.getByRole('menuitemcheckbox', { name: 'Rectangle', exact: true }).click();
+    const surface = await page.locator('canvas.upper-canvas').boundingBox();
+    if (!surface) throw new Error('The annotation canvas is not visible.');
+    // Wait for the dropdown's closing overlay to release pointer events before dragging.
+    await page.locator('canvas.upper-canvas').click({
+      trial: true,
+      position: { x: surface.width * 0.25, y: surface.height * 0.25 },
     });
+    await page.mouse.move(surface.x + surface.width * 0.25, surface.y + surface.height * 0.25);
+    await page.mouse.down();
+    await page.mouse.move(surface.x + surface.width * 0.55, surface.y + surface.height * 0.45, { steps: 8 });
+    await page.mouse.up();
     await expect(page.getByRole('button', { name: 'Start over' })).toBeEnabled();
-    await page.getByRole('button', { name: 'Minimize' }).click();
-    await page.getByRole('button', { name: 'Edit', exact: true }).click();
-    await expect(page.getByTestId('screenshot-editor')).toBeVisible();
     await page.getByRole('button', { name: 'Download', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Download', exact: true })).toBeDisabled();
     await expect(page.getByTestId('screenshot-editor')).toHaveCount(0);
