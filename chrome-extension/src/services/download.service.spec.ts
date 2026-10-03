@@ -113,7 +113,52 @@ describe('capture downloads', () => {
     expect(result).toEqual({ status: 'success', files: ['capture.zip'], downloadIds: [20] });
     const zipUrl = download.mock.calls[0][0].url as string;
     const entries = unzipSync(Uint8Array.from(atob(zipUrl.split(',')[1]), character => character.charCodeAt(0)));
-    expect(Object.keys(entries).sort()).toEqual(['capture.json', 'capture.png', 'network.har']);
+    expect(Object.keys(entries).sort()).toEqual(['capture.json', 'capture.png', 'network.har', 'report.md']);
     expect(JSON.parse(new TextDecoder().decode(entries['capture.json'])).console.errors).toHaveLength(1);
+  });
+  it('uses JPEG filenames and publishes actual attachment metadata without image bytes', async () => {
+    await downloadAssets(
+      { ...payload, screenshots: [{ src: 'data:image/jpeg;base64,anBlZw==', isPrimary: true }] },
+      42,
+    );
+    expect(download.mock.calls[0][0].filename).toBe('capture.jpeg');
+    const report = decodeJsonDataUrl(download.mock.calls[1][0].url);
+    expect(report.screenshots).toEqual([{ filename: 'capture.jpeg', type: 'cropped' }]);
+    expect(JSON.stringify(report)).not.toContain('base64');
+  });
+
+  it('preserves repeated screenshot roles under distinct safe names', async () => {
+    download.mockReset().mockResolvedValue(99);
+    const result = await downloadAssets(
+      {
+        ...payload,
+        name: '../capture:demo',
+        saveDebugLog: false,
+        screenshots: [
+          payload.screenshots[0],
+          payload.screenshots[0],
+          { ...payload.screenshots[0], isPrimary: false },
+          { ...payload.screenshots[0], isPrimary: false },
+        ],
+      },
+      42,
+    );
+    expect(result).toMatchObject({
+      files: ['-capture-demo.png', '-capture-demo-2.png', '-capture-demo-full.png', '-capture-demo-full-2.png'],
+    });
+  });
+
+  it('includes a Markdown issue template and browser HTTP failures in debug ZIPs', async () => {
+    download.mockReset().mockResolvedValue(20);
+    vi.mocked(getRecords).mockResolvedValue([
+      { recordType: 'network', type: 'xmlhttprequest', url: 'https://example.test/missing', statusCode: 404 },
+    ]);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, arrayBuffer: async () => strToU8('png').buffer }));
+    await downloadZip(payload, 42);
+    const url = download.mock.calls[0][0].url as string;
+    const entries = unzipSync(Uint8Array.from(atob(url.split(',')[1]), character => character.charCodeAt(0)));
+    expect(new TextDecoder().decode(entries['report.md'])).toContain('## Steps to reproduce');
+    expect(new TextDecoder().decode(entries['report.md'])).toContain('404');
+    expect(JSON.parse(new TextDecoder().decode(entries['network.har'])).log.entries[0].response.status).toBe(404);
   });
 });

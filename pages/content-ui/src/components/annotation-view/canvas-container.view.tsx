@@ -9,16 +9,18 @@ import {
   annotationsRedoStorage,
   annotationsStorage,
   captureStateStorage,
+  captureSettingsStorage,
 } from '@extension/storage';
 import type { RootState } from '@extension/store';
 import { clearCanvasState, useAppDispatch, useAppSelector } from '@extension/store';
-import { Button, Icon } from '@extension/ui';
+import { Button, Icon, toast } from '@extension/ui';
 
 import { defaultNavElement } from '@src/constants';
 import { useFitCanvasToParent } from '@src/hooks';
 import type { ActiveElement, Attributes, BackgroundFitMeta, ShapeSnapshot } from '@src/models';
 import { base64ToFile } from '@src/utils';
 import { applyBrush, DRAWING_TOOLS, getShadowHostElement } from '@src/utils/annotation/canvas.util';
+import { encodeScreenshot } from '@src/utils/encode-screenshot.util';
 
 import { CanvasWrapper } from './canvas-wrapper.view';
 import { Toolbar } from './ui';
@@ -40,7 +42,6 @@ import {
   setCanvasBackground,
   saveHistory,
   modifyShape,
-  mergeScreenshot,
   hexToRgba,
 } from '../../utils/annotation';
 
@@ -762,26 +763,19 @@ const CanvasContainerView = ({ screenshot, onElement, onAiRendererReady }: Canva
   }, []);
 
   const handleOnExportScreenshot = async (format: string = 'png') => {
-    const { objects, meta } = (await annotationsStorage.getAnnotations(screenshot.id!)) ?? { objects: [], meta: {} };
-
-    const fileName = `${screenshot.name}.${format}`;
-    let file = null;
-
-    if (!objects?.length) {
-      file = await base64ToFile(screenshot.src, fileName);
-    } else {
-      const { width, height } = meta!.sizes!.natural;
-
-      file = await mergeScreenshot({
-        screenshot,
-        objects,
-        parentHeight: height,
-
-        parentWidth: width,
-      });
+    try {
+      const canvas = fabricRef.current;
+      const scale = canvas?.viewportTransform?.[0] || 1;
+      const src = canvas?.toDataURL({ format: 'png', multiplier: 1 / scale }) ?? screenshot.src;
+      const settings = await captureSettingsStorage.get();
+      const outputFormat = format === 'jpeg' ? 'jpeg' : 'png';
+      const encoded = await encodeScreenshot(src, outputFormat, settings.screenshotQuality);
+      const name = screenshot.name || 'screenshot';
+      const file = base64ToFile(encoded, name);
+      saveAs(file, `${name}.${outputFormat}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not export the screenshot.');
     }
-
-    saveAs(file, fileName);
   };
 
   const handleOnRemove = () => {

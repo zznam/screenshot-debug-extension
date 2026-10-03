@@ -56,10 +56,10 @@ export const mergeScreenshot = async ({
 
   canvas.requestRenderAll();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const blob: any = await canvas.toBlob();
+  const blob = await canvas.toBlob();
 
   canvas.dispose();
 
-  return new File([blob], `${screenshot.name}.jpeg`, { type: 'image/jpeg' });
+  if (!blob) throw new Error('Could not render the annotated screenshot.');
+  return new File([blob], `${screenshot.name || 'screenshot'}.png`, { type: 'image/png' });
 };

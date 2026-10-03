@@ -7,6 +7,7 @@ import type { Record as ExtRecord } from '../types';
 import { getRecords } from '../utils';
 import { buildHarLog } from '../utils/har-builder.util';
 import { buildDebugReport } from '../utils/report-builder.util';
+import { buildReportMarkdown } from '../utils/report-markdown.util';
 
 const blobToDataUrl = (blob: Blob): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -17,7 +18,23 @@ const blobToDataUrl = (blob: Blob): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
-const getScreenshotFilename = (name: string, isPrimary: boolean) => `${name}${isPrimary ? '' : '-full'}.png`;
+const safeName = (name: string): string =>
+  Array.from(name, character => (character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127 ? '-' : character))
+    .join('')
+    .replace(/[<>:"/\\|?*]/g, '-')
+    .replace(/^\.+|\.+$/g, '')
+    .trim()
+    .slice(0, 120) || 'capture';
+const screenshotFiles = (payload: DownloadPayload) => {
+  const counts = new Map<string, number>();
+  return payload.screenshots.map(screenshot => {
+    const extension = /^data:image\/jpe?g[;,]/i.test(screenshot.src) ? 'jpeg' : 'png';
+    const base = `${safeName(payload.name)}${screenshot.isPrimary ? '' : '-full'}`;
+    const count = (counts.get(base) ?? 0) + 1;
+    counts.set(base, count);
+    return { ...screenshot, filename: `${base}${count > 1 ? `-${count}` : ''}.${extension}` };
+  });
+};
 const encodeText = (value: string) => Uint8Array.from(new TextEncoder().encode(value));
 
 const snapshotDebugRecords = async (tabId: number | undefined, saveDebugLog: boolean): Promise<ExtRecord[]> => {
@@ -39,10 +56,13 @@ const buildJsonDataUrl = (value: unknown) => {
 
 const buildReport = (records: ExtRecord[], payload: DownloadPayload) =>
   buildDebugReport(records, {
-    ...payload,
-    screenshots: payload.screenshots.map(screenshot => ({
+    timestamp: payload.timestamp,
+    host: payload.host,
+    url: payload.url,
+    title: payload.title,
+    screenshots: screenshotFiles(payload).map(screenshot => ({
       type: screenshot.isPrimary ? 'cropped' : 'full-page',
-      filename: getScreenshotFilename(payload.name, Boolean(screenshot.isPrimary)),
+      filename: screenshot.filename,
     })),
   });
 
@@ -55,15 +75,15 @@ export const downloadAssets = async (
   const files: string[] = [];
   const downloadIds: number[] = [];
 
-  for (const screenshot of payload.screenshots) {
-    const filename = getScreenshotFilename(payload.name, Boolean(screenshot.isPrimary));
+  for (const screenshot of screenshotFiles(payload)) {
+    const { filename } = screenshot;
     const downloadId = await chrome.downloads.download({ url: screenshot.src, filename, saveAs: false });
     files.push(filename);
     downloadIds.push(downloadId);
   }
 
   if (payload.saveDebugLog) {
-    const filename = `${payload.name}.json`;
+    const filename = `${safeName(payload.name)}.json`;
     const downloadId = await chrome.downloads.download({
       url: buildJsonDataUrl(buildReport(records, payload)),
       filename,
@@ -81,20 +101,22 @@ export const downloadZip = async (payload: DownloadPayload, tabId: number | unde
   const records = await snapshotDebugRecords(tabId, payload.saveDebugLog);
   const zipData: globalThis.Record<string, Uint8Array> = {};
 
-  for (const screenshot of payload.screenshots) {
-    const filename = getScreenshotFilename(payload.name, Boolean(screenshot.isPrimary));
+  for (const screenshot of screenshotFiles(payload)) {
+    const { filename } = screenshot;
     const response = await fetch(screenshot.src);
     if (!response.ok) throw new Error(`Failed to prepare ${filename}.`);
     zipData[filename] = new Uint8Array(await response.arrayBuffer());
   }
 
   if (payload.saveDebugLog) {
-    zipData[`${payload.name}.json`] = encodeText(JSON.stringify(buildReport(records, payload), null, 2));
+    const report = buildReport(records, payload);
+    zipData[`${safeName(payload.name)}.json`] = encodeText(JSON.stringify(report, null, 2));
+    zipData['report.md'] = encodeText(buildReportMarkdown(report));
     zipData['network.har'] = encodeText(JSON.stringify(buildHarLog(records, payload.url || 'unknown'), null, 2));
   }
 
   const blob = new Blob([zipSync(zipData)], { type: 'application/zip' });
-  const filename = `${payload.name}.zip`;
+  const filename = `${safeName(payload.name)}.zip`;
   const downloadId = await chrome.downloads.download({
     url: await blobToDataUrl(blob),
     filename,

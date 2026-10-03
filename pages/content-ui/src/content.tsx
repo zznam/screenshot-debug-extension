@@ -16,6 +16,7 @@ import type { ActiveElement } from './models';
 import { mergeScreenshot } from './utils/annotation';
 import { copyBase64ImageToClipboard } from './utils/base64-to-clipboard.util';
 import { downloadCapture } from './utils/download-capture.util';
+import { encodeScreenshot } from './utils/encode-screenshot.util';
 
 const SM_BREAKPOINT = 640;
 const LG_BREAKPOINT = 1024;
@@ -53,6 +54,8 @@ const Content = ({
   const [title, setTitle] = useState('Untitled report');
   const [activeElement, setActiveElement] = useState<ActiveElement>(defaultNavElement);
   const [isStartingAiDebug, setStartingAiDebug] = useState(false);
+  const [isDownloading, setDownloading] = useState(false);
+  const downloadInFlight = useRef(false);
   const aiRendererRef = useRef<(() => string) | null>(null);
 
   const isLg = canvasWidth >= LG_BREAKPOINT;
@@ -73,40 +76,71 @@ const Content = ({
   const handleOnElement = (element: ActiveElement) => setActiveElement(element);
 
   const handleOnDownload = async () => {
-    const timestamp = Date.now();
-    const screenshotName = `${location.host}-${timestamp}`.replaceAll('.', '-');
-
-    const settings = await captureSettingsStorage.get();
-    const saveDebugLog = await debugModeStorage.getDebugMode();
-    const messageType = settings.exportFormat === 'zip' ? 'DOWNLOAD_ZIP' : 'DOWNLOAD_ASSETS';
-
-    const request: DownloadRequest = {
-      type: messageType,
-      payload: {
-        screenshots: screenshots.map(s => ({ src: s.src, isPrimary: s.isPrimary })),
-        name: screenshotName,
-        timestamp,
-        host: location.host,
-        url: location.href,
-        title: document.title,
-        saveDebugLog,
-      },
-    };
-
+    if (downloadInFlight.current) return;
+    downloadInFlight.current = true;
+    setDownloading(true);
     try {
+      const timestamp = Date.now();
+      const screenshotName = `${location.host}-${timestamp}`.replaceAll('.', '-');
+      const [settings, saveDebugLog] = await Promise.all([
+        captureSettingsStorage.get(),
+        debugModeStorage.getDebugMode(),
+      ]);
+      const preparedScreenshots = [];
+      for (const screenshot of screenshots) {
+        let src = screenshot.id === activeScreenshotId ? (aiRendererRef.current?.() ?? screenshot.src) : screenshot.src;
+        if (screenshot.id !== activeScreenshotId || !aiRendererRef.current) {
+          const stored = await annotationsStorage.getAnnotations(screenshot.id!);
+          if (stored?.objects?.length && stored.meta?.sizes?.natural) {
+            const { width, height } = stored.meta.sizes.natural;
+            const file = await mergeScreenshot({
+              screenshot,
+              objects: stored.objects,
+              parentWidth: width,
+              parentHeight: height,
+            });
+            src = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => reject(reader.error ?? new Error('Could not read the annotated screenshot.'));
+              reader.readAsDataURL(file);
+            });
+          }
+        }
+        preparedScreenshots.push({
+          src: await encodeScreenshot(src, settings.screenshotFormat, settings.screenshotQuality),
+          isPrimary: screenshot.isPrimary,
+        });
+      }
+      const request: DownloadRequest = {
+        type: settings.exportFormat === 'zip' ? 'DOWNLOAD_ZIP' : 'DOWNLOAD_ASSETS',
+        payload: {
+          screenshots: preparedScreenshots,
+          name: screenshotName,
+          timestamp,
+          host: location.host,
+          url: location.href,
+          title: title === 'Untitled report' ? document.title : title,
+          saveDebugLog,
+        },
+      };
       await downloadCapture(request);
       onClose?.();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'The download could not be started.';
       toast.error(`Download failed: ${message}`);
       console.error('[download] Failed:', error);
+    } finally {
+      downloadInFlight.current = false;
+      setDownloading(false);
     }
   };
 
   const handleOnCopy = async () => {
     try {
       if (activeScreenshot?.src) {
-        await copyBase64ImageToClipboard(activeScreenshot.src);
+        const src = aiRendererRef.current?.() ?? activeScreenshot.src;
+        await copyBase64ImageToClipboard(await encodeScreenshot(src, 'png'));
         toast.success('Screenshot copied to clipboard!');
       }
     } catch (e) {
@@ -199,6 +233,7 @@ const Content = ({
           canvasWidth={canvasWidth}
           canvasHeight={canvasHeight}
           onDownload={handleOnDownload}
+          downloadLoading={isDownloading}
           onCopy={handleOnCopy}
           onAiDebug={handleOnAiDebug}
           aiDebugLoading={isStartingAiDebug}
