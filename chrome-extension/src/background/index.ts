@@ -12,8 +12,10 @@ import {
   handleOnCommitted,
 } from '@src/services';
 import { initBadgeListener } from '@src/services/badge.service';
+import { initRetentionCleanup } from '@src/services/retention.service';
 
 initBadgeListener();
+initRetentionCleanup();
 
 tabs.onRemoved.addListener(handleOnTabRemoved);
 tabs.onUpdated.addListener(handleOnTabUpdated);

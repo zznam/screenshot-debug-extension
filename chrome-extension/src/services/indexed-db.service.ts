@@ -95,3 +95,21 @@ export const deleteRecordsFromDB = async (tabId: number): Promise<void> => {
     console.error('[IndexedDB] deleteRecordsFromDB error:', error);
   }
 };
+
+export const deleteRecordsBeforeFromDB = async (cutoff: number): Promise<void> => {
+  const db = await initDB();
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const request = transaction.objectStore(STORE_NAME).openCursor();
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (!cursor) return;
+      const timestamp = cursor.value.timestamp;
+      if (!Number.isFinite(timestamp) || timestamp < cutoff) cursor.delete();
+      cursor.continue();
+    };
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error);
+  });
+};

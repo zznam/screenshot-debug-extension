@@ -1,7 +1,9 @@
 // rewind.service.ts
 import type { Runtime } from 'webextension-polyfill';
+import { tabs } from 'webextension-polyfill';
 
 import { REWIND, isRewindBlocked, sendMessageToTab } from '@extension/shared';
+import { domainSkipListStorage } from '@extension/storage';
 
 import { deleteTabAll, deleteBefore, getRange, putBatch } from '@src/services';
 
@@ -431,6 +433,17 @@ const resetTabRewind = async (tabId: number): Promise<void> => {
   tabState.latestEventTimestampSeen = null;
 };
 
+const freezeAllowedTab = async (tabId: number): Promise<FrozenRewindSnapshot> => {
+  const tab = await tabs.get(tabId).catch(() => null);
+  if (tab?.url && (await domainSkipListStorage.isDomainSkipped(tab.url))) {
+    await resetTabRewind(tabId);
+    const now = Date.now();
+    return { fromTimestamp: now, toTimestamp: now, events: [] };
+  }
+  const existing = getTabRewindState(tabId).frozenSnapshot;
+  return existing ?? freezeTabRewind(tabId);
+};
+
 export const rewindService = {
   setEnabled: async (tabId: number, enabled: boolean): Promise<void> => {
     const tabState = getTabRewindState(tabId);
@@ -447,18 +460,21 @@ export const rewindService = {
 
     const blockState = getBlockStateFromSender(sender);
     if (blockState.blocked) return;
+    if (sender.tab?.url && (await domainSkipListStorage.isDomainSkipped(sender.tab.url))) {
+      await resetTabRewind(tabId);
+      return;
+    }
 
     await ingestRewindEvents(tabId, Array.isArray(events) ? events : []);
   },
 
   freeze: async (tabId: number): Promise<FrozenRewindSnapshot> => {
-    return freezeTabRewind(tabId);
+    clearFrozenSnapshotOnly(tabId);
+    return freezeAllowedTab(tabId);
   },
 
   getFrozenOrFreeze: async (tabId: number): Promise<FrozenRewindSnapshot> => {
-    const existing = getTabRewindState(tabId).frozenSnapshot;
-    if (existing) return existing;
-    return freezeTabRewind(tabId);
+    return freezeAllowedTab(tabId);
   },
 
   clearFrozenOnly: (tabId: number): void => {

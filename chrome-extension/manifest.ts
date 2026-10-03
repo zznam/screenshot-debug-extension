@@ -38,6 +38,7 @@ const manifest = {
     'webRequest',
     'webNavigation',
     'storage',
+    'alarms',
     'tabs',
     'activeTab',
     'contextMenus',

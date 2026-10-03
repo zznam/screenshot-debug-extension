@@ -1,5 +1,5 @@
 import { RECORDING } from '@extension/shared';
-import { captureSettingsStorage } from '@extension/storage';
+import { captureSettingsStorage, domainSkipListStorage } from '@extension/storage';
 
 import { pauseRecording, resumeRecording, startCaptureNow, stopRecording, toggleMic } from '../capture';
 import { startPerformanceObserver } from '../utils/events/performance.observer';
@@ -24,8 +24,11 @@ export const addWindowEventListeners = () => {
           if (now - lastAutoScreenshotTime > 30000) {
             // 30s debounce
             lastAutoScreenshotTime = now;
-            captureSettingsStorage.get().then(settings => {
-              if (settings.autoScreenshotOnError) {
+            Promise.all([
+              captureSettingsStorage.get(),
+              domainSkipListStorage.isDomainSkipped(window.location.href),
+            ]).then(([settings, skipped]) => {
+              if (settings.autoScreenshotOnError && !skipped) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 chrome.runtime.sendMessage({ action: 'captureVisibleTab' }).then((res: any) => {
                   if (res?.success && res.dataUrl) {
