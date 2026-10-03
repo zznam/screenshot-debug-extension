@@ -25,3 +25,6 @@ tsconfig.tsbuildinfo
 
 # compiled
 **/tailwind-output.css
+
+# pnpm runtime/store cache
+.pnpm-store/

@@ -44,10 +44,10 @@
     "message": "Area"
   },
   "viewport": {
-    "message": "Window"
+    "message": "Viewport"
   },
   "fullPage": {
-    "message": "Fullscreen"
+    "message": "Full page"
   },
   "navigateToWebsite": {
     "message": "Navigate to any website to start capturing bugs."

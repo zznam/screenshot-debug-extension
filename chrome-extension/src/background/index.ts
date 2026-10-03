@@ -1,6 +1,7 @@
 import { tabs, contextMenus, runtime, webRequest, webNavigation } from 'webextension-polyfill';
 
 import {
+  handleOnCaptureCommand,
   handleOnBeforeRequest,
   handleOnBeforeSendHeaders,
   handleOnCompleted,
@@ -32,3 +33,4 @@ webRequest.onBeforeRequest.addListener(handleOnBeforeRequest, { urls: ['<all_url
 webRequest.onBeforeSendHeaders.addListener(handleOnBeforeSendHeaders, { urls: ['<all_urls>'] }, ['requestHeaders']);
 webRequest.onCompleted.addListener(handleOnCompleted, { urls: ['<all_urls>'] });
 webNavigation.onCommitted.addListener(handleOnCommitted);
+chrome.commands.onCommand.addListener((command, tab) => void handleOnCaptureCommand(command, tab));
