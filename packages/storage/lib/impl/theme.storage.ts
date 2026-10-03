@@ -2,39 +2,55 @@ import { createStorage, StorageEnum } from '../base/index.js';
 import type { BaseStorage } from '../base/index.js';
 
 type Theme = 'light' | 'dark';
+type ThemePreference = Theme | 'system';
 
-type ThemeStorage = BaseStorage<Theme> & {
-  toggle: () => Promise<void>;
-};
-
-const storage = createStorage<Theme>('theme-storage-key', 'light', {
+const preference = createStorage<ThemePreference>('theme-storage-key', 'system', {
   storageEnum: StorageEnum.Local,
   liveUpdate: true,
 });
+const systemListeners = new Set<() => void>();
+let mediaQuery: MediaQueryList | null = null;
 
-const detectSystemTheme = (): Theme => {
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  return prefersDark ? 'dark' : 'light';
+const resolveTheme = (value: ThemePreference): Theme => {
+  if (value === 'light' || value === 'dark') return value;
+  return globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
 
 const applySystemTheme = () => {
-  const systemTheme = detectSystemTheme();
-  storage.set(() => systemTheme);
+  if (preference.getSnapshot() === 'system') systemListeners.forEach(listener => listener());
 };
 
 const listenToSystemThemeChanges = () => {
-  const mql = window.matchMedia('(prefers-color-scheme: dark)');
-  mql.addEventListener('change', applySystemTheme);
+  if (mediaQuery || !globalThis.matchMedia) return;
+  mediaQuery = globalThis.matchMedia('(prefers-color-scheme: dark)');
+  mediaQuery.addEventListener('change', applySystemTheme);
 };
 
-export const themeStorage: ThemeStorage & {
+const themePreferenceStorage: BaseStorage<ThemePreference> = preference;
+const themeStorage: BaseStorage<Theme> & {
+  toggle: () => Promise<void>;
   applySystemTheme: () => void;
   listenToSystemThemeChanges: () => void;
 } = {
-  ...storage,
-  toggle: async () => {
-    await storage.set(currentTheme => (currentTheme === 'light' ? 'dark' : 'light'));
+  get: async () => resolveTheme(await preference.get()),
+  set: value => preference.set(async previous => (typeof value === 'function' ? value(resolveTheme(previous)) : value)),
+  getSnapshot: () => {
+    const value = preference.getSnapshot();
+    return value === null ? null : resolveTheme(value);
   },
+  subscribe: listener => {
+    listenToSystemThemeChanges();
+    systemListeners.add(listener);
+    const unsubscribe = preference.subscribe(listener);
+    return () => {
+      systemListeners.delete(listener);
+      unsubscribe();
+    };
+  },
+  toggle: () => preference.set(previous => (resolveTheme(previous) === 'light' ? 'dark' : 'light')),
   applySystemTheme,
   listenToSystemThemeChanges,
 };
+
+export { themeStorage, themePreferenceStorage };
+export type { Theme, ThemePreference };

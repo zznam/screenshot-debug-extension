@@ -2,7 +2,7 @@
 import { record } from 'rrweb';
 
 import { isRewindBlocked, REWIND } from '@extension/shared';
-import { rewindSettingsStorage } from '@extension/storage';
+import { domainSkipListStorage, rewindSettingsStorage } from '@extension/storage';
 
 type RrwebStopFunction = () => void;
 
@@ -118,6 +118,7 @@ const isHostDisabledByUser = async (url: string): Promise<boolean> => {
 const computeCapturePolicy = async (url: string): Promise<CapturePolicy> => {
   if (!isRewindGloballyEnabled) return { allowed: false, reason: 'rewind-disabled', url };
   if (isRestrictedScheme(url)) return { allowed: false, reason: 'restricted-scheme', url };
+  if (await domainSkipListStorage.isDomainSkipped(url)) return { allowed: false, reason: 'domain-skipped', url };
 
   const denylistState = getDenylistBlockState(url);
   if (denylistState.blocked) return { allowed: false, reason: denylistState.reason ?? 'blocked', url };
@@ -223,6 +224,7 @@ const bootstrap = async (): Promise<void> => {
   isRewindGloballyEnabled = await rewindSettingsStorage.isRewindEnabled();
   await applyPolicy(window.location.href);
   startUrlWatcher();
+  domainSkipListStorage.subscribe(() => void applyPolicy(window.location.href));
 };
 
 bootstrap();

@@ -2,11 +2,17 @@ import { v4 as uuidv4 } from 'uuid';
 import { tabs } from 'webextension-polyfill';
 
 import { deepRedactSensitiveInfo } from '@extension/shared';
+import { captureSettingsStorage, domainSkipListStorage } from '@extension/storage';
 
 import type { Record } from '@src/types';
 
 import { decodeRequestBody } from './decode-request-body.util';
-import { deleteRecordsFromDB, getRecordsFromDB, putRecordToDB } from '../services/indexed-db.service';
+import {
+  deleteRecordsBeforeFromDB,
+  deleteRecordsFromDB,
+  getRecordsFromDB,
+  putRecordToDB,
+} from '../services/indexed-db.service';
 
 const RESTRICTED: string[] = [];
 
@@ -39,6 +45,14 @@ export const deleteRecords = async (tabId: number) => {
 export const getRecords = async (tabId: number): Promise<Record[]> => {
   if (!tabId) return [];
 
+  const sourceTab = await tabs.get(tabId).catch(() => null);
+  if (sourceTab?.url && (await domainSkipListStorage.isDomainSkipped(sourceTab.url))) {
+    await deleteRecords(tabId);
+    return [];
+  }
+
+  await pruneExpiredRecords();
+
   if (tabRecordsMap.has(tabId)) {
     return Array.from(tabRecordsMap.get(tabId)!.values());
   }
@@ -66,8 +80,10 @@ export const addOrMergeRecords = async (tabId: number, record: Record): Promise<
     return;
   }
 
-  const [tab] = await tabs.query({ active: true, lastFocusedWindow: true });
-  const tabUrl = tab?.url || record?.url;
+  const tab = await tabs.get(tabId).catch(() => null);
+  const tabUrl = tab?.url || record?.pageUrl || record?.url;
+  if (await domainSkipListStorage.isDomainSkipped(tabUrl)) return;
+  if (record.url !== tabUrl && (await domainSkipListStorage.isDomainSkipped(record.url))) return;
 
   if (!tabRecordsMap.has(tabId)) {
     tabRecordsMap.set(tabId, new Map());
@@ -78,7 +94,7 @@ export const addOrMergeRecords = async (tabId: number, record: Record): Promise<
 
   try {
     if (record.recordType !== 'network') {
-      const newRecord = { uuid, ...deepRedactSensitiveInfo(record, tabUrl) };
+      const newRecord = { uuid, timestamp: Date.now(), ...deepRedactSensitiveInfo(record, tabUrl) };
       recordsMap.set(uuid, newRecord);
       putRecordToDB(tabId, newRecord);
       return;
@@ -144,7 +160,7 @@ export const addOrMergeRecords = async (tabId: number, record: Record): Promise<
     };
 
     if (!recordsMap.has(recordKey)) {
-      const newRecord = { uuid, ...redactedRecord };
+      const newRecord = { uuid, timestamp: Date.now(), ...redactedRecord };
       recordsMap.set(recordKey, newRecord);
       putRecordToDB(tabId, newRecord);
       return;
@@ -175,4 +191,16 @@ export const addOrMergeRecords = async (tabId: number, record: Record): Promise<
   } catch (e) {
     console.error('[addOrMergeRecords] Primary: Failed to process network record:', e);
   }
+};
+
+export const pruneExpiredRecords = async (): Promise<void> => {
+  const { retentionMinutes } = await captureSettingsStorage.get();
+  if (!retentionMinutes) return;
+  const cutoff = Date.now() - retentionMinutes * 60_000;
+  for (const records of tabRecordsMap.values()) {
+    for (const [key, record] of records) {
+      if (!Number.isFinite(record.timestamp) || record.timestamp < cutoff) records.delete(key);
+    }
+  }
+  await deleteRecordsBeforeFromDB(cutoff);
 };
