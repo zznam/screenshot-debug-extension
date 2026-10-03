@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { t } from '@extension/i18n';
 import { useStorage } from '@extension/shared';
 import { captureStateStorage } from '@extension/storage';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@extension/ui';
+import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@extension/ui';
 
 import { AiDebugButton, CaptureScreenshotGroup, DebugToggle } from './components/capture';
 import { RecordingControls } from './components/recording';
@@ -52,6 +52,15 @@ export const PopupContent = () => {
       </Tabs>
       {captureState === 'idle' && <SlicesHistoryButton onClick={() => setShowSlicesHistory(true)} />}
       {captureState === 'idle' && <SettingsButton onClick={() => setShowSettings(true)} />}
+      {captureState === 'idle' && (
+        <Button
+          variant="link"
+          size="sm"
+          className="mt-2 w-full text-xs"
+          onClick={() => void chrome.tabs.create({ url: 'chrome://extensions/shortcuts' })}>
+          Customize capture shortcuts
+        </Button>
+      )}
       <BetaNotifier />
     </>
   );

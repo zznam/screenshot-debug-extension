@@ -64,6 +64,11 @@ const manifest = {
     48: 'icon-48.png',
     128: 'icon-128.png',
   },
+  commands: {
+    'capture-area': { suggested_key: { default: 'Alt+Shift+A' }, description: 'Capture a selected area' },
+    'capture-viewport': { suggested_key: { default: 'Alt+Shift+V' }, description: 'Capture the visible viewport' },
+    'capture-full-page': { suggested_key: { default: 'Alt+Shift+F' }, description: 'Capture the full page' },
+  },
   content_scripts: [
     {
       matches: ['http://*/*', 'https://*/*', '<all_urls>'],

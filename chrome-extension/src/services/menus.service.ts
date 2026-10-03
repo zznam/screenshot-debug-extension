@@ -3,10 +3,10 @@ import type { ContextMenus, Menus, Tabs } from 'webextension-polyfill';
 import { contextMenus } from 'webextension-polyfill';
 
 import { t } from '@extension/i18n';
-import { captureStateStorage, captureTabStorage } from '@extension/storage';
 
 import type { CaptureType } from '@src/types';
-import { sendMessageToTab } from '@src/utils';
+
+import { startScreenshotFromTab } from './capture-start.service';
 
 export const addContextMenus = async (): Promise<void> => {
   try {
@@ -51,12 +51,8 @@ export const handleOnContextMenuClicked = async (info: Menus.OnClickData, tab?: 
     const type = info.menuItemId as CaptureType;
     if (!['area', 'full-page', 'viewport'].includes(type)) return;
 
-    await captureTabStorage.setCaptureTabId(tabId);
-    await captureStateStorage.setCaptureState('capturing');
-
-    await sendMessageToTab(tabId, { action: 'START_SCREENSHOT', payload: { type } });
+    await startScreenshotFromTab(tabId, type);
   } catch (e) {
-    await Promise.allSettled([captureStateStorage.setCaptureState('idle'), captureTabStorage.setCaptureTabId(null)]);
-    console.error('[background] onContextMenuClicked error:', e);
+    console.warn('[background] Capture could not start:', e);
   }
 };

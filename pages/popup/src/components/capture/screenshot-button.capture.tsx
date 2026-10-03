@@ -1,26 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@extension/i18n';
-import { useStorage } from '@extension/shared';
-import { captureStateStorage, captureTabStorage } from '@extension/storage';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  Button,
-  cn,
-  Icon,
-  Label,
-  RadioGroup,
-  RadioGroupItem,
-} from '@extension/ui';
+import { getCapturePageError, useStorage } from '@extension/shared';
+import { captureStateStorage, captureTabStorage, captureStartErrorStorage } from '@extension/storage';
+import { Alert, AlertDescription, AlertTitle, Button, Icon } from '@extension/ui';
 
-import {
-  beginScreenshotCapture,
-  exitScreenshotCapture,
-  reconcileScreenshotCaptureOwner,
-  sendMessageToTab,
-} from '@src/utils';
+import { exitScreenshotCapture, reconcileScreenshotCaptureOwner } from '@src/utils';
 
 const captureTypes = [
   {
@@ -34,7 +19,7 @@ const captureTypes = [
     slug: 'full-page',
     icon: 'RectangleVertical',
   },
-];
+] as const;
 
 export const CaptureScreenshotGroup = () => {
   const captureModeAndState = useStorage(captureStateStorage);
@@ -44,8 +29,9 @@ export const CaptureScreenshotGroup = () => {
   const [activeTab, setActiveTab] = useState({ id: null as number | null, url: '' });
   const [currentActiveTab, setCurrentActiveTab] = useState<number>();
   const [captureError, setCaptureError] = useState<string | null>(null);
-
-  const isCaptureActive = useMemo(() => captureState === 'capturing', [captureState]);
+  const startError = useStorage(captureStartErrorStorage);
+  const [starting, setStarting] = useState(false);
+  const startingRef = useRef(false);
 
   useEffect(() => {
     const initializeState = async () => {
@@ -77,39 +63,34 @@ export const CaptureScreenshotGroup = () => {
       }
     };
 
-    initializeState();
+    void initializeState().catch(error => setCaptureError(error instanceof Error ? error.message : String(error)));
     window.addEventListener('keydown', handleEscapeKey);
 
     return () => window.removeEventListener('keydown', handleEscapeKey);
   }, [captureState, captureTabId]);
 
-  const handleCaptureScreenshot = async (type?: 'full-page' | 'viewport' | 'area') => {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-
-    if (tabs[0]?.id && type) {
-      setCaptureError(null);
-      await beginScreenshotCapture(tabs[0].id);
-      setActiveTab(prev => ({ ...prev, id: tabs[0].id! }));
-
-      try {
-        const response = await sendMessageToTab<{ ok?: boolean; error?: string }>(tabs[0].id, {
-          action: 'START_SCREENSHOT',
-          payload: { type },
-        });
-
-        if (!response?.ok) throw new Error(response?.error ?? 'Unable to start screenshot capture.');
-        window.close();
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.error('Error starting capture:', type, error);
-        setCaptureError(message);
-        try {
-          await exitScreenshotCapture(tabs[0].id);
-        } catch (cleanupError) {
-          setCaptureError(cleanupError instanceof Error ? cleanupError.message : String(cleanupError));
-        }
-        setActiveTab(prev => ({ ...prev, id: null }));
-      }
+  const handleCaptureScreenshot = async (type: 'full-page' | 'viewport' | 'area') => {
+    if (startingRef.current) return;
+    startingRef.current = true;
+    setStarting(true);
+    setCaptureError(null);
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (typeof tab?.id !== 'number') throw new Error('Could not find the active page.');
+      const unavailable = getCapturePageError(tab.url);
+      if (unavailable) throw new Error(unavailable);
+      const response = (await chrome.runtime.sendMessage({
+        type: 'START_SCREENSHOT_CAPTURE',
+        tabId: tab.id,
+        captureType: type,
+      })) as { ok?: boolean; error?: string; message?: string };
+      if (!response?.ok) throw new Error(response?.error ?? response?.message ?? 'Unable to start screenshot capture.');
+      window.close();
+    } catch (error) {
+      setCaptureError(error instanceof Error ? error.message : String(error));
+    } finally {
+      startingRef.current = false;
+      setStarting(false);
     }
   };
 
@@ -149,16 +130,7 @@ export const CaptureScreenshotGroup = () => {
     }
   };
 
-  const isInternalPage = activeTab.url.startsWith('about:') || activeTab.url.startsWith('chrome:');
-  const showExitCapture = isCaptureActive && currentActiveTab !== activeTab.id;
-
-  if (isInternalPage && captureState !== 'capturing' && currentActiveTab !== activeTab.id) {
-    return (
-      <Alert className="text-center">
-        <AlertDescription className="text-[12px]">{t('navigateToWebsite')}</AlertDescription>
-      </Alert>
-    );
-  }
+  const unavailable = getCapturePageError(activeTab.url);
 
   if (captureState === 'capturing' && currentActiveTab !== activeTab.id) {
     return (
@@ -195,46 +167,40 @@ export const CaptureScreenshotGroup = () => {
 
   return (
     <>
-      {captureError && (
-        <Alert variant="destructive" className="mb-3">
-          <AlertDescription className="text-[12px]">{captureError}</AlertDescription>
+      {unavailable && (
+        <Alert className="mb-3 text-center">
+          <AlertDescription className="text-[12px]">
+            {t('navigateToWebsite')} {unavailable}
+          </AlertDescription>
         </Alert>
       )}
-      <RadioGroup
-        className={cn('border-muted grid w-full gap-4 rounded-xl border bg-slate-100/20 p-2', {
-          'grid-cols-3': !showExitCapture,
-        })}>
-        {showExitCapture ? (
-          <button
-            className="hover:bg-accent flex w-full items-center justify-center rounded-md border border-transparent py-4"
-            onClick={handleOnDiscard}>
-            <Icon name="X" size={20} strokeWidth={1.5} className="mr-1" />
-            <span>{t('exitCaptureScreenshot')}</span>
-          </button>
-        ) : (
-          <>
-            {captureTypes.map(type => (
-              <div key={type.slug}>
-                <RadioGroupItem
-                  value={type.slug}
-                  id={type.slug}
-                  className="peer sr-only"
-                  onClick={() => handleCaptureScreenshot(type.slug as 'area' | 'viewport' | 'full-page')}
-                />
-                <Label
-                  htmlFor={type.slug}
-                  className={cn(
-                    'hover:bg-accent hover:text-accent-foreground flex flex-col items-center justify-between rounded-md border border-transparent py-3 hover:cursor-pointer hover:border-slate-200 dark:border-0',
-                  )}>
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  <Icon name={type.icon as any} className="mb-3 size-5" strokeWidth={type.slug === 'area' ? 2 : 1.5} />
-                  <span className="text-nowrap text-[11px]">{type.name}</span>
-                </Label>
-              </div>
-            ))}
-          </>
-        )}
-      </RadioGroup>
+      {(captureError || startError) && (
+        <Alert variant="destructive" className="mb-3">
+          <AlertDescription className="text-[12px]">{captureError || startError}</AlertDescription>
+        </Alert>
+      )}
+      <div
+        role="group"
+        aria-label="Screenshot capture modes"
+        className="border-muted grid w-full grid-cols-3 gap-2 rounded-xl border bg-slate-100/20 p-2">
+        {captureTypes.map(type => (
+          <Button
+            key={type.slug}
+            id={type.slug}
+            variant="ghost"
+            disabled={starting || Boolean(unavailable)}
+            onClick={() => void handleCaptureScreenshot(type.slug)}
+            className="h-auto flex-col gap-3 py-4">
+            <Icon name={type.icon} className="size-5" strokeWidth={type.slug === 'area' ? 2 : 1.5} />
+            <span className="text-nowrap text-[11px]">{type.name}</span>
+          </Button>
+        ))}
+      </div>
+      {starting && (
+        <p role="status" className="text-muted-foreground mt-2 text-center text-xs">
+          Starting capture…
+        </p>
+      )}
 
       {activeTab.id !== currentActiveTab && captureState === 'capturing' && (
         <Button type="button" variant="link" size="sm" className="w-full" onClick={handleGoToActiveTab}>

@@ -1,12 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { CONTENT_SCRIPT } from '@extension/shared';
-
-import { createSendMessageToTab } from './send-message-to-tab.util';
-
-vi.mock('@extension/shared', () => ({
-  CONTENT_SCRIPT: { PING: 'CONTENT_SCRIPT:PING' },
-}));
+import { createSendMessageToTab } from './send-capture-message.util.js';
+import { CONTENT_SCRIPT } from '../constants/messages/content-script.message.js';
 
 const missingReceiver = new Error('Could not establish connection. Receiving end does not exist.');
 

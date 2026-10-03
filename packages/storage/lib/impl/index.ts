@@ -21,3 +21,4 @@ export type {
 
 export * from './theme.storage.js';
 export * from './user-uuid.storage.js';
+export { captureStartErrorStorage } from './capture/start-error.storage.js';

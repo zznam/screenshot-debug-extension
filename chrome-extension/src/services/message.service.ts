@@ -10,6 +10,7 @@ import { addOrMergeRecords, deleteRecords, getRecords, rewindService } from '@sr
 
 import { getAiDebug, listAiDebug, removeAiDebug, saveAiDebugMessage, startAiDebug } from './ai-debug.service';
 import { handleOnAuthStart } from './auth.service';
+import { startScreenshotFromTab } from './capture-start.service';
 import { downloadAssets, downloadZip } from './download.service';
 
 export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSender): Promise<BgResponse | void> => {
@@ -17,6 +18,19 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
 
   try {
     switch (message.type) {
+      case 'START_SCREENSHOT_CAPTURE': {
+        if (typeof message.tabId !== 'number') return { ok: false, error: 'Could not find the capture page.' };
+        try {
+          await startScreenshotFromTab(
+            message.tabId,
+            message.captureType as Parameters<typeof startScreenshotFromTab>[1],
+          );
+          return { ok: true };
+        } catch (cause) {
+          return { ok: false, error: cause instanceof Error ? cause.message : 'Could not start capture.' };
+        }
+      }
+
       case AI_DEBUG.START:
         return startAiDebug(message.tabId as number);
 
