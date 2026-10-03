@@ -2,7 +2,12 @@ import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 
 import { useStorage } from '@extension/shared';
-import { captureSettingsStorage, themePreferenceStorage, domainSkipListStorage } from '@extension/storage';
+import {
+  captureSettingsStorage,
+  themePreferenceStorage,
+  domainSkipListStorage,
+  librarySettingsStorage,
+} from '@extension/storage';
 import type { CaptureSettings, ExportFormat, ScreenshotFormat, ThemePreference } from '@extension/storage';
 import { Button } from '@extension/ui';
 
@@ -12,6 +17,7 @@ export const SettingsContent = ({ onBack }: { onBack: () => void }) => {
   const settings = useStorage(captureSettingsStorage);
   const theme = useStorage(themePreferenceStorage);
   const skipList = useStorage(domainSkipListStorage);
+  const libraryMode = useStorage(librarySettingsStorage);
   const [newDomain, setNewDomain] = useState('');
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
@@ -48,6 +54,23 @@ export const SettingsContent = ({ onBack }: { onBack: () => void }) => {
         {status}
       </p>
       <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="library-saving" className="text-sm font-medium">
+            Save captures to library
+          </label>
+          <select
+            id="library-saving"
+            className={controlClass}
+            value={libraryMode}
+            onChange={event =>
+              void save(() => librarySettingsStorage.set(event.target.value as 'ask' | 'manual' | 'automatic'))
+            }>
+            <option value="ask">Ask on first capture</option>
+            <option value="manual">Save manually</option>
+            <option value="automatic">Save automatically</option>
+          </select>
+          <p className="text-muted-foreground text-xs">Saved captures stay on this device until you delete them.</p>
+        </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="export-format" className="text-sm font-medium">
             Export Format
