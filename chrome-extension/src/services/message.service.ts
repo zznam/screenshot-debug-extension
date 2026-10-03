@@ -10,6 +10,7 @@ import { addOrMergeRecords, deleteRecords, getRecords, rewindService } from '@sr
 
 import { getAiDebug, listAiDebug, removeAiDebug, saveAiDebugMessage, startAiDebug } from './ai-debug.service';
 import { handleOnAuthStart } from './auth.service';
+import { handleLibraryMessage } from './capture-library.service';
 import { startScreenshotFromTab } from './capture-start.service';
 import { downloadAssets, downloadZip } from './download.service';
 
@@ -17,7 +18,14 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
   const message = raw as Record<string, unknown>;
 
   try {
+    if (typeof message.type === 'string' && message.type.startsWith('LIBRARY:')) {
+      return handleLibraryMessage(message, sender);
+    }
     switch (message.type) {
+      case 'OPEN_CAPTURE_LIBRARY': {
+        await tabs.create({ url: chrome.runtime.getURL('library/index.html') });
+        return { status: 'success' };
+      }
       case 'START_SCREENSHOT_CAPTURE': {
         if (typeof message.tabId !== 'number') return { ok: false, error: 'Could not find the capture page.' };
         try {

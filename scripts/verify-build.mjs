@@ -23,6 +23,7 @@ const files = [
   ...(manifest.web_accessible_resources ?? []).flatMap(entry => entry.resources.filter(file => !file.includes('*'))),
   `_locales/${manifest.default_locale}/messages.json`,
   'ai-debug/index.html',
+  'library/index.html',
   'mic-permission/index.html',
 ];
 for (const file of files) {

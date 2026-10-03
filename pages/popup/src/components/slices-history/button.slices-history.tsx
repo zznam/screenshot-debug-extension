@@ -1,4 +1,3 @@
-import { t } from '@extension/i18n';
 import { Button, Icon } from '@extension/ui';
 
 export const SlicesHistoryButton = ({ onClick }: { onClick: () => void }) => {
@@ -10,7 +9,7 @@ export const SlicesHistoryButton = ({ onClick }: { onClick: () => void }) => {
         size="sm"
         className="dark:text-muted-foreground h-6 gap-x-1.5 text-slate-600 dark:hover:text-white"
         onClick={onClick}>
-        {t('sliceHistoryTitle')} <Icon name="ImageIcon" className="size-4" />
+        Capture library <Icon name="ImageIcon" className="size-4" />
       </Button>
     </div>
   );

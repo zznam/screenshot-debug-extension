@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogTitle, cn, toast } from '@extension/ui';
 
 import { CanvasContainerView } from './components/annotation-view';
 import { Footer, Header, LeftSidebar } from './components/annotation-view/ui';
+import { LibrarySave } from './components/dialog-view/library-save.ui';
 import { defaultNavElement } from './constants';
 import { useElementSize, useViewportSize } from './hooks';
 import type { ActiveElement } from './models';
@@ -17,11 +18,13 @@ import { mergeScreenshot } from './utils/annotation';
 import { copyBase64ImageToClipboard } from './utils/base64-to-clipboard.util';
 import { downloadCapture } from './utils/download-capture.util';
 import { encodeScreenshot } from './utils/encode-screenshot.util';
+import type { LibrarySaveSession } from './utils/library-capture.util';
 
 const SM_BREAKPOINT = 640;
 const LG_BREAKPOINT = 1024;
 
 interface ContentProps {
+  librarySession: LibrarySaveSession;
   idempotencyKey: string;
   activeScreenshotId: string;
   screenshots: Screenshot[];
@@ -32,6 +35,7 @@ interface ContentProps {
 }
 
 const Content = ({
+  librarySession,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   idempotencyKey,
   screenshots = [],
@@ -51,12 +55,21 @@ const Content = ({
   const { ref: canvasRef, width: canvasWidth, height: canvasHeight } = useElementSize<HTMLDivElement>();
 
   const [isFullScreen, setFullScreen] = useState(viewportWidth < SM_BREAKPOINT);
-  const [title, setTitle] = useState('Untitled report');
+  const [title, setTitle] = useState(librarySession.title);
   const [activeElement, setActiveElement] = useState<ActiveElement>(defaultNavElement);
   const [isStartingAiDebug, setStartingAiDebug] = useState(false);
   const [isDownloading, setDownloading] = useState(false);
+  const [isLibrarySaving, setLibrarySaving] = useState(false);
   const downloadInFlight = useRef(false);
   const aiRendererRef = useRef<(() => string) | null>(null);
+  const getLibraryRenderer = useCallback(() => aiRendererRef.current, []);
+  const libraryCloseGuard = useRef<(() => Promise<boolean>) | null>(null);
+  const setLibraryCloseGuard = useCallback((guard: (() => Promise<boolean>) | null) => {
+    libraryCloseGuard.current = guard;
+  }, []);
+  const closeEditor = useCallback(async () => {
+    if (!libraryCloseGuard.current || (await libraryCloseGuard.current())) onClose();
+  }, [onClose]);
 
   const isLg = canvasWidth >= LG_BREAKPOINT;
   const hasShots = screenshots.length > 1;
@@ -125,7 +138,7 @@ const Content = ({
         },
       };
       await downloadCapture(request);
-      onClose?.();
+      await closeEditor();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'The download could not be started.';
       toast.error(`Download failed: ${message}`);
@@ -195,14 +208,14 @@ const Content = ({
   };
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={onClose} modal>
+    <Dialog open={isDialogOpen} onOpenChange={() => void closeEditor()} modal>
       <DialogContent
         data-testid="screenshot-editor"
         aria-describedby="Annotation View"
         onEscapeKeyDown={e => e.preventDefault()}
         onPointerDownOutside={e => e.preventDefault()}
         className={cn(
-          'bg-background text-foreground grid max-w-none grid-rows-[auto_minmax(0,1fr)_auto] !gap-0 border-none bg-repeat p-0',
+          'bg-background text-foreground grid max-w-none grid-rows-[auto_auto_minmax(0,1fr)_auto] !gap-0 border-none bg-repeat p-0',
           {
             'size-full !rounded-none': isFullScreen,
             'h-[80vh] w-[90vw] overflow-hidden !rounded-[18px]': !isFullScreen,
@@ -215,12 +228,19 @@ const Content = ({
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <Header
           id={activeScreenshotId || ''}
-          onClose={onClose}
-          onMinimize={onMinimize}
+          onClose={() => void closeEditor()}
+          onMinimize={() =>
+            void (async () => {
+              if (!libraryCloseGuard.current || (await libraryCloseGuard.current())) onMinimize();
+            })()
+          }
           onToggleFullScreen={() => setFullScreen(flag => !flag)}
           isFullScreen={isFullScreen}
           title={title}
-          onTitleChange={setTitle}
+          onTitleChange={value => {
+            librarySession.title = value;
+            setTitle(value);
+          }}
           onUndo={() => {
             dispatch(triggerCanvasAction('UNDO'));
           }}
@@ -233,10 +253,20 @@ const Content = ({
           canvasWidth={canvasWidth}
           canvasHeight={canvasHeight}
           onDownload={handleOnDownload}
-          downloadLoading={isDownloading}
+          downloadLoading={isDownloading || isLibrarySaving}
           onCopy={handleOnCopy}
           onAiDebug={handleOnAiDebug}
           aiDebugLoading={isStartingAiDebug}
+        />
+
+        <LibrarySave
+          session={librarySession}
+          title={title}
+          screenshots={screenshots}
+          activeId={activeScreenshotId}
+          renderActive={getLibraryRenderer}
+          onSavingChange={setLibrarySaving}
+          onBeforeCloseReady={setLibraryCloseGuard}
         />
 
         <main

@@ -9,11 +9,13 @@ export const SlicesHistoryContent = ({ onBack }: { onBack: () => void }) => {
         <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8">
           <ArrowLeft size={16} />
         </Button>
-        <h2 className="text-lg font-semibold">Slices History</h2>
+        <h2 className="text-lg font-semibold">Capture library</h2>
       </div>
       <div className="flex flex-col items-center justify-center gap-4 p-8 text-center">
-        <p className="text-muted-foreground">Slices history is disabled in offline mode.</p>
-        <p className="text-muted-foreground text-sm">Your captures are saved directly to your local machine.</p>
+        <p className="text-muted-foreground">Find saved screenshots and their debugging context on this device.</p>
+        <Button onClick={() => void chrome.tabs.create({ url: chrome.runtime.getURL('library/index.html') })}>
+          Open capture library
+        </Button>
       </div>
     </div>
   );

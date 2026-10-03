@@ -9,6 +9,17 @@ export * from './query-filter.interface.js';
 export type * from './auth.interfaces.js';
 export type * from './screenshot.interface.js';
 export type * from './download.interface.js';
+export type {
+  LibrarySaveMode,
+  CaptureSource,
+  CaptureAnnotations,
+  LibraryScreenshot,
+  CaptureDocument,
+  CaptureSummary,
+  CaptureSnapshot,
+  ScreenshotSavePayload,
+  LibraryResponse,
+} from '@extension/storage';
 export type * from './ai.interfaces.js';
 export type * from './ai-debug.interface.js';
 export type * from './recording.interface.js';

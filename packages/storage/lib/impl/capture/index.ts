@@ -6,5 +6,6 @@ export { captureTabStorage } from './tab-state.storage.js';
 export { debugModeStorage } from './debug-mode.storage.js';
 export { domainSkipListStorage } from './domain-skip-list.storage.js';
 export { captureSettingsStorage } from './settings.storage.js';
+export { librarySettingsStorage } from './library-settings.storage.js';
 export * from './recording-settings.storage.js';
 export * from './rewind-settings.storage.js';

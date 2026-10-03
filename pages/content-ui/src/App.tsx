@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import { t } from '@extension/i18n';
@@ -11,6 +11,7 @@ import {
   captureNotifyStorage,
   captureStateStorage,
   captureTabStorage,
+  librarySettingsStorage,
   themeStorage,
 } from '@extension/storage';
 import { store, ReduxProvider } from '@extension/store';
@@ -30,16 +31,22 @@ import {
 } from '@extension/ui';
 
 import { MinimizedPreview } from './components/dialog-view';
+import { LibrarySave } from './components/dialog-view/library-save.ui';
 import { RecordingOverlay } from './components/recording-view';
 import { VideoPlayer } from './components/recording-view/ui/video-player.ui';
 import { RewindPlayer } from './components/recording-view/views/rewind-player.view';
 import Content from './content';
 import type { TrimRange, VideoFormat, VideoSource } from './models';
+import { createLibrarySaveSession, prepareLibrarySession } from './utils/library-capture.util';
 import { exportRecordingVideo } from './utils/recording';
+
+const renderInactiveScreenshot = () => null;
+const ignoreSavingChange = () => undefined;
 
 export default function App() {
   const captureNotifyState = useStorage(captureNotifyStorage);
   const theme = useStorage(themeStorage);
+  const libraryMode = useStorage(librarySettingsStorage);
   const [minimized, setMinimized] = useState(true);
   const [video, setVideo] = useState<VideoSource>();
   const [events, setEvents] = useState<unknown[] | null>(null);
@@ -47,6 +54,14 @@ export default function App() {
   const [screenshots, setScreenshots] = useState<Screenshot[]>();
   const [activeScreenshotId, setActiveScreenshotId] = useState<string | null>();
   const [idempotencyKey, setIdempotencyKey] = useState<string>(uuid());
+  const librarySession = useRef(createLibrarySaveSession());
+  const minimizedCloseGuard = useRef<(() => Promise<boolean>) | null>(null);
+  const setMinimizedCloseGuard = useCallback((guard: (() => Promise<boolean>) | null) => {
+    minimizedCloseGuard.current = guard;
+  }, []);
+  const leaveMinimizedPreview = async (action: () => void) => {
+    if (!minimizedCloseGuard.current || (await minimizedCloseGuard.current())) action();
+  };
 
   useEffect(() => {
     window.addEventListener('DISPLAY_MODAL', handleOnDisplay);
@@ -74,6 +89,7 @@ export default function App() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOnStoreScreenshot = (event: any) => {
+    void prepareLibrarySession(librarySession.current).catch(() => undefined);
     handleOnMinimize();
     const incoming = (event.detail.screenshots as Screenshot[]).map(screenshot => ({
       ...screenshot,
@@ -97,6 +113,9 @@ export default function App() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOnDisplay = async (event: any) => {
+    librarySession.current = createLibrarySaveSession();
+    setIdempotencyKey(uuid());
+    void prepareLibrarySession(librarySession.current).catch(() => undefined);
     const incoming = (event.detail.screenshots as Screenshot[]).map(screenshot => ({
       ...screenshot,
       id: screenshot.id ?? uuid(),
@@ -159,6 +178,7 @@ export default function App() {
   );
 
   const handleOnClose = useCallback(async () => {
+    librarySession.current = createLibrarySaveSession();
     setIdempotencyKey(uuid());
     setScreenshots([]);
     setMinimized(false);
@@ -254,9 +274,30 @@ export default function App() {
 
           {!!screenshots?.length &&
             (minimized ? (
-              <MinimizedPreview screenshots={screenshots} onEdit={handleOnEdit} onDiscard={handleOnClose} />
+              <>
+                <MinimizedPreview
+                  screenshots={screenshots}
+                  onEdit={() => void leaveMinimizedPreview(handleOnEdit)}
+                  onDiscard={() => void leaveMinimizedPreview(handleOnClose)}
+                />
+                {libraryMode === 'automatic' && (
+                  <div className="fixed bottom-[212px] right-4 z-[2000000] max-w-[min(380px,calc(100vw-32px))] overflow-hidden rounded-lg shadow-xl">
+                    <LibrarySave
+                      session={librarySession.current}
+                      title={librarySession.current.title}
+                      screenshots={screenshots}
+                      activeId={activeScreenshotId || ''}
+                      renderActive={renderInactiveScreenshot}
+                      onSavingChange={ignoreSavingChange}
+                      onBeforeCloseReady={setMinimizedCloseGuard}
+                    />
+                  </div>
+                )}
+              </>
             ) : (
               <Content
+                key={idempotencyKey}
+                librarySession={librarySession.current}
                 idempotencyKey={idempotencyKey}
                 activeScreenshotId={activeScreenshotId || ''}
                 screenshots={screenshots}
