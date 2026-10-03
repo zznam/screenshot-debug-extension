@@ -30,6 +30,7 @@ interface EditorHeaderProps {
 
   /** download and copy actions */
   onDownload: () => void;
+  downloadLoading?: boolean;
   onCopy: () => void;
   onAiDebug: () => void;
   aiDebugLoading?: boolean;
@@ -56,6 +57,7 @@ export const Header: React.FC<EditorHeaderProps> = ({
   canvasHeight,
 
   onDownload,
+  downloadLoading = false,
   onCopy,
   onAiDebug,
   aiDebugLoading = false,
@@ -192,6 +194,8 @@ export const Header: React.FC<EditorHeaderProps> = ({
         </Button>
         <Button
           onClick={onDownload}
+          loading={downloadLoading}
+          disabled={downloadLoading}
           className="bg-gradient-overlay flex h-[35px] min-w-[120px] justify-center gap-x-2 text-white hover:text-white">
           <Icon name="DownloadIcon" size={16} />
           <span>Download</span>

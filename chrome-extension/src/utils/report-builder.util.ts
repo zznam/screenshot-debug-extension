@@ -30,7 +30,7 @@ export interface DebugReport {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const buildDebugReport = (records: ExtRecord[], metaOverrides: Record<string, any> = {}): DebugReport => {
   const networkRequests = records.filter(r => r.recordType === 'network');
-  const networkErrors = networkRequests.filter(r => (r.status && r.status >= 400) || r.type === 'error');
+  const networkErrors = networkRequests.filter(r => Number(r.status ?? r.statusCode) >= 400 || r.type === 'error');
 
   const consoleRecords = records.filter(r => r.recordType === 'console');
   const consoleErrors = consoleRecords.filter(r => r.method === 'error');
@@ -47,7 +47,7 @@ export const buildDebugReport = (records: ExtRecord[], metaOverrides: Record<str
       url: records[0]?.url || 'unknown',
       ...metaOverrides,
     },
-    screenshots: [],
+    screenshots: metaOverrides.screenshots ?? [],
     network: {
       requests: networkRequests,
       errors: networkErrors,

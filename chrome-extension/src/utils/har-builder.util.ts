@@ -7,7 +7,7 @@ export const buildHarLog = (records: ExtRecord[], url: string) => {
     // Basic mapping of our simplified Record to HAR 1.2 entry format
     return {
       startedDateTime: req.timestamp ? new Date(req.timestamp).toISOString() : new Date().toISOString(),
-      time: req.duration || -1,
+      time: req.duration ?? -1,
       request: {
         method: req.method || 'GET',
         url: req.url,
@@ -25,8 +25,8 @@ export const buildHarLog = (records: ExtRecord[], url: string) => {
         bodySize: req.requestBody ? JSON.stringify(req.requestBody).length : -1,
       },
       response: {
-        status: req.status || 200,
-        statusText: 'OK',
+        status: req.status ?? req.statusCode ?? 0,
+        statusText: req.statusText ?? '',
         httpVersion: 'HTTP/1.1',
         cookies: [],
         headers: [],
