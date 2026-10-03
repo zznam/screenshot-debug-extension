@@ -9,7 +9,7 @@ on:
 jobs:
   greet-user:
     if: github.actor != 'dependabot[bot]' && github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON((github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.LOCAL_RUNNER_LABELS || '["ubuntu-latest"]') }}
     permissions:
       issues: write
       pull-requests: write
