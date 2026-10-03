@@ -2,6 +2,8 @@
 
 This review proposes 38 improvements based on the capture, popup, settings, export, and debug-session code. The first three batches are independent PRs targeting `main`. Remaining ideas are proposals, not implemented features.
 
+Implemented batches: [Settings/privacy (#27)](https://github.com/zznam/screenshot-debug-extension/pull/27), [Export quality (#28)](https://github.com/zznam/screenshot-debug-extension/pull/28), and [Capture usability (#29)](https://github.com/zznam/screenshot-debug-extension/pull/29).
+
 | # | Feature or improvement | User benefit / acceptance criteria | Priority | Batch |
 |---|---|---|---|---|
 | 1 | Persistent System appearance | System remains selected across popup and editor launches. | P1 | Settings/privacy |
@@ -40,7 +42,6 @@ This review proposes 38 improvements based on the capture, popup, settings, expo
 | 34 | Capture comparison | Compare two screenshots with an overlay/diff and matching viewport metadata. | P2 | Proposed |
 | 35 | Recording quality and audio controls | Explicit resolution/frame-rate/system-audio options with capability detection. | P2 | Proposed |
 | 36 | AI session export and mobile navigation | Export selected chat/context and reach history on small screens. | P2 | Proposed |
-
 | 37 | Repository workflow hygiene | PR guidance targets main and generated pnpm stores stay out of Git. | P2 | Capture usability |
 | 38 | Accessible screenshot action buttons | Area, viewport, and full-page actions have visible keyboard focus and correct button semantics. | P1 | Capture usability |
 
