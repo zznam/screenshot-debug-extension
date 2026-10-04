@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 
+import { createEditorSession, EditorSessionProvider } from '@extension/editor';
 import { t } from '@extension/i18n';
 import type { Screenshot } from '@extension/shared';
 import { REWIND, UI, VIDEO, useStorage } from '@extension/shared';
 import {
-  annotationsHistoryStorage,
-  annotationsRedoStorage,
-  annotationsStorage,
   captureNotifyStorage,
   captureStateStorage,
   captureTabStorage,
@@ -54,6 +52,8 @@ export default function App() {
   const [screenshots, setScreenshots] = useState<Screenshot[]>();
   const [activeScreenshotId, setActiveScreenshotId] = useState<string | null>();
   const [idempotencyKey, setIdempotencyKey] = useState<string>(uuid());
+  const [editorSession, setEditorSession] = useState(createEditorSession);
+  const editorSessionRef = useRef(editorSession);
   const librarySession = useRef(createLibrarySaveSession());
   const minimizedCloseGuard = useRef<(() => Promise<boolean>) | null>(null);
   const setMinimizedCloseGuard = useCallback((guard: (() => Promise<boolean>) | null) => {
@@ -113,6 +113,9 @@ export default function App() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOnDisplay = async (event: any) => {
+    editorSessionRef.current.clear();
+    editorSessionRef.current = createEditorSession();
+    setEditorSession(editorSessionRef.current);
     librarySession.current = createLibrarySaveSession();
     setIdempotencyKey(uuid());
     void prepareLibrarySession(librarySession.current).catch(() => undefined);
@@ -178,18 +181,15 @@ export default function App() {
   );
 
   const handleOnClose = useCallback(async () => {
+    editorSessionRef.current.clear();
+    editorSessionRef.current = createEditorSession();
+    setEditorSession(editorSessionRef.current);
     librarySession.current = createLibrarySaveSession();
     setIdempotencyKey(uuid());
     setScreenshots([]);
     setMinimized(false);
 
-    await Promise.all([
-      captureStateStorage.setScreenshotState('idle'),
-      captureTabStorage.setCaptureTabId(null),
-      annotationsStorage.clearAll(),
-      annotationsRedoStorage.clearAll(),
-      annotationsHistoryStorage.clearAll(),
-    ]);
+    await Promise.all([captureStateStorage.setScreenshotState('idle'), captureTabStorage.setCaptureTabId(null)]);
   }, []);
 
   const handleOnSelectScreenshot = useCallback(
@@ -209,11 +209,7 @@ export default function App() {
         return next;
       });
 
-      await Promise.all([
-        annotationsStorage.deleteAnnotations(id),
-        annotationsRedoStorage.deleteAnnotations(id),
-        annotationsHistoryStorage.deleteAnnotations(id),
-      ]);
+      editorSessionRef.current.remove(id);
     },
     [activeScreenshotId],
   );
@@ -235,79 +231,81 @@ export default function App() {
       <ToasterProvider theme={theme} />
 
       <ReduxProvider store={store}>
-        <TooltipProvider>
-          <RecordingOverlay />
+        <EditorSessionProvider session={editorSession}>
+          <TooltipProvider>
+            <RecordingOverlay />
 
-          <Dialog open={Boolean(video || events)} onOpenChange={open => !open && void closeRecordingReview()}>
-            <DialogContent className="flex h-[80vh] w-[90vw] max-w-none flex-col overflow-hidden p-4">
-              <div className="flex items-center justify-between pr-8">
-                <DialogTitle className="text-lg font-semibold">
-                  {video ? t('recordingInProgress') : t('captureLastMinute')}
-                </DialogTitle>
-                <Button variant="outline" size="sm" onClick={() => void closeRecordingReview()}>
-                  {t('close')}
-                </Button>
-              </div>
-              <Tabs defaultValue={video ? 'video' : 'rewind'} className="flex min-h-0 flex-1 flex-col">
-                {video && events && (
-                  <TabsList className="grid w-64 grid-cols-2">
-                    <TabsTrigger value="video">Video</TabsTrigger>
-                    <TabsTrigger value="rewind">Rewind</TabsTrigger>
-                  </TabsList>
-                )}
-                {video && (
-                  <TabsContent value="video" className="min-h-0 flex-1">
-                    <VideoPlayer
-                      video={video}
-                      disableExport={isExportingVideo}
-                      onExport={(format, trim) => void exportVideo(format, trim)}
-                      onTrimUpdate={() => undefined}
-                    />
+            <Dialog open={Boolean(video || events)} onOpenChange={open => !open && void closeRecordingReview()}>
+              <DialogContent className="flex h-[80vh] w-[90vw] max-w-none flex-col overflow-hidden p-4">
+                <div className="flex items-center justify-between pr-8">
+                  <DialogTitle className="text-lg font-semibold">
+                    {video ? t('recordingInProgress') : t('captureLastMinute')}
+                  </DialogTitle>
+                  <Button variant="outline" size="sm" onClick={() => void closeRecordingReview()}>
+                    {t('close')}
+                  </Button>
+                </div>
+                <Tabs defaultValue={video ? 'video' : 'rewind'} className="flex min-h-0 flex-1 flex-col">
+                  {video && events && (
+                    <TabsList className="grid w-64 grid-cols-2">
+                      <TabsTrigger value="video">Video</TabsTrigger>
+                      <TabsTrigger value="rewind">Rewind</TabsTrigger>
+                    </TabsList>
+                  )}
+                  {video && (
+                    <TabsContent value="video" className="min-h-0 flex-1">
+                      <VideoPlayer
+                        video={video}
+                        disableExport={isExportingVideo}
+                        onExport={(format, trim) => void exportVideo(format, trim)}
+                        onTrimUpdate={() => undefined}
+                      />
+                    </TabsContent>
+                  )}
+                  <TabsContent value="rewind" className="min-h-0 flex-1">
+                    <RewindPlayer events={events} enableTrim showEventsMenu className="h-full" />
                   </TabsContent>
-                )}
-                <TabsContent value="rewind" className="min-h-0 flex-1">
-                  <RewindPlayer events={events} enableTrim showEventsMenu className="h-full" />
-                </TabsContent>
-              </Tabs>
-            </DialogContent>
-          </Dialog>
+                </Tabs>
+              </DialogContent>
+            </Dialog>
 
-          {!!screenshots?.length &&
-            (minimized ? (
-              <>
-                <MinimizedPreview
+            {!!screenshots?.length &&
+              (minimized ? (
+                <>
+                  <MinimizedPreview
+                    screenshots={screenshots}
+                    onEdit={() => void leaveMinimizedPreview(handleOnEdit)}
+                    onDiscard={() => void leaveMinimizedPreview(handleOnClose)}
+                  />
+                  {libraryMode === 'automatic' && (
+                    <div className="fixed bottom-[212px] right-4 z-[2000000] max-w-[min(380px,calc(100vw-32px))] overflow-hidden rounded-lg shadow-xl">
+                      <LibrarySave
+                        session={librarySession.current}
+                        title={librarySession.current.title}
+                        screenshots={screenshots}
+                        activeId={activeScreenshotId || ''}
+                        renderActive={renderInactiveScreenshot}
+                        onSavingChange={ignoreSavingChange}
+                        onBeforeCloseReady={setMinimizedCloseGuard}
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Content
+                  key={idempotencyKey}
+                  librarySession={librarySession.current}
+                  idempotencyKey={idempotencyKey}
+                  activeScreenshotId={activeScreenshotId || ''}
                   screenshots={screenshots}
-                  onEdit={() => void leaveMinimizedPreview(handleOnEdit)}
-                  onDiscard={() => void leaveMinimizedPreview(handleOnClose)}
+                  onClose={handleOnClose}
+                  onMinimize={handleOnMinimize}
+                  onDeleteScreenshot={handleOnDeleteScreenshot}
+                  onSelectScreenshot={handleOnSelectScreenshot}
                 />
-                {libraryMode === 'automatic' && (
-                  <div className="fixed bottom-[212px] right-4 z-[2000000] max-w-[min(380px,calc(100vw-32px))] overflow-hidden rounded-lg shadow-xl">
-                    <LibrarySave
-                      session={librarySession.current}
-                      title={librarySession.current.title}
-                      screenshots={screenshots}
-                      activeId={activeScreenshotId || ''}
-                      renderActive={renderInactiveScreenshot}
-                      onSavingChange={ignoreSavingChange}
-                      onBeforeCloseReady={setMinimizedCloseGuard}
-                    />
-                  </div>
-                )}
-              </>
-            ) : (
-              <Content
-                key={idempotencyKey}
-                librarySession={librarySession.current}
-                idempotencyKey={idempotencyKey}
-                activeScreenshotId={activeScreenshotId || ''}
-                screenshots={screenshots}
-                onClose={handleOnClose}
-                onMinimize={handleOnMinimize}
-                onDeleteScreenshot={handleOnDeleteScreenshot}
-                onSelectScreenshot={handleOnSelectScreenshot}
-              />
-            ))}
-        </TooltipProvider>
+              ))}
+          </TooltipProvider>
+        </EditorSessionProvider>
       </ReduxProvider>
     </div>
   );

@@ -243,6 +243,40 @@ importers:
         specifier: ^4.38.0
         version: 4.41.0
 
+  packages/editor:
+    dependencies:
+      '@extension/env':
+        specifier: workspace:*
+        version: link:../env
+      '@extension/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      '@extension/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@extension/storage':
+        specifier: workspace:*
+        version: link:../storage
+      '@extension/ui':
+        specifier: workspace:*
+        version: link:../ui
+      fabric:
+        specifier: 6.6.7
+        version: 6.6.7
+      file-saver:
+        specifier: ^2.0.5
+        version: 2.0.5
+      uuid:
+        specifier: ^11.0.3
+        version: 11.1.0
+    devDependencies:
+      '@extension/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/file-saver':
+        specifier: ^2.0.7
+        version: 2.0.7
+
   packages/env:
     dependencies:
       '@dotenvx/dotenvx':
@@ -558,6 +592,9 @@ importers:
 
   pages/content-ui:
     dependencies:
+      '@extension/editor':
+        specifier: workspace:*
+        version: link:../../packages/editor
       '@extension/env':
         specifier: workspace:*
         version: link:../../packages/env
@@ -628,6 +665,9 @@ importers:
 
   pages/library:
     dependencies:
+      '@extension/editor':
+        specifier: workspace:*
+        version: link:../../packages/editor
       '@extension/shared':
         specifier: workspace:*
         version: link:../../packages/shared

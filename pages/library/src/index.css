@@ -1,5 +1,9 @@
 @import '@extension/ui/global.css';
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   color-scheme: light;
   --lib-bg: #f7f8fa;
@@ -28,16 +32,16 @@ body {
   font-family: system-ui, sans-serif;
   font-size: 14px;
 }
-button,
-input,
-select {
+.library-shell button,
+.library-shell input,
+.library-shell select {
   font: inherit;
 }
-button,
+.library-shell button,
 .library-back {
   cursor: pointer;
 }
-button {
+.library-shell button {
   border: 1px solid var(--lib-line);
   background: var(--lib-surface);
   color: var(--lib-text);
@@ -45,10 +49,10 @@ button {
   border-radius: 8px;
   font-weight: 600;
 }
-button:hover {
+.library-shell button:hover {
   filter: brightness(0.94);
 }
-button:disabled {
+.library-shell button:disabled {
   cursor: wait;
   opacity: 0.55;
 }
@@ -56,8 +60,8 @@ button:disabled {
   outline: 3px solid #43a58b;
   outline-offset: 3px;
 }
-input,
-select {
+.library-shell input,
+.library-shell select {
   width: 100%;
   min-width: 0;
   border: 1px solid var(--lib-line);
@@ -66,7 +70,7 @@ select {
   color: var(--lib-text);
   background: var(--lib-surface);
 }
-label {
+.library-shell label {
   display: grid;
   gap: 7px;
   font-size: 12px;
@@ -428,5 +432,40 @@ h2 {
   }
   .library-onboarding button {
     font-size: 12px;
+  }
+}
+
+.library-edit-link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 18px 0;
+}
+.saved-editor {
+  height: 100dvh;
+  min-height: 540px;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+.saved-editor-workspace {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+}
+.saved-editor-workspace[data-sidebar='true'] {
+  grid-template-columns: 220px minmax(0, 1fr);
+}
+@media (max-width: 640px) {
+  .saved-editor-workspace[data-sidebar='true'] {
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px;
   }
 }

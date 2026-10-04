@@ -8,7 +8,7 @@ The library keeps screenshot sets, original image bytes, rendered previews, edit
 
 Search by title, source title, domain, or tag, and combine domain/date/type filters. Open a capture after its source page closes or the browser restarts. Rename captures, add comma-separated tags, or permanently delete a capture and its images. Saved captures do not expire automatically.
 
-This first PR provides durable screenshot storage and viewing. Reopening annotation layers for editing, recording/Rewind persistence, report composition, privacy review, OCR, comparison, and bulk storage management are separate dependent feature PRs.
+Choose **Edit screenshots** on a capture to reopen its original images and annotation layers in a standalone editor. The source tab is unnecessary. See [saved screenshot editing](LIBRARY-EDITOR.md) for saving, undo/redo, and conflict recovery. Recording/Rewind persistence, report composition, privacy review, OCR, comparison, and bulk storage management are separate feature PRs.
 
 ## Persistence boundaries
 

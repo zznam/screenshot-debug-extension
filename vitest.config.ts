@@ -24,7 +24,7 @@ export default defineConfig({
       reporter: ['text-summary', 'html', 'lcov', 'json-summary'],
       include: [
         'chrome-extension/src/**/*.ts',
-        'packages/{shared,storage}/lib/**/*.ts',
+        'packages/{shared,storage,editor}/lib/**/*.{ts,tsx}',
         'packages/ai-helper/src/**/*.ts',
         'pages/*/src/**/*.{ts,tsx}',
       ],
