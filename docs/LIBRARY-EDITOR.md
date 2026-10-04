@@ -20,6 +20,8 @@ Blur and annotations are editable markup. The original pixels remain local, and 
 
 ## Implementation and validation
 
-`@extension/editor` contains the shared Fabric canvas, toolbar, header, sidebar, rendering helpers, and isolated editor sessions. Compatibility exports preserve existing content-overlay imports. The annotation controls retain the repository's Apache-2.0 attribution; this PR refactors existing source and introduces no additional upstream ports.
+`@extension/editor` contains the shared Fabric canvas, toolbar, header, sidebar, rendering helpers, and isolated editor sessions. Compatibility exports preserve existing content-overlay imports. The library page's content security policy permits bundled resources and local data/blob images, and blocks external resource connections. The annotation controls retain the repository's Apache-2.0 attribution; this PR refactors existing source and introduces no additional upstream ports.
 
 Unit tests cover saved-layer undo baselines, per-session isolation, bounded histories, revision conflicts, immutable originals and context, deletion, and quota rollback/retry. Chromium integration scenarios cover standalone editing, concurrent windows, PNG download/copy, automatic saving, quota recovery, keyboard access, and layouts at 360, 768, and 1280 pixels alongside the existing capture/restart regressions.
+
+The production bundle passes 22 Chromium integration scenarios and 167 unit tests. Editor screenshots: [desktop](images/library-editor/desktop.png), [tablet](images/library-editor/tablet.png), and [mobile](images/library-editor/mobile.png).

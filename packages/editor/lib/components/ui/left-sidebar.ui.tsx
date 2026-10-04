@@ -63,7 +63,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           aria-label="Open screenshots"
           type="button"
           onClick={toggle}
-          className="border-border bg-card text-card-foreground group absolute left-4 top-[5.2rem] z-10 border transition-colors">
+          className="border-border bg-card text-card-foreground group absolute left-4 top-4 z-10 border transition-colors">
           <Icon
             strokeWidth={1.5}
             name="PanelLeftOpenIcon"

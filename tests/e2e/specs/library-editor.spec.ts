@@ -153,7 +153,7 @@ test('edits existing layers, undoes/redoes, saves preserved originals and downlo
   await expect(page.getByText('Screenshot copied to clipboard!')).toBeVisible();
   for (const width of [360, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath(`editor-${width}.png`), fullPage: true });
   }
   await page.reload();
@@ -238,5 +238,82 @@ test('preserves unsaved edits after quota failure, retries, and respects automat
   await page.reload();
   await expect(page.getByRole('button', { name: 'Saved', exact: true })).toBeVisible();
   expect((await evidence(page)).capture.screenshots[0]!.annotations.objects).toHaveLength(0);
+  expect(extensionErrors).toEqual([]);
+});
+
+test('keeps image histories and layer clipboard within a screenshot set and confirms unsaved exits', async ({
+  context,
+  extensionId,
+  extensionErrors,
+}) => {
+  const page = await context.newPage();
+  await seedLibrary(page, extensionId);
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>(resolve => {
+      const request = indexedDB.open('screenshot_debug_library_v1');
+      request.onsuccess = () => resolve(request.result);
+    });
+    const capture = await new Promise<{
+      screenshots: {
+        id: string;
+        originalAssetId: string;
+        previewAssetId: string;
+        annotations: { objects: unknown[] };
+      }[];
+    }>(resolve => {
+      const request = db.transaction('captures').objectStore('captures').get('first');
+      request.onsuccess = () => resolve(request.result);
+    });
+    const asset = await new Promise<{ blob: Blob }>(resolve => {
+      const request = db.transaction('assets').objectStore('assets').get('first-original');
+      request.onsuccess = () => resolve(request.result);
+    });
+    const tx = db.transaction(['captures', 'assets'], 'readwrite');
+    tx.objectStore('assets').put({ id: 'first-original-2', captureId: 'first', blob: asset.blob });
+    tx.objectStore('assets').put({ id: 'first-preview-2', captureId: 'first', blob: asset.blob });
+    capture.screenshots.push({
+      ...capture.screenshots[0]!,
+      id: 'other-shot',
+      originalAssetId: 'first-original-2',
+      previewAssetId: 'first-preview-2',
+      annotations: { objects: [] },
+    });
+    tx.objectStore('captures').put(capture);
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onabort = () => reject(tx.error);
+    });
+    db.close();
+  });
+  await page.goto(`chrome-extension://${extensionId}/library/index.html?capture=first&edit=1`);
+  await drawRectangle(page);
+  await page.getByRole('button', { name: 'Screenshot 2', exact: true }).click();
+  await drawRectangle(page);
+  await page.getByRole('button', { name: 'Screenshot 1', exact: true }).click();
+  await expect(page.locator('[data-editor-ready="true"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Saved', exact: true })).toBeVisible();
+  expect((await evidence(page)).capture.screenshots.map(shot => shot.annotations.objects.length)).toEqual([1, 1]);
+  const frame = (await page.locator('canvas.upper-canvas').boundingBox())!;
+  await page.locator('canvas.upper-canvas').click({ position: { x: frame.width * 0.86, y: frame.height * 0.78 } });
+  await page.keyboard.press('Control+c');
+  await page.getByRole('button', { name: 'Screenshot 2', exact: true }).click();
+  await expect(page.locator('[data-editor-ready="true"]')).toBeVisible();
+  await page.keyboard.press('Control+v');
+  await expect(page.getByRole('button', { name: 'Save changes', exact: true })).toBeEnabled();
+  expect(await page.evaluate(() => localStorage.getItem('clipboard'))).toBeNull();
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page.getByTestId('saved-screenshot-editor')).toBeVisible();
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Saved', exact: true })).toBeVisible();
+  expect((await evidence(page)).capture.screenshots.map(shot => shot.annotations.objects.length)).toEqual([1, 2]);
+  await page.getByRole('button', { name: 'first saved capture', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Capture title' }).fill('Temporary title');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: 'Saved', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page.getByRole('link', { name: 'Edit screenshots', exact: true })).toBeVisible();
   expect(extensionErrors).toEqual([]);
 });

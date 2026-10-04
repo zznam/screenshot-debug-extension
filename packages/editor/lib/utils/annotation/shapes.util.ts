@@ -302,13 +302,15 @@ export const setCanvasBackground = async ({
   canvas,
   parentWidth,
   parentHeight,
+  signal,
 }: {
   file: string;
   canvas: Canvas;
   parentWidth: number;
   parentHeight: number;
+  signal?: AbortSignal;
 }): Promise<BackgroundFitMeta> => {
-  const img = await FabricImage.fromURL(file, { crossOrigin: 'anonymous' });
+  const img = await FabricImage.fromURL(file, { crossOrigin: 'anonymous', signal });
   const naturalWidth = img.width ?? 1;
   const naturalHeight = img.height ?? 1;
 

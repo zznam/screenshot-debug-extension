@@ -19,7 +19,7 @@ export const Footer: React.FC<FooterProps> = ({ className, tool, zoom, file, onZ
     <footer
       data-testid="editor-footer"
       className={cn('border-border bg-card text-card-foreground rounded-b-[18px] border-t text-xs', className)}>
-      <div className="flex items-center gap-x-4 px-6 py-1.5">
+      <div className="flex flex-wrap items-center gap-2 px-4 py-1.5">
         {tool && (
           <div className="flex items-center gap-x-1">
             <span className="text-muted-foreground">Tool:</span>
@@ -55,7 +55,7 @@ export const Footer: React.FC<FooterProps> = ({ className, tool, zoom, file, onZ
         {file && (
           <div className="flex items-center gap-x-1">
             <span className="text-muted-foreground">File:</span>
-            <span className="text-foreground max-w-[10rem] truncate">{file}</span>
+            <span className="text-foreground min-w-0 max-w-[10rem] truncate">{file}</span>
           </div>
         )}
       </div>

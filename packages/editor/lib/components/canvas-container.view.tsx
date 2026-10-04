@@ -68,6 +68,7 @@ const CanvasContainerView = ({ screenshot, onElement, onAiRendererReady }: Canva
    */
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<Canvas | null>(null);
+  const lifetime = useRef<AbortController | null>(null);
 
   /**
    * isDrawing is a boolean that tells us if the user is drawing on the canvas.
@@ -153,14 +154,17 @@ const CanvasContainerView = ({ screenshot, onElement, onAiRendererReady }: Canva
 
   const restoreObjects = useCallback(
     async (canvas: Canvas, snapshot: { objects: unknown[] }) => {
-      await canvas.loadFromJSON(snapshot);
+      const signal = lifetime.current?.signal;
+      await canvas.loadFromJSON(snapshot, undefined, { signal });
       const frame = gridCellRef.current?.getBoundingClientRect();
       const meta = await setCanvasBackground({
         file: screenshot.src,
+        signal,
         canvas,
         parentWidth: frame?.width || canvas.getWidth(),
         parentHeight: frame?.height || canvas.getHeight(),
       });
+      signal?.throwIfAborted();
       await annotationsStorage.setAnnotations(screenshot.id!, { meta });
     },
     [annotationsStorage, screenshot.id, screenshot.src],
@@ -173,6 +177,9 @@ const CanvasContainerView = ({ screenshot, onElement, onAiRendererReady }: Canva
       try {
         const snapshot = session[direction](screenshot.id!);
         if (snapshot) await restoreObjects(fabricRef.current, snapshot);
+      } catch (error) {
+        if (!lifetime.current?.signal.aborted)
+          toast.error(error instanceof Error ? error.message : 'Could not restore annotations.');
       } finally {
         restoring.current = false;
       }
@@ -204,10 +211,13 @@ const CanvasContainerView = ({ screenshot, onElement, onAiRendererReady }: Canva
     session.record(screenshot.id!, []);
   }, [screenshot.id, session]);
 
-  const syncShapeInStorage = useCallback(() => {
-    if (fabricRef.current && !restoring.current)
-      session.record(screenshot.id!, fabricRef.current.toJSON().objects ?? []);
-  }, [screenshot.id, session]);
+  const syncShapeInStorage = useCallback(
+    (object: unknown) => {
+      if (object && fabricRef.current && !restoring.current)
+        session.record(screenshot.id!, fabricRef.current.toJSON().objects ?? []);
+    },
+    [screenshot.id, session],
+  );
 
   /**
    * Set the active element in the navbar and perform the action based
@@ -356,6 +366,8 @@ const CanvasContainerView = ({ screenshot, onElement, onAiRendererReady }: Canva
       return;
     }
 
+    const controller = new AbortController();
+    lifetime.current = controller;
     const canvas = initializeFabric({
       canvasRef,
       fabricRef,
@@ -562,6 +574,7 @@ const CanvasContainerView = ({ screenshot, onElement, onAiRendererReady }: Canva
       const rect = frame.getBoundingClientRect();
       const meta = await setCanvasBackground({
         file: screenshot.src,
+        signal: controller.signal,
         canvas,
         parentWidth: rect.width,
         parentHeight: rect.height,
@@ -569,17 +582,28 @@ const CanvasContainerView = ({ screenshot, onElement, onAiRendererReady }: Canva
       if (!disposed) await annotationsStorage.setAnnotations(screenshot.id!, { meta });
     };
     const observer = new ResizeObserver(() => {
-      void resize();
+      void resize().catch(error => {
+        if (!disposed) toast.error(error instanceof Error ? error.message : 'Could not fit this image.');
+      });
     });
     observer.observe(frame);
     const keyboardRoot = canvasRef.current!.getRootNode();
     const keydown = (event: Event) => {
       if (disposed || restoring.current) return;
-      handleKeyDown({ e: event as KeyboardEvent, canvas, undo, redo, syncShapeInStorage, deleteShapeFromStorage });
+      handleKeyDown({
+        e: event as KeyboardEvent,
+        canvas,
+        clipboard: session.clipboard,
+        undo,
+        redo,
+        syncShapeInStorage,
+        deleteShapeFromStorage,
+      });
     };
     keyboardRoot.addEventListener('keydown', keydown);
     return () => {
       disposed = true;
+      controller.abort();
       onAiRendererReady?.(null);
       observer.disconnect();
       keyboardRoot.removeEventListener('keydown', keydown);

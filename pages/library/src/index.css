@@ -452,6 +452,7 @@ h2 {
   color: hsl(var(--foreground));
 }
 .saved-editor-workspace {
+  position: relative;
   min-width: 0;
   min-height: 0;
   display: grid;
@@ -469,3 +470,7 @@ h2 {
     padding: 8px;
   }
 }
+
+.saved-editor .bg-gradient-overlay { background: linear-gradient(180deg, #48443b, #27241d); }
+
+.saved-editor-toasts { max-width: calc(100vw - 32px); }

@@ -333,7 +333,7 @@ export default function ScreenshotEditorPage({ id, theme }: { id: string; theme:
     );
   return (
     <TooltipProvider>
-      <ToasterProvider theme={theme} />
+      <ToasterProvider theme={theme} className="saved-editor-toasts" />
       <EditorSessionProvider session={loaded.session}>
         <SavedEditor loaded={loaded} />
       </EditorSessionProvider>

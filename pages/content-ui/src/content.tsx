@@ -273,7 +273,7 @@ const Content = ({
         <main
           ref={canvasRef}
           className={cn(
-            'grid h-full min-h-0 gap-4 p-4 transition-[grid-template-columns] duration-300',
+            'relative grid h-full min-h-0 gap-4 p-4 transition-[grid-template-columns] duration-300',
             isLeftSidebarOpen ? 'grid-cols-[260px_minmax(0,1fr)]' : 'grid-cols-[1px_minmax(0,1fr)]',
           )}>
           <LeftSidebar

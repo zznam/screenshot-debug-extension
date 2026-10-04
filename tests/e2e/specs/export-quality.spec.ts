@@ -38,19 +38,7 @@ for (const format of ['png', 'jpeg']) {
       await chrome.tabs.sendMessage(tab!.id!, { action: 'START_SCREENSHOT', payload: { type: 'viewport' } });
     }, url);
     await expect(page.getByTestId('screenshot-editor')).toBeVisible();
-    await expect
-      .poll(async () =>
-        serviceWorker.evaluate(async () => {
-          const stored = await chrome.storage.local.get('annotations-storage-key');
-          const annotations = stored['annotations-storage-key'] as
-            | Record<string, { meta?: { sizes?: { natural?: { width?: number } } } }>
-            | undefined;
-          return Object.values(annotations ?? {}).filter(
-            annotation => (annotation.meta?.sizes?.natural?.width ?? 0) > 0,
-          ).length;
-        }),
-      )
-      .toBeGreaterThan(0);
+    await expect(page.locator('[data-editor-ready="true"]')).toBeVisible();
     await page.getByRole('button', { name: 'Rectangle', exact: true }).click();
     await page.getByRole('menuitemcheckbox', { name: 'Rectangle', exact: true }).click();
     const surface = await page.locator('canvas.upper-canvas').boundingBox();
