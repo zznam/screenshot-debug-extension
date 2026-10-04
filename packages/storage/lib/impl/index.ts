@@ -6,6 +6,7 @@ export {
   captureTabStorage,
   debugModeStorage,
   rewindSettingsStorage,
+  librarySettingsStorage,
 } from './capture/index.js';
 export * from './capture/settings.storage.js';
 export * from './capture/domain-skip-list.storage.js';
