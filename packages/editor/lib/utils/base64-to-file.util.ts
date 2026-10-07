@@ -1,6 +1,9 @@
 export const base64ToFile = (base64: string, fileName: string) => {
-  const byteString = atob(base64.split(',')[1]);
-  const mimeType = base64.match(/data:(.*?);base64/)?.[1];
+  const commaIndex = base64.indexOf(',');
+  const header = commaIndex !== -1 ? base64.slice(0, commaIndex) : '';
+  const payload = commaIndex !== -1 ? base64.slice(commaIndex + 1) : base64;
+  const byteString = atob(payload);
+  const mimeType = header.startsWith('data:') ? header.slice(5).split(';')[0].trim() || 'image/png' : 'image/png';
   const arrayBuffer = new ArrayBuffer(byteString.length);
   const uintArray = new Uint8Array(arrayBuffer);
 
@@ -8,5 +11,6 @@ export const base64ToFile = (base64: string, fileName: string) => {
     uintArray[i] = byteString.charCodeAt(i);
   }
 
-  return new File([arrayBuffer], `${fileName}.${mimeType?.replace('image/', '')}`, { type: mimeType });
+  const extension = mimeType.replace(/^image\//, '') || 'png';
+  return new File([arrayBuffer], `${fileName}.${extension}`, { type: mimeType });
 };
