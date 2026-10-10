@@ -2,6 +2,7 @@ import type {
   CaptureDocument,
   CaptureSnapshot,
   CaptureSummary,
+  LibraryStorageStats,
   ScreenshotSavePayload,
   ScreenshotEditPayload,
 } from './types.js';
@@ -439,6 +440,38 @@ const deleteLibraryCapture = async (id: string) => {
   await done;
   notifyChange();
 };
+const deleteLibraryCaptures = async (ids: string[]) => {
+  const uniqueIds = [...new Set(ids.filter(Boolean))];
+  if (!uniqueIds.length) return;
+  const db = await openLibrary();
+  const tx = db.transaction(['captures', 'assets'], 'readwrite');
+  const done = completed(tx);
+  for (const id of uniqueIds) {
+    tx.objectStore('captures').delete(id);
+    deleteByIndex(tx.objectStore('assets'), 'captureId', id);
+  }
+  await done;
+  notifyChange();
+};
+const getLibraryStorageStats = async (): Promise<LibraryStorageStats> => {
+  const db = await openLibrary();
+  const tx = db.transaction(['captures', 'assets'], 'readonly');
+  const capturesRequest = tx.objectStore('captures').getAll();
+  const assetsRequest = tx.objectStore('assets').count();
+
+  const [captures, assetCount] = await Promise.all([
+    result(capturesRequest) as Promise<StoredCapture[]>,
+    result(assetsRequest),
+  ]);
+
+  const totalBytes = captures.reduce((acc, cap) => acc + (cap.sizeBytes || 0), 0);
+
+  return {
+    totalBytes,
+    captureCount: captures.length,
+    assetCount,
+  };
+};
 const cleanLibraryStaging = async () => {
   const db = await openLibrary();
   const tx = db.transaction(['sessions', 'uploads', 'chunks'], 'readwrite');
@@ -474,6 +507,8 @@ export {
   updateLibraryMetadata,
   updateLibraryScreenshots,
   deleteLibraryCapture,
+  deleteLibraryCaptures,
+  getLibraryStorageStats,
   cleanLibraryStaging,
 };
 export type { LibrarySession };

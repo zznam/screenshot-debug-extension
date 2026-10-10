@@ -165,6 +165,38 @@ describe('durable local library', () => {
     expect(await library.listLibraryCaptures()).toEqual([]);
   });
 
+  it('calculates library storage statistics across saved captures and assets', async () => {
+    const initialStats = await library.getLibraryStorageStats();
+    expect(initialStats).toEqual({ totalBytes: 0, captureCount: 0, assetCount: 0 });
+
+    await library.commitScreenshotCapture(payload(), session);
+    const stats = await library.getLibraryStorageStats();
+    expect(stats.captureCount).toBe(1);
+    expect(stats.assetCount).toBe(2);
+    expect(stats.totalBytes).toBeGreaterThan(0);
+  });
+
+  it('supports bulk deletion of multiple captures and their associated assets', async () => {
+    await library.commitScreenshotCapture(payload(), session);
+
+    const session2: LibrarySession = {
+      ...session,
+      id: 'session-2',
+      captureId: 'capture-2',
+    };
+    await library.saveLibrarySession(session2);
+    await library.commitScreenshotCapture({ ...payload(), id: 'capture-2', snapshotId: 'session-2' }, session2);
+
+    expect(await library.listLibraryCaptures()).toHaveLength(2);
+
+    await library.deleteLibraryCaptures(['capture', 'capture-2', 'capture']);
+    expect(await library.listLibraryCaptures()).toEqual([]);
+
+    const stats = await library.getLibraryStorageStats();
+    expect(stats.captureCount).toBe(0);
+    expect(stats.assetCount).toBe(0);
+  });
+
   it('edits previews and layers atomically while preserving originals, tags and frozen context', async () => {
     await library.commitScreenshotCapture(payload(), session);
     await library.updateLibraryMetadata('capture', 1, 'Checkout issue', ['checkout']);

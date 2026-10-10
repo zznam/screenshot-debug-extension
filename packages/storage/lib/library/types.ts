@@ -68,6 +68,12 @@ export interface ScreenshotSavePayload {
 
 export type LibraryResponse<T> = { status: 'success'; data: T } | { status: 'error'; message: string };
 
+export interface LibraryStorageStats {
+  totalBytes: number;
+  captureCount: number;
+  assetCount: number;
+}
+
 /** Edits replace flattened previews and layers; original assets and context stay frozen. */
 export interface ScreenshotEditPayload {
   id: string;
