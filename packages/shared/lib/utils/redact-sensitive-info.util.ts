@@ -93,21 +93,35 @@ const shouldRedactByNameValueContext = (obj: unknown): boolean => {
  * @param shouldSkipRedaction - If true, redaction is bypassed entirely.
  * @param ctx - Optional context (derived from key/name/label/type).
  */
-const deepRedactInternal = (input: unknown, shouldSkipRedaction: boolean, ctx?: { strength: Strength }): unknown => {
+const deepRedactInternal = (
+  input: unknown,
+  shouldSkipRedaction: boolean,
+  ctx?: { strength: Strength },
+  seen: WeakSet<object> = new WeakSet(),
+): unknown => {
   if (shouldSkipRedaction || input === null || input === undefined) return input;
 
   if (typeof input === 'string') {
     return redactPossiblyJsonString(input, shouldSkipRedaction, ctx);
   }
 
-  if (Array.isArray(input)) {
-    return input.map(item => deepRedactInternal(item, shouldSkipRedaction, ctx));
-  }
-
   if (typeof input !== 'object') return input;
+
+  if (seen.has(input)) {
+    return Array.isArray(input) ? [] : {};
+  }
+  seen.add(input);
+
+  if (Array.isArray(input)) {
+    return input.map(item => deepRedactInternal(item, shouldSkipRedaction, ctx, seen));
+  }
 
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(input)) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      continue;
+    }
+
     if (keyMatches(key, STRONG_KEYS)) {
       result[key] = REDACTED_KEYWORD;
       continue;
@@ -139,7 +153,7 @@ const deepRedactInternal = (input: unknown, shouldSkipRedaction: boolean, ctx?: 
         result[key] = REDACTED_KEYWORD;
         continue;
       }
-      result[key] = deepRedactInternal(value, shouldSkipRedaction, { strength });
+      result[key] = deepRedactInternal(value, shouldSkipRedaction, { strength }, seen);
       continue;
     }
 
@@ -151,12 +165,12 @@ const deepRedactInternal = (input: unknown, shouldSkipRedaction: boolean, ctx?: 
         continue;
       }
       // otherwise process string with context
-      result[key] = deepRedactInternal(value, shouldSkipRedaction, { strength });
+      result[key] = deepRedactInternal(value, shouldSkipRedaction, { strength }, seen);
       continue;
     }
 
     // Recurse for nested structures, propagate context strength for this field
-    result[key] = deepRedactInternal(value, shouldSkipRedaction, { strength });
+    result[key] = deepRedactInternal(value, shouldSkipRedaction, { strength }, seen);
   }
 
   return result;

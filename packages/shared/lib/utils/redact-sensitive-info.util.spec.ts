@@ -107,4 +107,24 @@ describe('sensitive diagnostic redaction', () => {
       url: `https://service.internal/auth?api_key=${REDACTED_KEYWORD}&client_secret=${REDACTED_KEYWORD}`,
     });
   });
+
+  it('safely handles circular references without stack overflow', () => {
+    const circularObj: Record<string, unknown> = {
+      name: 'root',
+      token: 'secret-token',
+    };
+    circularObj.self = circularObj;
+
+    const result = redact(circularObj);
+    expect(result.token).toBe(REDACTED_KEYWORD);
+    expect(result.self).toEqual({});
+  });
+
+  it('filters out forbidden prototype keys', () => {
+    const input = JSON.parse('{"__proto__":{"polluted":true},"safe":"value","token":"secret"}');
+    const result = redact(input);
+    expect(result.token).toBe(REDACTED_KEYWORD);
+    expect(result.safe).toBe('value');
+    expect(Object.prototype.hasOwnProperty.call(result, '__proto__')).toBe(false);
+  });
 });
