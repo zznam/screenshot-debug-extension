@@ -2,17 +2,21 @@ import type { Runtime } from 'webextension-polyfill';
 import { tabs } from 'webextension-polyfill';
 
 import { AI_DEBUG, REWIND, TAB } from '@extension/shared';
-import type { DownloadPayload } from '@extension/shared';
-import { annotationsRedoStorage, annotationsStorage, captureStateStorage, captureTabStorage } from '@extension/storage';
-
-import type { BgResponse } from '@src/types';
-import { addOrMergeRecords, deleteRecords, getRecords, rewindService } from '@src/utils';
+import {
+  annotationsRedoStorage,
+  annotationsStorage,
+  captureSettingsStorage,
+  captureStateStorage,
+  captureTabStorage,
+} from '@extension/storage';
 
 import { getAiDebug, listAiDebug, removeAiDebug, saveAiDebugMessage, startAiDebug } from './ai-debug.service';
 import { handleOnAuthStart } from './auth.service';
 import { handleLibraryMessage } from './capture-library.service';
 import { startScreenshotFromTab } from './capture-start.service';
 import { downloadAssets, downloadZip } from './download.service';
+import type { BgResponse } from '../types';
+import { addOrMergeRecords, deleteRecords, getRecords, rewindService } from '../utils';
 
 export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSender): Promise<BgResponse | void> => {
   const message = raw as Record<string, unknown>;
@@ -202,10 +206,14 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
 
       if (message.action === 'captureVisibleTab') {
         try {
-          const dataUrl = await tabs.captureVisibleTab(undefined, {
-            format: 'jpeg',
-            quality: 100,
-          });
+          const settings = await captureSettingsStorage.get();
+          const options: chrome.extensionTypes.ImageDetails =
+            settings.screenshotFormat === 'jpeg'
+              ? { format: 'jpeg', quality: settings.screenshotQuality }
+              : { format: 'png' };
+
+          const windowId = sender.tab?.windowId;
+          const dataUrl = await tabs.captureVisibleTab(windowId, options);
 
           return { success: true, dataUrl };
         } catch (e) {
