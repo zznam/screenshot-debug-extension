@@ -10,8 +10,12 @@ interface LibraryFilters {
 
 const filterCaptures = (captures: CaptureSummary[], filters: LibraryFilters) => {
   const query = filters.search.trim().toLocaleLowerCase();
-  const from = filters.from ? new Date(filters.from + 'T00:00:00').getTime() : -Infinity;
-  const to = filters.to ? new Date(filters.to + 'T23:59:59.999').getTime() : Infinity;
+  const fromTime = filters.from ? new Date(filters.from + 'T00:00:00').getTime() : NaN;
+  const from = Number.isNaN(fromTime) ? -Infinity : fromTime;
+
+  const toTime = filters.to ? new Date(filters.to + 'T23:59:59.999').getTime() : NaN;
+  const to = Number.isNaN(toTime) ? Infinity : toTime;
+
   return captures.filter(
     capture =>
       (!query ||
@@ -24,8 +28,13 @@ const filterCaptures = (captures: CaptureSummary[], filters: LibraryFilters) => 
       capture.createdAt <= to,
   );
 };
-const formatBytes = (bytes: number) =>
-  bytes < 1024 * 1024 ? `${Math.round(bytes / 1024)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+
+const formatBytes = (bytes: number) => {
+  if (bytes <= 0 || !Number.isFinite(bytes)) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+};
 
 export { filterCaptures, formatBytes };
 export type { LibraryFilters };

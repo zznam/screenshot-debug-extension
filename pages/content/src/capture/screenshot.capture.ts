@@ -14,6 +14,8 @@ let overlay: HTMLDivElement;
 let dimensionLabel: HTMLDivElement;
 let message: HTMLDivElement | null = null;
 let loadingMessage: HTMLDivElement | null = null;
+let activeMouseUpHandler: ((e: MouseEvent) => void) | null = null;
+let activeTouchEndHandler: ((e: TouchEvent) => void) | null = null;
 
 const waitForRepaint = () => new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
 const getShadowHost = () => document.getElementById('brie-root');
@@ -30,18 +32,19 @@ const addBoundaryBox = (
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  // Adjust coordinates and dimensions by the scale factors
-  const scaledX = x * scaleFactor;
-  const scaledY = y * scaleFactor;
-  const scaledWidth = width * scaleFactor;
-  const scaledHeight = height * scaleFactor;
+  const scaledX = Math.max(0, Math.min(canvas.width, Math.round(x * scaleFactor)));
+  const scaledY = Math.max(0, Math.min(canvas.height, Math.round(y * scaleFactor)));
+  const maxWidth = canvas.width - scaledX;
+  const maxHeight = canvas.height - scaledY;
+  const scaledWidth = Math.max(1, Math.min(maxWidth, Math.round(width * scaleFactor)));
+  const scaledHeight = Math.max(1, Math.min(maxHeight, Math.round(height * scaleFactor)));
 
   ctx.strokeStyle = 'red';
-  ctx.lineWidth = 4;
+  ctx.lineWidth = Math.max(2, Math.round(4 * scaleFactor));
   ctx.strokeRect(scaledX, scaledY, scaledWidth, scaledHeight);
 };
 
-// Function to crop the selected area
+// Function to crop the selected area with boundary clamping
 const cropSelectedArea = (
   canvas: HTMLCanvasElement,
   x: number,
@@ -50,26 +53,23 @@ const cropSelectedArea = (
   height: number,
   scaleFactor: number,
 ): HTMLCanvasElement => {
+  const scaledX = Math.max(0, Math.min(canvas.width, Math.round(x * scaleFactor)));
+  const scaledY = Math.max(0, Math.min(canvas.height, Math.round(y * scaleFactor)));
+  const maxWidth = canvas.width - scaledX;
+  const maxHeight = canvas.height - scaledY;
+  const targetWidth = Math.max(1, Math.min(maxWidth, Math.round(width * scaleFactor)));
+  const targetHeight = Math.max(1, Math.min(maxHeight, Math.round(height * scaleFactor)));
+
   const croppedCanvas = document.createElement('canvas');
-  croppedCanvas.width = width * scaleFactor; // Scale the width for higher resolution
-  croppedCanvas.height = height * scaleFactor; // Scale the height for higher resolution
+  croppedCanvas.width = targetWidth;
+  croppedCanvas.height = targetHeight;
 
   const ctx = croppedCanvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) {
     throw new Error('Failed to get 2D context for cropped canvas.');
   }
 
-  ctx.drawImage(
-    canvas,
-    x * scaleFactor,
-    y * scaleFactor,
-    width * scaleFactor,
-    height * scaleFactor,
-    0,
-    0,
-    width * scaleFactor,
-    height * scaleFactor,
-  );
+  ctx.drawImage(canvas, scaledX, scaledY, targetWidth, targetHeight, 0, 0, targetWidth, targetHeight);
 
   return croppedCanvas;
 };
@@ -243,11 +243,14 @@ const onMouseDown = (e: MouseEvent | TouchEvent, mode: 'single' | 'multiple') =>
   createSelectionBox();
   createDimensionLabel();
 
+  activeMouseUpHandler = (e: MouseEvent) => void onMouseUp(e, mode);
+  activeTouchEndHandler = (e: TouchEvent) => void onTouchEnd(e, mode);
+
   document.addEventListener('keydown', onKeyDown);
   document.addEventListener('mousemove', updateSelectionBox, { passive: false });
-  document.addEventListener('mouseup', e => onMouseUp(e, mode));
+  document.addEventListener('mouseup', activeMouseUpHandler);
   document.addEventListener('touchmove', updateSelectionBox, { passive: false });
-  document.addEventListener('touchend', e => onTouchEnd(e, mode));
+  document.addEventListener('touchend', activeTouchEndHandler);
 
   message?.remove();
   message = null;
@@ -568,7 +571,7 @@ const saveAndNotify = async ({ screenshots, mode }: { screenshots: Screenshot[];
 };
 
 // Initialization
-export const startScreenshotCapture = async ({
+const startScreenshotCapture = async ({
   type,
   /**
    * @todo
@@ -623,13 +626,8 @@ export const startScreenshotCapture = async ({
 };
 
 // Clean up all temporary elements
-export const cleanup = (): void => {
+const cleanup = (): void => {
   isSelecting = false;
-
-  // Reset any necessary state
-  // startX = 0;
-  // startY = 0;
-  // cancelled = true;
 
   overlay?.remove();
   selectionBox?.remove();
@@ -639,9 +637,20 @@ export const cleanup = (): void => {
 
   document.body.style.overflow = '';
   document.removeEventListener('keydown', onKeyDown);
+  document.removeEventListener('mousemove', onMouseMove);
   document.removeEventListener('mousemove', updateSelectionBox);
-  // document.removeEventListener('mouseup', onMouseUp);
+  document.removeEventListener('touchmove', onTouchMove);
   document.removeEventListener('touchmove', updateSelectionBox);
-  document.removeEventListener('touchend', () => onTouchEnd({} as TouchEvent, 'single'));
   document.removeEventListener('scroll', onScroll);
+
+  if (activeMouseUpHandler) {
+    document.removeEventListener('mouseup', activeMouseUpHandler);
+    activeMouseUpHandler = null;
+  }
+  if (activeTouchEndHandler) {
+    document.removeEventListener('touchend', activeTouchEndHandler);
+    activeTouchEndHandler = null;
+  }
 };
+
+export { startScreenshotCapture, cleanup, addBoundaryBox, cropSelectedArea };

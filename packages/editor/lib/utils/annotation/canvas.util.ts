@@ -6,7 +6,7 @@ import { getCanvasScale } from './canvas-scale.utils';
 import { createDefaultControls } from './controls.util';
 import { hexToRgba } from './hex-to-rgba.util';
 import { createSpecificShape, setCanvasBackground } from './shapes.util';
-import { defaultNavElement } from '../../constants/annotation-elements';
+import { defaultNavElement } from '../../constants';
 import type {
   CanvasMouseDown,
   CanvasMouseMove,
@@ -16,7 +16,7 @@ import type {
   CanvasPathCreated,
   CanvasSelectionCreated,
   RenderCanvas,
-} from '../../models/annotation.model';
+} from '../../models';
 
 export const DRAWING_TOOLS = ['freeform', 'highlighter'];
 
@@ -45,6 +45,7 @@ export const getCanvasElement = () => {
 export const initializeFabric = ({
   fabricRef,
   canvasRef,
+  backgroundImage,
 }: {
   fabricRef: RefObject<Canvas | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
@@ -60,9 +61,16 @@ export const initializeFabric = ({
     height,
   });
 
+  if (backgroundImage) {
+    try {
+      // Set the background image and adjust canvas dimensions
+      setCanvasBackground({ file: backgroundImage, canvas, parentHeight: height, parentWidth: width });
+    } catch (error) {
+      console.error('Failed to set the background image:', error);
+    }
+  }
   //fabricjs.com/docs/configuring-defaults/
 
-  FabricObject.customProperties = ['objectId', 'shapeType', 'blurRadius'];
   FabricObject.ownDefaults = {
     ...FabricObject.ownDefaults,
     selectable: true,
@@ -155,6 +163,10 @@ export const handleCanvasMouseDown = ({
 
     // if shapeRef is not null, add it to canvas
     if (shapeRef.current) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (shapeRef.current as any)._startX = pointer.x;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (shapeRef.current as any)._startY = pointer.y;
       // add: http://fabricjs.com/docs/fabric.Canvas.html#add
       canvas.add(shapeRef.current);
     }
@@ -162,7 +174,14 @@ export const handleCanvasMouseDown = ({
 };
 
 // handle mouse move event on canvas to draw shapes with different dimensions
-export const handleCanvasMouseMove = ({ options, canvas, isDrawing, selectedShapeRef, shapeRef }: CanvasMouseMove) => {
+export const handleCanvasMouseMove = ({
+  options,
+  canvas,
+  isDrawing,
+  selectedShapeRef,
+  shapeRef,
+  syncShapeInStorage,
+}: CanvasMouseMove) => {
   // if selected shape is freeform, return
   if (!isDrawing.current) {
     return;
@@ -176,23 +195,38 @@ export const handleCanvasMouseMove = ({ options, canvas, isDrawing, selectedShap
   // get pointer coordinates
   const pointer = canvas.getScenePoint(options.e);
 
-  // depending on the selected shape, set the dimensions of the shape stored in shapeRef in previous step of handelCanvasMouseDown
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const startX = (shapeRef.current as any)?._startX ?? shapeRef.current?.left ?? pointer.x;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const startY = (shapeRef.current as any)?._startY ?? shapeRef.current?.top ?? pointer.y;
+
+  // depending on the selected shape, set the dimensions of the shape stored in shapeRef in previous step of handleCanvasMouseDown
   // calculate shape dimensions based on pointer coordinates
   switch (selectedShapeRef?.current) {
     case 'rectangle':
     case 'triangle':
-    case 'arrow':
     case 'blur':
-    case 'image':
-      shapeRef.current?.set({
-        width: pointer.x - (shapeRef.current?.left || 0),
-        height: pointer.y - (shapeRef.current?.top || 0),
-      });
+    case 'image': {
+      const left = Math.min(startX, pointer.x);
+      const top = Math.min(startY, pointer.y);
+      const width = Math.max(1, Math.abs(pointer.x - startX));
+      const height = Math.max(1, Math.abs(pointer.y - startY));
+      shapeRef.current?.set({ left, top, width, height });
       break;
+    }
 
-    case 'circle':
-      shapeRef.current.set({
-        radius: Math.abs(pointer.x - (shapeRef.current?.left || 0)) / 2,
+    case 'circle': {
+      const radius = Math.max(1, Math.abs(pointer.x - startX) / 2);
+      const left = Math.min(startX, pointer.x);
+      const top = Math.min(startY, pointer.y);
+      shapeRef.current?.set({ left, top, radius });
+      break;
+    }
+
+    case 'arrow':
+      shapeRef.current?.set({
+        width: Math.max(1, Math.abs(pointer.x - startX)),
+        height: Math.max(1, Math.abs(pointer.y - startY)),
       });
       break;
 
@@ -209,6 +243,11 @@ export const handleCanvasMouseMove = ({ options, canvas, isDrawing, selectedShap
   // render objects on canvas
   // renderAll: http://fabricjs.com/docs/fabric.Canvas.html#renderAll
   canvas.renderAll();
+
+  // sync shape in storage
+  if (shapeRef.current?.objectId) {
+    syncShapeInStorage(shapeRef.current);
+  }
 };
 
 // handle mouse up event on canvas to stop drawing shapes

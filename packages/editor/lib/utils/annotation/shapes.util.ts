@@ -3,12 +3,7 @@ import { Rect, Line, Triangle, Circle, Group, IText, FabricImage, FabricText, fi
 import { v4 as uuidv4 } from 'uuid';
 
 import { DRAWING_TOOLS } from './canvas.util';
-import type {
-  BackgroundFitMeta,
-  CustomFabricObject,
-  ElementDirection,
-  ModifyShape,
-} from '../../models/annotation.model';
+import type { BackgroundFitMeta, CustomFabricObject, ElementDirection, ModifyShape } from '../../models';
 
 const DEFAULT_SHAPE_OPTIONS = {
   width: 100,
@@ -118,9 +113,10 @@ export const createArrow = (pointer: PointerEvent, stroke: string) => {
   return arrowGroup;
 };
 
+export const DEFAULT_BLUR_RADIUS = 0.5;
+
 /**
- * Adds a blurred clone of the canvas background
- * and clips it to a draggable / resizable rectangle.
+ * Creates a blurred rectangular window over the canvas background image.
  *
  * @param canvas   Fabric canvas (backgroundImage already set)
  * @param pointer  result of canvas.getScenePoint(e)
@@ -135,18 +131,8 @@ export const createBlur = (canvas: Canvas | undefined, pointer: PointerEvent): R
   if (!bg) throw new Error('[Brie] Background image must be set before blur tool');
 
   blurred = bg.cloneAsImage({});
-  blurred.filters = [new FabricFilters.Blur({ blur: 0.1 })];
+  blurred.filters = [new FabricFilters.Blur({ blur: DEFAULT_BLUR_RADIUS })];
   blurred.applyFilters();
-
-  blurred.set({
-    selectable: false,
-    evented: false,
-    objectCaching: false,
-    data: 'blur-layer',
-  });
-
-  canvas.add(blurred);
-  canvas.sendObjectToBack(blurred);
 
   const win = new Rect({
     ...DEFAULT_SHAPE_OPTIONS,
@@ -158,9 +144,21 @@ export const createBlur = (canvas: Canvas | undefined, pointer: PointerEvent): R
     objectId: uuidv4(),
     data: 'blur-window',
     shapeType: 'blur',
-    blurRadius: 0.1,
+    blurRadius: DEFAULT_BLUR_RADIUS,
     absolutePositioned: true,
   });
+
+  blurred.set({
+    selectable: false,
+    evented: false,
+    objectCaching: false,
+    data: 'blur-layer',
+    objectId: uuidv4(),
+    blurWindowId: win.objectId,
+  } as Partial<CustomFabricObject<FabricImage>>);
+
+  canvas.add(blurred);
+  canvas.sendObjectToBack(blurred);
 
   blurred.clipPath = win;
 
@@ -302,15 +300,13 @@ export const setCanvasBackground = async ({
   canvas,
   parentWidth,
   parentHeight,
-  signal,
 }: {
   file: string;
   canvas: Canvas;
   parentWidth: number;
   parentHeight: number;
-  signal?: AbortSignal;
 }): Promise<BackgroundFitMeta> => {
-  const img = await FabricImage.fromURL(file, { crossOrigin: 'anonymous', signal });
+  const img = await FabricImage.fromURL(file, { crossOrigin: 'anonymous' });
   const naturalWidth = img.width ?? 1;
   const naturalHeight = img.height ?? 1;
 
