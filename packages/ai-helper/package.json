@@ -18,7 +18,7 @@
     "clean": "pnpm clean:bundle && pnpm clean:turbo && pnpm clean:node_modules"
   },
   "dependencies": {
-    "openai": "6.17.0"
+    "openai": "7.30.0"
   },
   "devDependencies": {
     "@extension/shared": "workspace:*",
