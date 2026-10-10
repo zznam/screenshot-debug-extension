@@ -16,6 +16,6 @@
   },
   "devDependencies": {
     "@extension/tsconfig": "workspace:*",
-    "@playwright/test": "1.61.1"
+    "@playwright/test": "1.63.0"
   }
 }

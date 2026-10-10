@@ -46,6 +46,6 @@
     "@extension/vite-config": "workspace:*",
     "@types/file-saver": "^2.0.7",
     "concurrently": "^10.0.5",
-    "cross-env": "^7.0.3"
+    "cross-env": "^10.1.0"
   }
 }
