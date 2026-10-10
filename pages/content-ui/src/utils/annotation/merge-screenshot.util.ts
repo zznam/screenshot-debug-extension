@@ -3,6 +3,8 @@ import { Canvas, util as FabricUtil, FabricImage, filters as FabricFilters } fro
 
 import type { Screenshot } from '@extension/shared';
 
+import { DEFAULT_BLUR_RADIUS } from './shapes.util';
+
 /**
  * Renders a screenshot *with* its annotations into a PNG Blob
  * without flashing anything on-screen.
@@ -47,7 +49,7 @@ export const mergeScreenshot = async ({
 
     const patch = bg.cloneAsImage({});
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    patch.filters = [new FabricFilters.Blur({ blur: (snap as any).blurRadius ?? 12 })];
+    patch.filters = [new FabricFilters.Blur({ blur: (snap as any).blurRadius ?? DEFAULT_BLUR_RADIUS })];
     patch.applyFilters();
     patch.clipPath = rect;
 

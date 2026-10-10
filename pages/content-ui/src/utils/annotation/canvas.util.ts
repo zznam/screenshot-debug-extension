@@ -2,7 +2,11 @@ import { Canvas, FabricObject, PencilBrush, util as fabricUtil, Point } from 'fa
 import type { RefObject } from 'react';
 import { v4 as uuid4 } from 'uuid';
 
-import { defaultNavElement } from '@src/constants';
+import { getCanvasScale } from './canvas-scale.utils';
+import { createDefaultControls } from './controls.util';
+import { hexToRgba } from './hex-to-rgba.util';
+import { createSpecificShape, setCanvasBackground } from './shapes.util';
+import { defaultNavElement } from '../../constants';
 import type {
   CanvasMouseDown,
   CanvasMouseMove,
@@ -12,12 +16,7 @@ import type {
   CanvasPathCreated,
   CanvasSelectionCreated,
   RenderCanvas,
-} from '@src/models';
-
-import { getCanvasScale } from './canvas-scale.utils';
-import { createDefaultControls } from './controls.util';
-import { hexToRgba } from './hex-to-rgba.util';
-import { createSpecificShape, setCanvasBackground } from './shapes.util';
+} from '../../models';
 
 export const DRAWING_TOOLS = ['freeform', 'highlighter'];
 

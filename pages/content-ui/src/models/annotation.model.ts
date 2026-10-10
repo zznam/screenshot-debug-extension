@@ -101,6 +101,8 @@ export type ActiveElement = {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface CustomFabricObject<T extends FabricObject> extends FabricObject {
   objectId?: string;
+  blurWindowId?: string;
+  shapeType?: string;
 }
 
 export type ModifyShape = {

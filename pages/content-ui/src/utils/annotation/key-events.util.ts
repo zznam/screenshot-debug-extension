@@ -73,16 +73,26 @@ export const handleDelete = (canvas: Canvas, deleteShapeFromStorage: (id: string
     return;
   }
 
-  if (activeObjects.length > 0) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  activeObjects.forEach((obj: CustomFabricObject<any>) => {
+    if (!obj.objectId) {
+      return;
+    }
+
+    // Clean up associated blur background layer if deleting a blur shape
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    activeObjects.forEach((obj: CustomFabricObject<any>) => {
-      if (!obj.objectId) {
-        return;
-      }
-      canvas.remove(obj);
-      deleteShapeFromStorage(obj.objectId);
-    });
-  }
+    if (obj.data === 'blur-window' || (obj as any).shapeType === 'blur') {
+      const allObjects = canvas.getObjects();
+      const orphanedLayers = allObjects.filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (o: any) => o.data === 'blur-layer' && (o.clipPath === obj || o.blurWindowId === obj.objectId),
+      );
+      orphanedLayers.forEach(layer => canvas.remove(layer));
+    }
+
+    canvas.remove(obj);
+    deleteShapeFromStorage(obj.objectId);
+  });
 
   canvas.discardActiveObject();
   canvas.requestRenderAll();
