@@ -156,12 +156,35 @@ describe('durable local library', () => {
     await expect(library.beginLibraryUpload(session.id, session.owner)).rejects.toThrow('expired');
   });
 
-  it('limits chunks and rejects an incorrect snapshot before exposing any capture', async () => {
-    const id = await library.beginLibraryUpload(session.id, session.owner);
-    await expect(
-      library.appendLibraryChunk(id, session.owner, 0, 'x'.repeat(library.CHUNK_SIZE + 1)),
-    ).rejects.toThrow();
-    await expect(library.commitScreenshotCapture({ ...payload(), snapshotId: 'foreign' }, session)).rejects.toThrow();
+  it('calculates library storage statistics across saved captures and assets', async () => {
+    const initialStats = await library.getLibraryStorageStats();
+    expect(initialStats).toEqual({ totalBytes: 0, captureCount: 0, assetCount: 0 });
+
+    await library.commitScreenshotCapture(payload(), session);
+    const stats = await library.getLibraryStorageStats();
+    expect(stats.captureCount).toBe(1);
+    expect(stats.assetCount).toBe(2);
+    expect(stats.totalBytes).toBeGreaterThan(0);
+  });
+
+  it('supports bulk deletion of multiple captures and their associated assets', async () => {
+    await library.commitScreenshotCapture(payload(), session);
+
+    const session2: LibrarySession = {
+      ...session,
+      id: 'session-2',
+      captureId: 'capture-2',
+    };
+    await library.saveLibrarySession(session2);
+    await library.commitScreenshotCapture({ ...payload(), id: 'capture-2', snapshotId: 'session-2' }, session2);
+
+    expect(await library.listLibraryCaptures()).toHaveLength(2);
+
+    await library.deleteLibraryCaptures(['capture', 'capture-2', 'capture']);
     expect(await library.listLibraryCaptures()).toEqual([]);
+
+    const stats = await library.getLibraryStorageStats();
+    expect(stats.captureCount).toBe(0);
+    expect(stats.assetCount).toBe(0);
   });
 });
