@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
+import type { Canvas } from 'fabric';
 import { describe, expect, it, vi } from 'vitest';
 
 import { handleDelete } from './key-events.util';
-import { createBlur, DEFAULT_BLUR_RADIUS } from './shapes.util';
+import { bringElement, createBlur, DEFAULT_BLUR_RADIUS } from './shapes.util';
 
 vi.mock('fabric', () => {
   class MockRect {
@@ -133,6 +134,70 @@ describe('shapes.util and blur layer cleanup', () => {
       expect(deleteShapeFromStorage).toHaveBeenCalledWith('win-123');
       expect(mockCanvas.discardActiveObject).toHaveBeenCalled();
       expect(mockCanvas.requestRenderAll).toHaveBeenCalled();
+    });
+  });
+
+  describe('bringElement', () => {
+    it('returns early when canvas is null or no active object exists', () => {
+      const syncShape = vi.fn();
+      expect(() =>
+        bringElement({
+          canvas: null as unknown as Canvas,
+          direction: 'front',
+          syncShapeInStorage: syncShape,
+        }),
+      ).not.toThrow();
+
+      const mockCanvas = {
+        getActiveObject: vi.fn().mockReturnValue(null),
+        bringObjectToFront: vi.fn(),
+        requestRenderAll: vi.fn(),
+      } as unknown as Canvas;
+      bringElement({ canvas: mockCanvas, direction: 'front', syncShapeInStorage: syncShape });
+      expect(mockCanvas.bringObjectToFront).not.toHaveBeenCalled();
+      expect(mockCanvas.requestRenderAll).not.toHaveBeenCalled();
+      expect(syncShape).not.toHaveBeenCalled();
+    });
+
+    it('returns early when active object is activeSelection', () => {
+      const syncShape = vi.fn();
+      const mockCanvas = {
+        getActiveObject: vi.fn().mockReturnValue({ type: 'activeSelection' }),
+        bringObjectToFront: vi.fn(),
+        requestRenderAll: vi.fn(),
+      } as unknown as Canvas;
+      bringElement({ canvas: mockCanvas, direction: 'front', syncShapeInStorage: syncShape });
+      expect(mockCanvas.bringObjectToFront).not.toHaveBeenCalled();
+      expect(mockCanvas.requestRenderAll).not.toHaveBeenCalled();
+      expect(syncShape).not.toHaveBeenCalled();
+    });
+
+    it('brings element to front, renders canvas, and syncs shape', () => {
+      const syncShape = vi.fn();
+      const mockObj = { type: 'rect', objectId: 'rect-1' };
+      const mockCanvas = {
+        getActiveObject: vi.fn().mockReturnValue(mockObj),
+        bringObjectToFront: vi.fn(),
+        requestRenderAll: vi.fn(),
+      } as unknown as Canvas;
+      bringElement({ canvas: mockCanvas, direction: 'front', syncShapeInStorage: syncShape });
+      expect(mockCanvas.bringObjectToFront).toHaveBeenCalledWith(mockObj as never);
+      expect(mockCanvas.requestRenderAll).toHaveBeenCalled();
+      expect(syncShape).toHaveBeenCalledWith(mockObj as never);
+    });
+
+    it('sends element to back, renders canvas, and syncs shape', () => {
+      const syncShape = vi.fn();
+      const mockObj = { type: 'rect', objectId: 'rect-2' };
+      const mockCanvas = {
+        getActiveObject: vi.fn().mockReturnValue(mockObj),
+        sendObjectToBack: vi.fn(),
+        requestRenderAll: vi.fn(),
+      } as unknown as Canvas;
+      bringElement({ canvas: mockCanvas, direction: 'back', syncShapeInStorage: syncShape });
+      expect(mockCanvas.sendObjectToBack).toHaveBeenCalledWith(mockObj as never);
+      expect(mockCanvas.requestRenderAll).toHaveBeenCalled();
+      expect(syncShape).toHaveBeenCalledWith(mockObj as never);
     });
   });
 });

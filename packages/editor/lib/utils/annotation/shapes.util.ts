@@ -400,10 +400,18 @@ export const bringElement = ({ canvas, direction, syncShapeInStorage }: ElementD
     canvas.bringObjectToFront(selectedElement);
   } else if (direction === 'back') {
     canvas.sendObjectToBack(selectedElement);
+  } else if (
+    direction === 'forward' &&
+    typeof (canvas as unknown as { bringObjectForward?: (obj: unknown) => void }).bringObjectForward === 'function'
+  ) {
+    (canvas as unknown as { bringObjectForward: (obj: unknown) => void }).bringObjectForward(selectedElement);
+  } else if (
+    direction === 'backward' &&
+    typeof (canvas as unknown as { sendObjectBackwards?: (obj: unknown) => void }).sendObjectBackwards === 'function'
+  ) {
+    (canvas as unknown as { sendObjectBackwards: (obj: unknown) => void }).sendObjectBackwards(selectedElement);
   }
 
-  // canvas.renderAll();
+  canvas.requestRenderAll();
   syncShapeInStorage(selectedElement);
-
-  // re-render all objects on the canvas
 };
