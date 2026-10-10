@@ -25,6 +25,22 @@ describe('base64 conversions', () => {
       expect(file.size).toBeGreaterThan(0);
     });
 
+    it('prevents duplicate extension when filename already has .jpg or .jpeg', () => {
+      const file1 = base64ToFile(sampleJpegDataUrl, 'capture.jpg');
+      expect(file1.name).toBe('capture.jpeg');
+      const file2 = base64ToFile(sampleJpegDataUrl, 'capture.jpeg');
+      expect(file2.name).toBe('capture.jpeg');
+      const file3 = base64ToFile(samplePngDataUrl, 'screenshot.png');
+      expect(file3.name).toBe('screenshot.png');
+    });
+
+    it('maps image/svg+xml to .svg extension', () => {
+      const svgBase64 = 'data:image/svg+xml;base64,' + btoa('<svg></svg>');
+      const file = base64ToFile(svgBase64, 'diagram');
+      expect(file.name).toBe('diagram.svg');
+      expect(file.type).toBe('image/svg+xml');
+    });
+
     it('handles raw base64 payload defaulting to png', () => {
       const file = base64ToFile(samplePngPayload, 'raw-shot');
       expect(file.name).toBe('raw-shot.png');
