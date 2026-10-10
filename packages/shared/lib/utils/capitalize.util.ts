@@ -1,2 +1,6 @@
-export const capitalizeWord = (word: string): string =>
-  word && word?.charAt(0)?.toUpperCase() + word?.slice(1)?.toLowerCase();
+export const capitalizeWord = (word?: string | null): string => {
+  if (typeof word !== 'string' || !word) return '';
+  const trimmed = word.trim();
+  if (!trimmed) return '';
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+};
