@@ -1,6 +1,7 @@
 import type { DebugReport } from './report-builder.util';
 
 const text = (value: unknown): string => {
+  if (value === null || value === undefined) return '';
   const serialized = typeof value === 'string' ? value : (JSON.stringify(value) ?? '');
   return serialized
     .replace(/[\r\n]+/g, ' ')
@@ -9,13 +10,24 @@ const text = (value: unknown): string => {
 };
 
 export const buildReportMarkdown = (report: DebugReport): string => {
+  const meta = report?.meta ?? ({} as DebugReport['meta']);
+  const network = report?.network ?? { requests: [], errors: [], summary: { total: 0, failed: 0 } };
+  const consoleData = report?.console ?? { errors: [], warnings: [], info: [] };
+  const consoleErrors = consoleData.errors ?? [];
+  const consoleWarnings = consoleData.warnings ?? [];
+  const networkErrors = network.errors ?? [];
+  const networkRequests = network.requests ?? [];
+  const totalRequests = network.summary?.total ?? networkRequests.length;
+  const failedRequests = network.summary?.failed ?? networkErrors.length;
+  const screenshots = report?.screenshots ?? [];
+
   const lines = [
-    `# ${text(report.meta.title || 'Bug report')}`,
+    `# ${text(meta.title || 'Bug report')}`,
     '',
-    `- Page: ${text(report.meta.url)}`,
-    `- Captured: ${text(report.meta.generatedAt)}`,
-    `- Network: ${report.network.summary.total} requests, ${report.network.summary.failed} failures`,
-    `- Console: ${report.console.errors.length} errors, ${report.console.warnings.length} warnings`,
+    `- Page: ${text(meta.url || 'unknown')}`,
+    `- Captured: ${text(meta.generatedAt || '')}`,
+    `- Network: ${totalRequests} requests, ${failedRequests} failures`,
+    `- Console: ${consoleErrors.length} errors, ${consoleWarnings.length} warnings`,
     '',
     '## Steps to reproduce',
     '',
@@ -32,26 +44,32 @@ export const buildReportMarkdown = (report: DebugReport): string => {
     '## Console errors',
     '',
   ];
-  if (!report.console.errors.length) lines.push('No console errors were captured.');
-  for (const record of report.console.errors.slice(0, 20)) {
+
+  if (!consoleErrors.length) lines.push('No console errors were captured.');
+  for (const record of consoleErrors.slice(0, 20)) {
     lines.push(`- ${text(record.error?.message ?? record.args ?? record.message ?? 'Console error')}`);
   }
-  if (report.console.errors.length > 20)
-    lines.push(`- ${report.console.errors.length - 20} additional errors in the JSON report.`);
+  if (consoleErrors.length > 20) lines.push(`- ${consoleErrors.length - 20} additional errors in the JSON report.`);
+
   lines.push('', '## Failed requests', '');
-  if (!report.network.errors.length) lines.push('No failed requests were captured.');
-  for (const record of report.network.errors.slice(0, 20)) {
+  if (!networkErrors.length) lines.push('No failed requests were captured.');
+  for (const record of networkErrors.slice(0, 20)) {
     lines.push(
-      `- ${text(record.method || 'GET')} ${text(record.url)} — ${text(record.status ?? record.statusCode ?? record.type)}`,
+      `- ${text(record.method || 'GET')} ${text(record.url)} — ${text(record.status ?? record.statusCode ?? record.type ?? 'Error')}`,
     );
   }
-  if (report.network.errors.length > 20)
-    lines.push(`- ${report.network.errors.length - 20} additional failures in the JSON report.`);
+  if (networkErrors.length > 20) lines.push(`- ${networkErrors.length - 20} additional failures in the JSON report.`);
+
+  lines.push('', '## Attachments', '');
+  if (screenshots.length > 0) {
+    for (const screenshot of screenshots) {
+      lines.push(`- ${text(screenshot.filename)}`);
+    }
+  } else {
+    lines.push('No screenshot attachments.');
+  }
+
   lines.push(
-    '',
-    '## Attachments',
-    '',
-    ...report.screenshots.map(screenshot => `- ${text(screenshot.filename)}`),
     '',
     'The JSON report and network.har contain structured diagnostics. Review attachments before sharing.',
     '',
