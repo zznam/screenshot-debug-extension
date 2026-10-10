@@ -12,12 +12,19 @@ const captureTypes = [
     name: t('area'),
     slug: 'area',
     icon: 'SquareDashed',
+    shortcut: 'Alt+Shift+A',
   },
-  { name: t('viewport'), slug: 'viewport', icon: 'AppWindowMac' },
+  {
+    name: t('viewport'),
+    slug: 'viewport',
+    icon: 'AppWindowMac',
+    shortcut: 'Alt+Shift+V',
+  },
   {
     name: t('fullPage'),
     slug: 'full-page',
     icon: 'RectangleVertical',
+    shortcut: 'Alt+Shift+F',
   },
 ] as const;
 
@@ -155,12 +162,15 @@ export const CaptureScreenshotGroup = () => {
   if (captureState === 'capturing' && currentActiveTab === activeTab.id) {
     return (
       <div className="border-muted grid w-full gap-4 rounded-xl border bg-slate-100/20 p-2">
-        <button
-          className="hover:bg-accent flex w-full items-center justify-center rounded-md border border-transparent py-4"
+        <Button
+          variant="ghost"
+          type="button"
+          aria-label={t('exitCaptureScreenshot')}
+          className="hover:bg-accent flex w-full items-center justify-center py-4"
           onClick={handleOnDiscard}>
           <Icon name="X" size={20} strokeWidth={1.5} className="mr-1" />
           <span>{t('exitCaptureScreenshot')}</span>
-        </button>
+        </Button>
       </div>
     );
   }
@@ -188,11 +198,16 @@ export const CaptureScreenshotGroup = () => {
             key={type.slug}
             id={type.slug}
             variant="ghost"
+            type="button"
+            aria-label={`${type.name} screenshot (${type.shortcut})`}
             disabled={starting || Boolean(unavailable)}
             onClick={() => void handleCaptureScreenshot(type.slug)}
-            className="h-auto flex-col gap-3 py-4">
+            className="h-auto flex-col gap-2 py-3">
             <Icon name={type.icon} className="size-5" strokeWidth={type.slug === 'area' ? 2 : 1.5} />
-            <span className="text-nowrap text-[11px]">{type.name}</span>
+            <span className="text-nowrap text-[11px] font-medium">{type.name}</span>
+            <kbd className="text-muted-foreground/80 rounded bg-slate-200/50 px-1 py-0.5 font-mono text-[9px] tracking-tighter dark:bg-slate-800/50">
+              {type.shortcut}
+            </kbd>
           </Button>
         ))}
       </div>

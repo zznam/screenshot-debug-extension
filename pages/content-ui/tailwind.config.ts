@@ -1,5 +1,5 @@
 import { withUI } from '@extension/ui';
 
 export default withUI({
-  content: ['./src/**/*.{ts,tsx}'],
+  content: ['../../packages/editor/lib/**/*.{ts,tsx}', './src/**/*.{ts,tsx}'],
 });

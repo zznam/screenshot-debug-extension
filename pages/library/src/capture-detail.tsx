@@ -92,6 +92,9 @@ const CaptureDetail = ({ id }: { id: string }) => {
             <p className="library-muted">
               {capture.source.domain} · {new Date(capture.createdAt).toLocaleString()}
             </p>
+            <a className="library-primary library-edit-link" href={`?capture=${encodeURIComponent(id)}&edit=1`}>
+              Edit screenshots
+            </a>
             <form
               onSubmit={event => {
                 event.preventDefault();

@@ -156,6 +156,15 @@ describe('durable local library', () => {
     await expect(library.beginLibraryUpload(session.id, session.owner)).rejects.toThrow('expired');
   });
 
+  it('limits chunks and rejects an incorrect snapshot before exposing any capture', async () => {
+    const id = await library.beginLibraryUpload(session.id, session.owner);
+    await expect(
+      library.appendLibraryChunk(id, session.owner, 0, 'x'.repeat(library.CHUNK_SIZE + 1)),
+    ).rejects.toThrow();
+    await expect(library.commitScreenshotCapture({ ...payload(), snapshotId: 'foreign' }, session)).rejects.toThrow();
+    expect(await library.listLibraryCaptures()).toEqual([]);
+  });
+
   it('calculates library storage statistics across saved captures and assets', async () => {
     const initialStats = await library.getLibraryStorageStats();
     expect(initialStats).toEqual({ totalBytes: 0, captureCount: 0, assetCount: 0 });
@@ -186,5 +195,88 @@ describe('durable local library', () => {
     const stats = await library.getLibraryStorageStats();
     expect(stats.captureCount).toBe(0);
     expect(stats.assetCount).toBe(0);
+  });
+
+  it('edits previews and layers atomically while preserving originals, tags and frozen context', async () => {
+    await library.commitScreenshotCapture(payload(), session);
+    await library.updateLibraryMetadata('capture', 1, 'Checkout issue', ['checkout']);
+    const before = (await library.getLibraryCapture('capture'))!;
+    const original = await library.getLibraryAsset(before.screenshots[0]!.originalAssetId);
+    const revision = await library.updateLibraryScreenshots({
+      id: 'capture',
+      expectedRevision: 2,
+      title: 'Edited',
+      thumbnail: png,
+      screenshots: [{ id: 'shot', preview: png, annotations: { objects: [{ type: 'Rect', left: 42 }] } }],
+    });
+    const after = (await library.getLibraryCapture('capture'))!;
+    expect(revision).toBe(3);
+    expect(after).toMatchObject({
+      title: 'Edited',
+      revision: 3,
+      tags: ['checkout'],
+      source: before.source,
+      diagnostics: before.diagnostics,
+      createdAt: before.createdAt,
+    });
+    expect(after.screenshots[0]!.originalAssetId).toBe(before.screenshots[0]!.originalAssetId);
+    expect(await (await library.getLibraryAsset(after.screenshots[0]!.originalAssetId))!.arrayBuffer()).toEqual(
+      await original!.arrayBuffer(),
+    );
+    expect(after.screenshots[0]!.annotations.objects).toEqual([{ type: 'Rect', left: 42 }]);
+    expect(await library.getLibraryAsset(before.screenshots[0]!.previewAssetId)).toBeUndefined();
+    expect(await library.getLibraryAsset(after.screenshots[0]!.previewAssetId)).toBeDefined();
+  });
+
+  it('rejects stale, foreign and deleted edits without overwriting or recreating a capture', async () => {
+    await library.commitScreenshotCapture(payload(), session);
+    const edit = {
+      id: 'capture',
+      expectedRevision: 1,
+      title: 'Edit',
+      thumbnail: png,
+      screenshots: [{ id: 'shot', preview: png, annotations: { objects: [] } }],
+    };
+    await library.updateLibraryScreenshots(edit);
+    const current = await library.getLibraryCapture('capture');
+    await expect(library.updateLibraryScreenshots(edit)).rejects.toThrow('changed in another window');
+    await expect(
+      library.updateLibraryScreenshots({
+        ...edit,
+        expectedRevision: 2,
+        screenshots: [{ ...edit.screenshots[0]!, id: 'foreign' }],
+      }),
+    ).rejects.toThrow('do not match');
+    expect(await library.getLibraryCapture('capture')).toEqual(current);
+    await library.deleteLibraryCapture('capture');
+    await expect(library.updateLibraryScreenshots({ ...edit, expectedRevision: 2 })).rejects.toThrow('deleted');
+    expect(await library.listLibraryCaptures()).toEqual([]);
+  });
+
+  it('keeps the entire previous revision after an edit hits quota and can retry successfully', async () => {
+    await library.commitScreenshotCapture(payload(), session);
+    const before = (await library.getLibraryCapture('capture'))!;
+    const edit = {
+      id: 'capture',
+      expectedRevision: 1,
+      title: 'Edit',
+      thumbnail: png,
+      screenshots: [{ id: 'shot', preview: png, annotations: { objects: [] } }],
+    };
+    const put = IDBObjectStore.prototype.put;
+    const failing = vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementation(function (
+      this: IDBObjectStore,
+      value,
+      key,
+    ) {
+      if (this.name === 'assets') throw new DOMException('Full', 'QuotaExceededError');
+      return put.call(this, value, key);
+    });
+    await expect(library.updateLibraryScreenshots(edit)).rejects.toMatchObject({ name: 'QuotaExceededError' });
+    failing.mockRestore();
+    expect(await library.getLibraryCapture('capture')).toEqual(before);
+    expect(await library.getLibraryAsset(before.screenshots[0]!.originalAssetId)).toBeDefined();
+    expect(await library.getLibraryAsset(before.screenshots[0]!.previewAssetId)).toBeDefined();
+    expect(await library.updateLibraryScreenshots(edit)).toBe(2);
   });
 });

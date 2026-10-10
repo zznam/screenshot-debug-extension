@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useStorage } from '@extension/shared';
 import type { CaptureSummary } from '@extension/shared';
@@ -7,6 +7,8 @@ import { librarySettingsStorage, listLibraryCaptures, themeStorage } from '@exte
 import { CaptureDetail } from './capture-detail';
 import { filterCaptures, formatBytes } from './filter';
 import type { LibraryFilters } from './filter';
+
+const ScreenshotEditorPage = lazy(() => import('./screenshot-editor'));
 
 const emptyFilters: LibraryFilters = { search: '', domain: '', from: '', to: '', kind: '' };
 
@@ -46,6 +48,13 @@ const LibraryPage = () => {
   const domains = [...new Set(captures.map(capture => capture.source.domain))].sort();
   const updateFilter = (key: keyof LibraryFilters, value: string) =>
     setFilters(previous => ({ ...previous, [key]: value }));
+  if (captureId && new URLSearchParams(window.location.search).has('edit')) {
+    return (
+      <Suspense fallback={<p role="status">Opening editor…</p>}>
+        <ScreenshotEditorPage id={captureId} theme={theme} />
+      </Suspense>
+    );
+  }
   return (
     <div className="library-shell">
       <header className="library-topbar">

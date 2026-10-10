@@ -93,4 +93,18 @@ describe('sensitive diagnostic redaction', () => {
     expect(redact({ label: 'password', value: 'plain text' })).toEqual({ label: 'password', value: REDACTED_KEYWORD });
     expect(redact('[{"token":"secret"}]')).toBe(JSON.stringify([{ token: REDACTED_KEYWORD }]));
   });
+
+  it('redacts sensitive credentials embedded in URL query parameters', () => {
+    const url = 'https://api.example.com/v1/user?token=mysecrettoken123&other=public&password=mypassword#hash';
+    expect(redact(url)).toBe(
+      `https://api.example.com/v1/user?token=${REDACTED_KEYWORD}&other=public&password=${REDACTED_KEYWORD}#hash`,
+    );
+
+    const logEntry = {
+      url: 'https://service.internal/auth?api_key=secretkey999&client_secret=topsecret',
+    };
+    expect(redact(logEntry)).toEqual({
+      url: `https://service.internal/auth?api_key=${REDACTED_KEYWORD}&client_secret=${REDACTED_KEYWORD}`,
+    });
+  });
 });

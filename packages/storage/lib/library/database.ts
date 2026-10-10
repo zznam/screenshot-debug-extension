@@ -4,6 +4,7 @@ import type {
   CaptureSummary,
   LibraryStorageStats,
   ScreenshotSavePayload,
+  ScreenshotEditPayload,
 } from './types.js';
 
 interface StoredCapture extends CaptureDocument {
@@ -283,6 +284,108 @@ const getLibraryCapture = async (id: string): Promise<CaptureDocument | undefine
   return document;
 };
 const getLibraryAsset = async (id: string) => (await readOne<CaptureAsset>('assets', id))?.blob;
+
+const updateLibraryScreenshots = async (payload: ScreenshotEditPayload): Promise<number> => {
+  if (
+    !payload.title?.trim() ||
+    payload.title.length > 500 ||
+    !Number.isInteger(payload.expectedRevision) ||
+    payload.expectedRevision < 1 ||
+    !Array.isArray(payload.screenshots) ||
+    !payload.screenshots.length ||
+    payload.screenshots.length > 30
+  )
+    throw new Error('Invalid screenshot edits.');
+  if (typeof payload.thumbnail !== 'string' || payload.thumbnail.length > 200_000)
+    throw new Error('Capture thumbnail is too large.');
+  imageBlob(payload.thumbnail);
+  const ids = new Set<string>();
+  const edits = payload.screenshots.map(shot => {
+    if (!shot?.id || ids.has(shot.id) || !Array.isArray(shot.annotations?.objects))
+      throw new Error('Invalid screenshot annotations.');
+    ids.add(shot.id);
+    return {
+      ...shot,
+      annotations: structuredClone(shot.annotations),
+      blob: imageBlob(shot.preview),
+      assetId: crypto.randomUUID(),
+    };
+  });
+  const db = await openLibrary();
+  const tx = db.transaction(['captures', 'assets'], 'readwrite');
+  const done = completed(tx);
+  let failure: Error | undefined;
+  const request = tx.objectStore('captures').get(payload.id);
+  request.onsuccess = () => {
+    const previous = request.result as StoredCapture | undefined;
+    if (!previous) {
+      failure = new Error('This capture was deleted. Download your edits before leaving.');
+      tx.abort();
+      return;
+    }
+    if (previous.revision !== payload.expectedRevision) {
+      failure = new Error('This capture changed in another window. Download your edits or reload the latest version.');
+      tx.abort();
+      return;
+    }
+    if (previous.screenshots.length !== edits.length || previous.screenshots.some(shot => !ids.has(shot.id))) {
+      failure = new Error('These edits do not match the saved screenshot set.');
+      tx.abort();
+      return;
+    }
+    let remaining = previous.screenshots.length;
+    let originalBytes = 0;
+    previous.screenshots.forEach(shot => {
+      const original = tx.objectStore('assets').get(shot.originalAssetId);
+      original.onsuccess = () => {
+        const asset = original.result as CaptureAsset | undefined;
+        if (!asset || asset.captureId !== previous.id) {
+          failure = new Error('An original screenshot is missing. Download your edits before leaving.');
+          tx.abort();
+          return;
+        }
+        originalBytes += asset.blob.size;
+        remaining -= 1;
+        if (remaining) return;
+        const screenshots = previous.screenshots.map(saved => {
+          const edit = edits.find(item => item.id === saved.id)!;
+          return { ...saved, previewAssetId: edit.assetId, annotations: edit.annotations };
+        });
+        const sizeBytes =
+          originalBytes +
+          edits.reduce((total, edit) => total + edit.blob.size, 0) +
+          new TextEncoder().encode(
+            JSON.stringify({ screenshots, diagnostics: previous.diagnostics, thumbnail: payload.thumbnail }),
+          ).byteLength;
+        try {
+          previous.screenshots.forEach(saved => tx.objectStore('assets').delete(saved.previewAssetId));
+          edits.forEach(edit =>
+            tx
+              .objectStore('assets')
+              .put({ id: edit.assetId, captureId: previous.id, blob: edit.blob } satisfies CaptureAsset),
+          );
+          tx.objectStore('captures').put({
+            ...previous,
+            title: payload.title.trim(),
+            screenshots,
+            thumbnail: payload.thumbnail,
+            sizeBytes,
+            revision: previous.revision + 1,
+            updatedAt: Date.now(),
+          });
+        } catch (cause) {
+          failure = cause instanceof Error ? cause : new Error('Could not store screenshot edits.');
+          tx.abort();
+        }
+      };
+    });
+  };
+  await done.catch(error => {
+    throw failure ?? error;
+  });
+  notifyChange();
+  return payload.expectedRevision + 1;
+};
 const listLibraryCaptures = async (): Promise<CaptureSummary[]> => {
   const db = await openLibrary();
   const captures = (await result(db.transaction('captures').objectStore('captures').getAll())) as StoredCapture[];
@@ -402,6 +505,7 @@ export {
   getLibraryCapture,
   getLibraryAsset,
   updateLibraryMetadata,
+  updateLibraryScreenshots,
   deleteLibraryCapture,
   deleteLibraryCaptures,
   getLibraryStorageStats,

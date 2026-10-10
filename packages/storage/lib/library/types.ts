@@ -73,3 +73,12 @@ export interface LibraryStorageStats {
   captureCount: number;
   assetCount: number;
 }
+
+/** Edits replace flattened previews and layers; original assets and context stay frozen. */
+export interface ScreenshotEditPayload {
+  id: string;
+  expectedRevision: number;
+  title: string;
+  thumbnail: string;
+  screenshots: { id: string; preview: string; annotations: CaptureAnnotations }[];
+}

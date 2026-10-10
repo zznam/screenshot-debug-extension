@@ -1,5 +1,6 @@
 import type { FabricObject } from 'fabric';
 
+import type { EditorSession } from '@extension/editor';
 import type {
   CaptureAnnotations,
   CaptureSnapshot,
@@ -7,7 +8,7 @@ import type {
   Screenshot,
   ScreenshotSavePayload,
 } from '@extension/shared';
-import { annotationsStorage, CHUNK_SIZE } from '@extension/storage';
+import { CHUNK_SIZE } from '@extension/storage';
 
 import { mergeScreenshot } from './annotation/merge-screenshot.util';
 
@@ -60,6 +61,7 @@ const prepareLibrarySession = (session: LibrarySaveSession) => {
   return session.context;
 };
 const saveScreenshotsToLibrary = async ({
+  annotationsStorage,
   context,
   revision,
   title,
@@ -69,6 +71,7 @@ const saveScreenshotsToLibrary = async ({
   signal,
   onProgress,
 }: {
+  annotationsStorage: EditorSession['annotationsStorage'];
   context: LibraryContext;
   revision: number;
   title: string;

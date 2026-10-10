@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { t } from '@extension/i18n';
+import { useEditorSession } from '@extension/editor';
 import type { AiDebugResponse, DownloadRequest, Screenshot } from '@extension/shared';
 import { AI_DEBUG, useStorage } from '@extension/shared';
-import { annotationsStorage, captureSettingsStorage, debugModeStorage, themeStorage } from '@extension/storage';
-import { useAppDispatch, triggerCanvasAction } from '@extension/store';
+import { captureSettingsStorage, debugModeStorage, themeStorage } from '@extension/storage';
 import { Dialog, DialogContent, DialogTitle, cn, toast } from '@extension/ui';
 
 import { CanvasContainerView } from './components/annotation-view';
@@ -45,7 +43,10 @@ const Content = ({
   onDeleteScreenshot,
   onSelectScreenshot,
 }: ContentProps) => {
-  const dispatch = useAppDispatch();
+  const {
+    session: { annotationsStorage },
+    triggerCanvasAction,
+  } = useEditorSession();
   const theme = useStorage(themeStorage);
   const bgLight = chrome.runtime.getURL('content-ui/annotation-bg-light.png');
   const bgDark = chrome.runtime.getURL('content-ui/annotation-bg-dark.png');
@@ -242,13 +243,13 @@ const Content = ({
             setTitle(value);
           }}
           onUndo={() => {
-            dispatch(triggerCanvasAction('UNDO'));
+            triggerCanvasAction('UNDO');
           }}
           onRedo={() => {
-            dispatch(triggerCanvasAction('REDO'));
+            triggerCanvasAction('REDO');
           }}
           onStartOver={() => {
-            dispatch(triggerCanvasAction('START_OVER'));
+            triggerCanvasAction('START_OVER');
           }}
           canvasWidth={canvasWidth}
           canvasHeight={canvasHeight}
@@ -272,7 +273,7 @@ const Content = ({
         <main
           ref={canvasRef}
           className={cn(
-            'grid h-full min-h-0 gap-4 p-4 transition-[grid-template-columns] duration-300',
+            'relative grid h-full min-h-0 gap-4 p-4 transition-[grid-template-columns] duration-300',
             isLeftSidebarOpen ? 'grid-cols-[260px_minmax(0,1fr)]' : 'grid-cols-[1px_minmax(0,1fr)]',
           )}>
           <LeftSidebar

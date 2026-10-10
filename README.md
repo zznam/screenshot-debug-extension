@@ -108,7 +108,7 @@ The helper accepts requests only from Chrome extension origins with the pairing 
 
 ## Capture library
 
-Open **Capture library** from the popup, or choose **Save to library** in the screenshot editor. On first use, choose manual or automatic saving; the preference stays available in Settings. Saved captures persist after their source page closes or the browser restarts, and remain until deleted. See [capture library details](docs/CAPTURE-LIBRARY.md).
+Open **Capture library** from the popup, or choose **Save to library** in the screenshot editor. On first use, choose manual or automatic saving; the preference stays available in Settings. Saved captures persist after their source page closes or the browser restarts, and remain until deleted. Choose **Edit screenshots** to reopen their annotation layers, undo/redo, save changes, or copy/download an image. See [capture library details](docs/CAPTURE-LIBRARY.md) and [saved screenshot editing](docs/LIBRARY-EDITOR.md).
 
 ## Development
 
