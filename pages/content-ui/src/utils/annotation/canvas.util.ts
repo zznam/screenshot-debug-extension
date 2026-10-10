@@ -164,6 +164,10 @@ export const handleCanvasMouseDown = ({
 
     // if shapeRef is not null, add it to canvas
     if (shapeRef.current) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (shapeRef.current as any)._startX = pointer.x;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (shapeRef.current as any)._startY = pointer.y;
       // add: http://fabricjs.com/docs/fabric.Canvas.html#add
       canvas.add(shapeRef.current);
     }
@@ -192,23 +196,38 @@ export const handleCanvasMouseMove = ({
   // get pointer coordinates
   const pointer = canvas.getScenePoint(options.e);
 
-  // depending on the selected shape, set the dimensions of the shape stored in shapeRef in previous step of handelCanvasMouseDown
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const startX = (shapeRef.current as any)?._startX ?? shapeRef.current?.left ?? pointer.x;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const startY = (shapeRef.current as any)?._startY ?? shapeRef.current?.top ?? pointer.y;
+
+  // depending on the selected shape, set the dimensions of the shape stored in shapeRef in previous step of handleCanvasMouseDown
   // calculate shape dimensions based on pointer coordinates
   switch (selectedShapeRef?.current) {
     case 'rectangle':
     case 'triangle':
-    case 'arrow':
     case 'blur':
-    case 'image':
-      shapeRef.current?.set({
-        width: pointer.x - (shapeRef.current?.left || 0),
-        height: pointer.y - (shapeRef.current?.top || 0),
-      });
+    case 'image': {
+      const left = Math.min(startX, pointer.x);
+      const top = Math.min(startY, pointer.y);
+      const width = Math.max(1, Math.abs(pointer.x - startX));
+      const height = Math.max(1, Math.abs(pointer.y - startY));
+      shapeRef.current?.set({ left, top, width, height });
       break;
+    }
 
-    case 'circle':
-      shapeRef.current.set({
-        radius: Math.abs(pointer.x - (shapeRef.current?.left || 0)) / 2,
+    case 'circle': {
+      const radius = Math.max(1, Math.abs(pointer.x - startX) / 2);
+      const left = Math.min(startX, pointer.x);
+      const top = Math.min(startY, pointer.y);
+      shapeRef.current?.set({ left, top, radius });
+      break;
+    }
+
+    case 'arrow':
+      shapeRef.current?.set({
+        width: Math.max(1, Math.abs(pointer.x - startX)),
+        height: Math.max(1, Math.abs(pointer.y - startY)),
       });
       break;
 
