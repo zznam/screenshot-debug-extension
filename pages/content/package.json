@@ -24,7 +24,7 @@
     "@extension/i18n": "workspace:*",
     "@extension/shared": "workspace:*",
     "@extension/storage": "workspace:*",
-    "rrweb": "2.0.0-alpha.4"
+    "rrweb": "2.1.7"
   },
   "devDependencies": {
     "@extension/hmr": "workspace:*",
