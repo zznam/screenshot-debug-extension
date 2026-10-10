@@ -25,6 +25,11 @@ export const keyedSecretPatterns: { pattern: RegExp; groupIndex?: number }[] = [
     pattern: /(?:api[_-]?key|access[_-]?token|client[_-]?secret)["']?\s*[:=]\s*["']?([a-zA-Z0-9_\-.]{16,64})["']?/gi,
     groupIndex: 1,
   },
+  // URL query parameter credentials (?token=..., &api_key=..., &secret=...)
+  {
+    pattern:
+      /(?<=[?&](?:api[_-]?key|access[_-]?token|client[_-]?secret|auth[_-]?token|token|secret|password)=)[^&\s"'`#]+/gi,
+  },
 ];
 
 export const optionalPiiPatterns: { pattern: RegExp; groupIndex?: number }[] = [
