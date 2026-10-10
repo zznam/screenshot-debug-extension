@@ -1,0 +1,126 @@
+import type { WheelEvent } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+
+import type { Screenshot } from '@extension/shared';
+import { Button, cn, Icon, ScrollArea } from '@extension/ui';
+
+import { useElementSize } from '../../hooks/index';
+import { useEditorSession, useSessionAnnotations } from '../../session-context';
+import { HoverImage } from '../dialog/index';
+
+interface LeftSidebarProps {
+  open?: boolean;
+  canvasHeight: number;
+  className?: string;
+  screenshots: Screenshot[];
+  activeScreenshotId: string;
+  defaultOpen?: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDelete?: (id: string) => void;
+  onSelect: (id: string) => void;
+}
+
+const ADDITIONAL_SIDEBAR_HEIGHT = 52;
+const LeftSidebar: React.FC<LeftSidebarProps> = ({
+  open,
+  canvasHeight,
+  defaultOpen = false,
+  screenshots,
+  className,
+  activeScreenshotId,
+  onOpenChange,
+  onDelete,
+  onSelect,
+}) => {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const isControlled = open !== undefined;
+  const isOpen = isControlled ? open! : internalOpen;
+
+  const { ref: screenshotsViewRef, height: screenshotsViewHeight } = useElementSize<HTMLDivElement>();
+  const {
+    session: { annotationsStorage },
+  } = useEditorSession();
+  const annotations = useSessionAnnotations(annotationsStorage);
+
+  const toggle = useCallback(() => {
+    const next = !isOpen;
+    if (!isControlled) setInternalOpen(next);
+
+    onOpenChange(next);
+  }, [isControlled, isOpen, onOpenChange]);
+
+  const isScrollEnabled = useMemo(
+    () => screenshotsViewHeight + ADDITIONAL_SIDEBAR_HEIGHT > canvasHeight,
+    [screenshotsViewHeight, canvasHeight],
+  );
+
+  return (
+    <>
+      {!isOpen && screenshots.length && (
+        <Button
+          size="icon"
+          variant="secondary"
+          aria-label="Open screenshots"
+          type="button"
+          onClick={toggle}
+          className="border-border bg-card text-card-foreground group absolute left-4 top-4 z-10 border transition-colors">
+          <Icon
+            strokeWidth={1.5}
+            name="PanelLeftOpenIcon"
+            size={16}
+            className="text-muted-foreground group-hover:text-foreground transition-colors"
+          />
+        </Button>
+      )}
+
+      <aside
+        data-testid="editor-left-sidebar"
+        className={cn(
+          'border-border bg-card text-card-foreground relative flex flex-col space-y-2.5 rounded-lg border p-4',
+          isOpen ? 'opacity-100' : 'pointer-events-none size-0 opacity-0',
+          isScrollEnabled ? 'min-h-0' : 'self-start',
+          className,
+        )}>
+        <div className="flex items-center justify-between">
+          <p className="text-foreground text-sm font-medium">Screenshots</p>
+          <Button
+            size="icon"
+            variant="ghost"
+            type="button"
+            aria-label="Close screenshots"
+            onClick={toggle}
+            className="size-7">
+            <Icon strokeWidth={1.5} name="PanelLeftCloseIcon" size={16} />
+          </Button>
+        </div>
+
+        <ScrollArea
+          className={cn('h-full w-full', {
+            'overflow-y-auto pr-2.5': isScrollEnabled,
+          })}
+          /**
+           * Keeps the wheel event inside the ScrollArea
+           * so normal scrolling works.
+           */
+          onWheelCapture={(e: WheelEvent<HTMLDivElement>) => e.stopPropagation()}>
+          <div className="space-y-2" ref={screenshotsViewRef}>
+            {screenshots.map(screenshot => (
+              <HoverImage
+                key={screenshot.id}
+                isEdited={!!annotations[screenshot.id!]?.objects?.length}
+                isActive={screenshot.id === activeScreenshotId}
+                src={screenshot.src}
+                alt={screenshot.alt ?? `Screenshot ${screenshot.name}`}
+                hasDeleteDisabled={!onDelete || screenshots.length === 1}
+                onDelete={() => onDelete?.(screenshot.id!)}
+                onSelect={() => onSelect(screenshot.id!)}
+              />
+            ))}
+          </div>
+        </ScrollArea>
+      </aside>
+    </>
+  );
+};
+
+export default LeftSidebar;

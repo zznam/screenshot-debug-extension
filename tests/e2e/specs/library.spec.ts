@@ -56,6 +56,13 @@ test('saves annotated evidence, reopens after the source closes, and searches re
   await library.getByLabel('Tags', { exact: true }).fill('checkout, mobile');
   await library.getByRole('button', { name: 'Save details' }).click();
   await expect(library.getByText('Changes saved.')).toBeVisible();
+  await library.getByRole('link', { name: 'Edit screenshots', exact: true }).click();
+  await expect(library.locator('[data-editor-ready="true"]')).toBeVisible();
+  await drawRectangle(library);
+  await library.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(library.getByText('Changes saved on this device.')).toBeVisible();
+  await library.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(library.getByRole('img', { name: /screenshot 1/ })).toBeVisible();
   await library.getByRole('link', { name: 'All captures' }).click();
   await library.getByRole('searchbox', { name: 'Search' }).fill('MOBILE');
   await expect(library.locator('.library-card')).toHaveCount(1);

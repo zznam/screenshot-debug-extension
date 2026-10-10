@@ -71,9 +71,8 @@ describe('shapes.util and blur layer cleanup', () => {
 
       const rect = createBlur(mockCanvas, { x: 50, y: 75 } as unknown as PointerEvent);
 
-      expect(rect.data).toBe('blur-window');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((rect as any).blurRadius).toBe(DEFAULT_BLUR_RADIUS);
+      expect((rect as { data?: unknown }).data).toBe('blur-window');
+      expect((rect as { blurRadius?: unknown }).blurRadius).toBe(DEFAULT_BLUR_RADIUS);
       expect(rect.left).toBe(50);
       expect(rect.top).toBe(75);
 

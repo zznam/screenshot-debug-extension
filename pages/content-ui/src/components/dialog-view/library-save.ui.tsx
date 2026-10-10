@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useEditorSession, useSessionAnnotations } from '@extension/editor';
 import { useStorage } from '@extension/shared';
 import type { Screenshot } from '@extension/shared';
-import { annotationsStorage, librarySettingsStorage } from '@extension/storage';
+import { librarySettingsStorage } from '@extension/storage';
 import { Button } from '@extension/ui';
 
 import { prepareLibrarySession, saveScreenshotsToLibrary } from '@src/utils/library-capture.util';
@@ -27,8 +28,11 @@ const LibrarySave = ({
   onSavingChange,
   onBeforeCloseReady,
 }: LibrarySaveProps) => {
+  const {
+    session: { annotationsStorage },
+  } = useEditorSession();
   const mode = useStorage(librarySettingsStorage);
-  const annotations = useStorage(annotationsStorage);
+  const annotations = useSessionAnnotations(annotationsStorage);
   const [context, setContext] = useState<LibraryContext>();
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -42,7 +46,7 @@ const LibrarySave = ({
   const signature = JSON.stringify({
     title,
     ids: screenshots.map(shot => shot.id),
-    annotations: screenshots.map(shot => annotations?.[shot.id!]),
+    annotations: screenshots.map(shot => annotations?.[shot.id!]?.objects ?? []),
   });
   latestSignature.current = signature;
   const dirty = signature !== savedSignature.current;
@@ -72,6 +76,7 @@ const LibrarySave = ({
     const savingSignature = latestSignature.current;
     try {
       revision.current = await saveScreenshotsToLibrary({
+        annotationsStorage,
         context,
         revision: revision.current,
         title: title === 'Untitled report' ? context.source.title : title,
@@ -97,7 +102,7 @@ const LibrarySave = ({
       setSaving(false);
       onSavingChange(false);
     }
-  }, [activeId, context, onSavingChange, renderActive, screenshots, session, title]);
+  }, [annotationsStorage, activeId, context, onSavingChange, renderActive, screenshots, session, title]);
 
   useEffect(() => {
     onBeforeCloseReady(async () => {

@@ -8,7 +8,7 @@ The library keeps screenshot sets, original image bytes, rendered previews, edit
 
 Search by title, source title, domain, or tag, and combine domain/date/type filters. Open a capture after its source page closes or the browser restarts. Rename captures, add comma-separated tags, or permanently delete a capture and its images. Saved captures do not expire automatically.
 
-This first PR provides durable screenshot storage and viewing. Reopening annotation layers for editing, recording/Rewind persistence, report composition, privacy review, OCR, comparison, and bulk storage management are separate dependent feature PRs.
+Choose **Edit screenshots** on a capture to reopen its original images and annotation layers in a standalone editor. The source tab is unnecessary. See [saved screenshot editing](LIBRARY-EDITOR.md) for saving, undo/redo, and conflict recovery. Recording/Rewind persistence, report composition, privacy review, OCR, comparison, and bulk storage management are separate feature PRs.
 
 ## Persistence boundaries
 
@@ -28,6 +28,6 @@ The thumbnail-history interaction is adapted from Brie, replacing its authentica
 
 Unit tests exercise upload ordering and ownership, frozen metadata, revision conflicts, atomic asset replacement, invalid inputs, staging cleanup, search filters, and redaction. Chromium tests cover real annotated capture saving, reopening after the source tab closes, tags/search/deletion, responsive layouts, automatic updates, and a complete browser restart.
 
-The production bundle passed all 18 integration scenarios in Linux with Playwright 1.61.1, including the existing capture, image-export, Settings, and AI Debug regressions. Annotation scenarios draw through the editor rather than injecting state during canvas initialization.
+The production bundle passes 22 integration scenarios with Playwright 1.61.1, including the saved editor and existing capture, image-export, Settings, and AI Debug regressions. Annotation scenarios draw through the editor rather than injecting state during canvas initialization.
 
 Screenshots from the browser tests: [desktop](images/capture-library/desktop.png), [tablet](images/capture-library/tablet.png), [mobile](images/capture-library/mobile.png), and [restored annotated capture](images/capture-library/restored-capture.png).

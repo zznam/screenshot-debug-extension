@@ -67,3 +67,12 @@ export interface ScreenshotSavePayload {
 }
 
 export type LibraryResponse<T> = { status: 'success'; data: T } | { status: 'error'; message: string };
+
+/** Edits replace flattened previews and layers; original assets and context stay frozen. */
+export interface ScreenshotEditPayload {
+  id: string;
+  expectedRevision: number;
+  title: string;
+  thumbnail: string;
+  screenshots: { id: string; preview: string; annotations: CaptureAnnotations }[];
+}

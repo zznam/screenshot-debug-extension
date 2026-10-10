@@ -21,10 +21,14 @@ vi.mock('fabric', () => {
 describe('key-events.util', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockCanvas: any;
-  let undo: ReturnType<typeof vi.fn>;
-  let redo: ReturnType<typeof vi.fn>;
-  let syncShapeInStorage: ReturnType<typeof vi.fn>;
-  let deleteShapeFromStorage: ReturnType<typeof vi.fn>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let undo: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let redo: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let syncShapeInStorage: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let deleteShapeFromStorage: any;
 
   beforeEach(() => {
     vi.clearAllMocks();

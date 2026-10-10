@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 export const drawRectangle = async (page: Page) => {
+  await expect(page.locator('[data-editor-ready="true"]')).toBeVisible();
   await page.getByRole('button', { name: 'Rectangle', exact: true }).click();
   await page.getByRole('menuitemcheckbox', { name: 'Rectangle', exact: true }).click();
   const canvas = page.locator('canvas.upper-canvas');
