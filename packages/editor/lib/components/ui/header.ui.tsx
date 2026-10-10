@@ -1,8 +1,9 @@
-import { IS_DEV } from '@extension/env';
 import { Button, cn, Icon, Tooltip, TooltipContent, TooltipTrigger } from '@extension/ui';
 
 import { useEditorSession, useSessionAnnotations } from '../../session-context';
 import { EditableTitle } from '../dialog/index';
+
+const IS_DEV = process.env.CLI_DEV === 'true' || process.env.NODE_ENV === 'development';
 
 interface EditorHeaderProps {
   /** active screenshot id */
