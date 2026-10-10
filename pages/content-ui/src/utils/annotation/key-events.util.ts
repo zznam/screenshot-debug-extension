@@ -1,5 +1,5 @@
 import type { FabricObject } from 'fabric';
-import { Canvas, util } from 'fabric';
+import { ActiveSelection, Canvas, util } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { CustomFabricObject, HandleKeyDownDeps } from '@src/models';
@@ -89,7 +89,7 @@ export const handleDelete = (canvas: Canvas, deleteShapeFromStorage: (id: string
 };
 
 /**
- * Handles editor keyboard shortcuts (copy / paste / cut / delete / undo / redo).
+ * Handles editor keyboard shortcuts (copy / paste / cut / delete / undo / redo / select all / deselect / nudge).
  *
  * **Shortcuts**
  * - ⌘/Ctrl + C : Copy selected object(s)
@@ -97,7 +97,10 @@ export const handleDelete = (canvas: Canvas, deleteShapeFromStorage: (id: string
  * - ⌘/Ctrl + X : Cut (copy + delete)
  * - ⌘/Ctrl + Z : Undo
  * - ⌘/Ctrl + ⇧ + Z or ⌘/Ctrl + Y : Redo
+ * - ⌘/Ctrl + A : Select all selectable objects
  * - Delete / Backspace : Delete selection
+ * - Escape : Deselect active object(s)
+ * - Arrow keys (↑, ↓, ←, →) : Nudge selected object(s) by 1px (or 10px with Shift)
  * - '/' (unshifted) : Prevent browser quick-find (optional)
  *
  * Skips handling when the focused element is a form field or contentEditable.
@@ -124,6 +127,24 @@ export const handleKeyDown = ({
 
   if (mod) {
     switch (code) {
+      case 'KeyA': {
+        e.preventDefault();
+        const objects = canvas
+          .getObjects()
+          .filter(obj => obj.selectable !== false && (obj as { evented?: boolean }).evented !== false);
+        if (objects.length > 0) {
+          canvas.discardActiveObject();
+          if (objects.length === 1) {
+            canvas.setActiveObject(objects[0]);
+          } else {
+            const sel = new ActiveSelection(objects, { canvas });
+            canvas.setActiveObject(sel);
+          }
+          canvas.requestRenderAll();
+        }
+        return;
+      }
+
       case 'KeyC':
         e.preventDefault();
         doCopy();
@@ -157,6 +178,44 @@ export const handleKeyDown = ({
   }
 
   switch (key) {
+    case 'Escape':
+      e.preventDefault();
+      canvas.discardActiveObject();
+      canvas.requestRenderAll();
+      return;
+
+    case 'ArrowUp':
+    case 'ArrowDown':
+    case 'ArrowLeft':
+    case 'ArrowRight': {
+      const activeObject = canvas.getActiveObject();
+      if (!activeObject) return;
+
+      e.preventDefault();
+      const step = shiftKey ? 10 : 1;
+      let dx = 0;
+      let dy = 0;
+
+      if (key === 'ArrowUp') dy = -step;
+      else if (key === 'ArrowDown') dy = step;
+      else if (key === 'ArrowLeft') dx = -step;
+      else if (key === 'ArrowRight') dx = step;
+
+      activeObject.set({
+        left: (activeObject.left ?? 0) + dx,
+        top: (activeObject.top ?? 0) + dy,
+      });
+      activeObject.setCoords();
+      canvas.requestRenderAll();
+
+      if ((activeObject as { getObjects?: () => FabricObject[] }).getObjects) {
+        (activeObject as { getObjects: () => FabricObject[] }).getObjects().forEach(obj => syncShapeInStorage(obj));
+      } else {
+        syncShapeInStorage(activeObject);
+      }
+      return;
+    }
+
     case 'Delete':
     case 'Backspace':
       e.preventDefault();
