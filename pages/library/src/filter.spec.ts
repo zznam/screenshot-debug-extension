@@ -39,9 +39,13 @@ describe('library discovery', () => {
   it('formats bytes into human-readable representations', () => {
     expect(formatBytes(0)).toBe('0 B');
     expect(formatBytes(-10)).toBe('0 B');
+    expect(formatBytes(NaN)).toBe('0 B');
+    expect(formatBytes(Infinity)).toBe('0 B');
     expect(formatBytes(512)).toBe('512 B');
     expect(formatBytes(1024)).toBe('1 KB');
     expect(formatBytes(2048)).toBe('2 KB');
     expect(formatBytes(1.5 * 1024 * 1024)).toBe('1.5 MB');
+    expect(formatBytes(1024 * 1024 * 1024)).toBe('1.0 GB');
+    expect(formatBytes(2.5 * 1024 * 1024 * 1024)).toBe('2.5 GB');
   });
 });
