@@ -2,7 +2,7 @@ import type { FabricObject } from 'fabric';
 import { ActiveSelection, Canvas, util } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { CustomFabricObject, HandleKeyDownDeps } from '@src/models';
+import type { CustomFabricObject, HandleKeyDownDeps } from '../../models/annotation.model';
 
 /**
  * Is the event target a native form field or contentEditable node?
@@ -17,38 +17,53 @@ const isDomEditor = (el: EventTarget | null): el is HTMLElement =>
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isFabricEditing = (canvas: Canvas): boolean => !!(canvas.getActiveObject() as any)?.isEditing;
 
-export const handleCopy = (canvas: Canvas) => {
+const clipboards = new WeakMap<Canvas, { objects: unknown[] }>();
+const clipboardFor = (canvas: Canvas, clipboard?: { objects: unknown[] }) => {
+  if (clipboard) return clipboard;
+  let scoped = clipboards.get(canvas);
+  if (!scoped) {
+    scoped = { objects: [] };
+    clipboards.set(canvas, scoped);
+  }
+  return scoped;
+};
+
+export const handleCopy = (canvas: Canvas, clipboard?: { objects: unknown[] }) => {
   const activeObjects = canvas.getActiveObjects();
   if (activeObjects.length > 0) {
     // Serialize the selected objects
     const serializedObjects = activeObjects.map(obj => obj.toObject());
     // Store the serialized objects in the clipboard
-    localStorage.setItem('clipboard', JSON.stringify(serializedObjects));
+    clipboardFor(canvas, clipboard).objects = structuredClone(serializedObjects);
   }
 
   return activeObjects;
 };
 
-export const handlePaste = (canvas: Canvas, syncShapeInStorage: (shape: FabricObject) => void) => {
+export const handlePaste = (
+  canvas: Canvas,
+  syncShapeInStorage: (shape: FabricObject) => void,
+  clipboard?: { objects: unknown[] },
+) => {
   if (!canvas || !(canvas instanceof Canvas)) {
     console.error('Invalid canvas object. Aborting paste operation.');
     return;
   }
 
   // Retrieve serialized objects from the clipboard
-  const clipboardData = localStorage.getItem('clipboard');
+  const clipboardData = clipboardFor(canvas, clipboard).objects;
 
-  if (clipboardData) {
+  if (clipboardData.length) {
     try {
-      const parsedObjects = JSON.parse(clipboardData);
-      parsedObjects.forEach((objData: FabricObject) => {
+      const parsedObjects = structuredClone(clipboardData);
+      parsedObjects.forEach(objData => {
         // convert the plain javascript objects retrieved from localStorage into fabricjs objects (deserialization)
-        util.enlivenObjects<FabricObject>([objData]).then((enlivenedObjects: FabricObject[]) => {
+        util.enlivenObjects<FabricObject>([objData as FabricObject]).then((enlivenedObjects: FabricObject[]) => {
           enlivenedObjects.forEach(enlivenedObj => {
             // Offset the pasted objects to avoid overlap with existing objects
             enlivenedObj.set({
-              left: enlivenedObj.left || 0 + 20,
-              top: enlivenedObj.top || 0 + 20,
+              left: (enlivenedObj.left || 0) + 20,
+              top: (enlivenedObj.top || 0) + 20,
 
               objectId: uuidv4(),
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,7 +96,7 @@ export const handleDelete = (canvas: Canvas, deleteShapeFromStorage: (id: string
 
     // Clean up associated blur background layer if deleting a blur shape
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (obj.data === 'blur-window' || (obj as any).shapeType === 'blur') {
+    if ((obj as any).data === 'blur-window' || (obj as any).shapeType === 'blur') {
       const allObjects = canvas.getObjects();
       const orphanedLayers = allObjects.filter(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,6 +135,7 @@ export const handleDelete = (canvas: Canvas, deleteShapeFromStorage: (id: string
 export const handleKeyDown = ({
   e,
   canvas,
+  clipboard,
   undo,
   redo,
   syncShapeInStorage,
@@ -131,8 +147,8 @@ export const handleKeyDown = ({
   const mod = e.metaKey || e.ctrlKey;
   const { code, key, shiftKey } = e;
 
-  const doCopy = () => handleCopy(canvas);
-  const doPaste = () => handlePaste(canvas, syncShapeInStorage);
+  const doCopy = () => handleCopy(canvas, clipboard);
+  const doPaste = () => handlePaste(canvas, syncShapeInStorage, clipboard);
   const doDelete = () => handleDelete(canvas, deleteShapeFromStorage);
 
   if (mod) {
@@ -141,7 +157,7 @@ export const handleKeyDown = ({
         e.preventDefault();
         const objects = canvas
           .getObjects()
-          .filter(obj => obj.selectable !== false && (obj as { evented?: boolean }).evented !== false);
+          .filter((obj: FabricObject) => obj.selectable !== false && (obj as { evented?: boolean }).evented !== false);
         if (objects.length > 0) {
           canvas.discardActiveObject();
           if (objects.length === 1) {
@@ -219,7 +235,9 @@ export const handleKeyDown = ({
       canvas.requestRenderAll();
 
       if ((activeObject as { getObjects?: () => FabricObject[] }).getObjects) {
-        (activeObject as { getObjects: () => FabricObject[] }).getObjects().forEach(obj => syncShapeInStorage(obj));
+        (activeObject as unknown as { getObjects: () => FabricObject[] })
+          .getObjects()
+          .forEach(obj => syncShapeInStorage(obj));
       } else {
         syncShapeInStorage(activeObject);
       }

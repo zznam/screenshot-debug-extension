@@ -6,7 +6,7 @@ import { getCanvasScale } from './canvas-scale.utils';
 import { createDefaultControls } from './controls.util';
 import { hexToRgba } from './hex-to-rgba.util';
 import { createSpecificShape, setCanvasBackground } from './shapes.util';
-import { defaultNavElement } from '../../constants';
+import { defaultNavElement } from '../../constants/annotation-elements';
 import type {
   CanvasMouseDown,
   CanvasMouseMove,
@@ -16,7 +16,7 @@ import type {
   CanvasPathCreated,
   CanvasSelectionCreated,
   RenderCanvas,
-} from '../../models';
+} from '../../models/annotation.model';
 
 export const DRAWING_TOOLS = ['freeform', 'highlighter'];
 

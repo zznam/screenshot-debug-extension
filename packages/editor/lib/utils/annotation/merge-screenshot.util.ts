@@ -19,7 +19,7 @@ export const mergeScreenshot = async ({
   parentHeight,
 }: {
   screenshot: Screenshot;
-  objects: FabricObject[];
+  objects: FabricObject[] | unknown[];
   parentWidth: number;
   parentHeight: number;
 }): Promise<File> => {

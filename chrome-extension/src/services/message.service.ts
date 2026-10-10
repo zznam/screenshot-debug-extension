@@ -1,6 +1,7 @@
 import type { Runtime } from 'webextension-polyfill';
 import { tabs } from 'webextension-polyfill';
 
+import type { DownloadPayload } from '@extension/shared';
 import { AI_DEBUG, REWIND, TAB } from '@extension/shared';
 import {
   annotationsRedoStorage,

@@ -13,4 +13,5 @@ export {
   createShape,
   modifyShape,
   bringElement,
+  DEFAULT_BLUR_RADIUS,
 } from '@extension/editor';

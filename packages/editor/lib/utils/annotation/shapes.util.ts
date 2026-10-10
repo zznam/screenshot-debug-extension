@@ -3,7 +3,12 @@ import { Rect, Line, Triangle, Circle, Group, IText, FabricImage, FabricText, fi
 import { v4 as uuidv4 } from 'uuid';
 
 import { DRAWING_TOOLS } from './canvas.util';
-import type { BackgroundFitMeta, CustomFabricObject, ElementDirection, ModifyShape } from '../../models';
+import type {
+  BackgroundFitMeta,
+  CustomFabricObject,
+  ElementDirection,
+  ModifyShape,
+} from '../../models/annotation.model';
 
 const DEFAULT_SHAPE_OPTIONS = {
   width: 100,
@@ -154,7 +159,7 @@ export const createBlur = (canvas: Canvas | undefined, pointer: PointerEvent): R
     objectCaching: false,
     data: 'blur-layer',
     objectId: uuidv4(),
-    blurWindowId: win.objectId,
+    blurWindowId: (win as { objectId?: string }).objectId,
   } as Partial<CustomFabricObject<FabricImage>>);
 
   canvas.add(blurred);
@@ -300,13 +305,15 @@ export const setCanvasBackground = async ({
   canvas,
   parentWidth,
   parentHeight,
+  signal,
 }: {
   file: string;
   canvas: Canvas;
   parentWidth: number;
   parentHeight: number;
+  signal?: AbortSignal;
 }): Promise<BackgroundFitMeta> => {
-  const img = await FabricImage.fromURL(file, { crossOrigin: 'anonymous' });
+  const img = await FabricImage.fromURL(file, { crossOrigin: 'anonymous', signal });
   const naturalWidth = img.width ?? 1;
   const naturalHeight = img.height ?? 1;
 
