@@ -59,7 +59,16 @@ export type RewindSettingsStorage = BaseStorage<RewindSettings> & {
   isHostDisabled: (host: string) => Promise<boolean>;
 };
 
-const normalizeHost = (host: string): string => host.trim().toLowerCase();
+export const normalizeHost = (host: string): string => {
+  const trimmed = host.trim().toLowerCase();
+  if (!trimmed) return '';
+  try {
+    const parsed = new URL(trimmed.includes('://') ? trimmed : `https://${trimmed}`);
+    return parsed.hostname || trimmed;
+  } catch {
+    return trimmed;
+  }
+};
 
 const getMigratedSettings = async (): Promise<RewindSettings> => {
   const settings = (await baseStorage.get()) ?? defaultRewindSettings;
@@ -80,19 +89,26 @@ export const rewindSettingsStorage: RewindSettingsStorage = {
   get: getMigratedSettings,
   getSettings: getMigratedSettings,
 
+  getSnapshot: () => {
+    const snapshot = baseStorage.getSnapshot();
+    return snapshot ? migrateRewindSettings(snapshot) : defaultRewindSettings;
+  },
+
   isRewindEnabled: async () => {
     const settings = await rewindSettingsStorage.getSettings();
     return Boolean(settings.rewind.enabled);
   },
 
   setRewindEnabled: async (enabled: boolean) => {
-    const settings = await rewindSettingsStorage.getSettings();
-    await baseStorage.set({
-      ...settings,
-      rewind: {
-        ...settings.rewind,
-        enabled: Boolean(enabled),
-      },
+    await baseStorage.set(current => {
+      const settings = migrateRewindSettings(current ?? defaultRewindSettings);
+      return {
+        ...settings,
+        rewind: {
+          ...settings.rewind,
+          enabled: Boolean(enabled),
+        },
+      };
     });
   },
 
@@ -105,18 +121,19 @@ export const rewindSettingsStorage: RewindSettingsStorage = {
     const normalizedHost = normalizeHost(host);
     if (!normalizedHost) return;
 
-    const settings = await rewindSettingsStorage.getSettings();
-    const currentHosts = Array.isArray(settings.rewind.disabledHosts) ? settings.rewind.disabledHosts : [];
-    const alreadyDisabled = currentHosts.includes(normalizedHost);
-
-    if (alreadyDisabled) return;
-
-    await baseStorage.set({
-      ...settings,
-      rewind: {
-        ...settings.rewind,
-        disabledHosts: [...currentHosts, normalizedHost],
-      },
+    await baseStorage.set(current => {
+      const settings = migrateRewindSettings(current ?? defaultRewindSettings);
+      const currentHosts = Array.isArray(settings.rewind.disabledHosts) ? settings.rewind.disabledHosts : [];
+      if (currentHosts.includes(normalizedHost)) {
+        return settings;
+      }
+      return {
+        ...settings,
+        rewind: {
+          ...settings.rewind,
+          disabledHosts: [...currentHosts, normalizedHost],
+        },
+      };
     });
   },
 
@@ -124,15 +141,16 @@ export const rewindSettingsStorage: RewindSettingsStorage = {
     const normalizedHost = normalizeHost(host);
     if (!normalizedHost) return;
 
-    const settings = await rewindSettingsStorage.getSettings();
-    const currentHosts = Array.isArray(settings.rewind.disabledHosts) ? settings.rewind.disabledHosts : [];
-
-    await baseStorage.set({
-      ...settings,
-      rewind: {
-        ...settings.rewind,
-        disabledHosts: currentHosts.filter(existingHost => existingHost !== normalizedHost),
-      },
+    await baseStorage.set(current => {
+      const settings = migrateRewindSettings(current ?? defaultRewindSettings);
+      const currentHosts = Array.isArray(settings.rewind.disabledHosts) ? settings.rewind.disabledHosts : [];
+      return {
+        ...settings,
+        rewind: {
+          ...settings.rewind,
+          disabledHosts: currentHosts.filter(existingHost => existingHost !== normalizedHost),
+        },
+      };
     });
   },
 
