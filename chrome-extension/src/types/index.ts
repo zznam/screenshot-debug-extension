@@ -38,7 +38,7 @@ export interface Record {
   url: string;
   requestId?: string;
   requestBody?: {
-    raw?: { bytes: ArrayBuffer }[];
+    raw?: Array<{ bytes?: ArrayBuffer | ArrayBufferLike | unknown }>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     decoded?: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
