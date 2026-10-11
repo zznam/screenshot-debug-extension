@@ -1,5 +1,5 @@
 export const decodeRequestBody = (requestBody?: {
-  raw?: Array<{ bytes?: ArrayBuffer | ArrayBufferLike }>;
+  raw?: Array<{ bytes?: ArrayBuffer | ArrayBufferLike | unknown }>;
 }): { decoded: string; parsed: unknown } | null => {
   if (!requestBody?.raw?.length) return null;
 
