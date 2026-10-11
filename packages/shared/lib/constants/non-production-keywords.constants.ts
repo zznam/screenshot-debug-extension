@@ -8,4 +8,8 @@ export const nonProductionKeywords = [
   // 'sandbox.',
   // 'dev.',
   'localhost',
+  '127.0.0.1',
+  '0.0.0.0',
+  '[::1]',
+  '::1',
 ];
