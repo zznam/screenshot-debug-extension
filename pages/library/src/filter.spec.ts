@@ -36,6 +36,18 @@ describe('library discovery', () => {
   it('handles invalid date strings gracefully without discarding results', () => {
     expect(filterCaptures(captures, { ...empty, from: 'invalid-date', to: 'not-a-date' })).toEqual(captures);
   });
+  it('handles captures with missing source or tags without throwing', () => {
+    const incompleteCaptures = [
+      {
+        title: 'Minimal capture',
+        kind: 'screenshots',
+        createdAt: 100,
+      } as unknown as CaptureSummary,
+    ];
+
+    expect(filterCaptures(incompleteCaptures, { ...empty, search: 'minimal' })).toEqual(incompleteCaptures);
+    expect(filterCaptures(incompleteCaptures, { ...empty, domain: 'anything.com' })).toEqual([]);
+  });
   it('formats bytes into human-readable representations', () => {
     expect(formatBytes(0)).toBe('0 B');
     expect(formatBytes(-10)).toBe('0 B');
@@ -47,5 +59,6 @@ describe('library discovery', () => {
     expect(formatBytes(1.5 * 1024 * 1024)).toBe('1.5 MB');
     expect(formatBytes(1024 * 1024 * 1024)).toBe('1.0 GB');
     expect(formatBytes(2.5 * 1024 * 1024 * 1024)).toBe('2.5 GB');
+    expect(formatBytes(1.5 * 1024 * 1024 * 1024 * 1024)).toBe('1.5 TB');
   });
 });
