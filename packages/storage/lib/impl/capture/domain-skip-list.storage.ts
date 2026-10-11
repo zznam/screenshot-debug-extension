@@ -46,10 +46,15 @@ const storage = createStorage<string[]>('domain-skip-list-storage-key', [], {
 
 const domainSkipListStorage: DomainSkipListStorage = {
   ...storage,
+  getSnapshot: () => {
+    const snapshot = storage.getSnapshot();
+    return Array.isArray(snapshot) ? snapshot : [];
+  },
   addDomain: async domain => {
     const normalized = normalizeDomain(domain);
     await storage.set(current => {
-      const valid = current.flatMap(existing => {
+      const list = Array.isArray(current) ? current : [];
+      const valid = list.flatMap(existing => {
         try {
           return [normalizeDomain(existing)];
         } catch {
@@ -60,9 +65,27 @@ const domainSkipListStorage: DomainSkipListStorage = {
     });
   },
   removeDomain: async domain => {
-    await storage.set(current => current.filter(existing => existing !== domain));
+    let target = domain.trim().toLowerCase().replace(/\.$/, '');
+    try {
+      target = normalizeDomain(domain);
+    } catch {
+      // Fallback to lowercase trimmed comparison if not valid URL
+    }
+    await storage.set(current => {
+      if (!Array.isArray(current)) return [];
+      return current.filter(existing => {
+        try {
+          return normalizeDomain(existing) !== target;
+        } catch {
+          return existing.trim().toLowerCase().replace(/\.$/, '') !== target;
+        }
+      });
+    });
   },
-  isDomainSkipped: async url => matchesSkippedDomain(url, await storage.get()),
+  isDomainSkipped: async url => {
+    const list = await storage.get();
+    return matchesSkippedDomain(url, Array.isArray(list) ? list : []);
+  },
 };
 
 export { domainSkipListStorage, normalizeDomain, matchesSkippedDomain };
