@@ -467,21 +467,28 @@ export const handleResize = ({
 // zoom canvas on mouse scroll
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const handleCanvasZoom = ({ options, canvas }: { options: any; canvas: Canvas }) => {
+  if (!canvas || typeof canvas.getZoom !== 'function' || !options) return;
+
   const delta = options.e?.deltaY;
-  let zoom = canvas.getZoom();
+  if (typeof delta !== 'number' || !Number.isFinite(delta)) return;
+
+  const currentZoom = canvas.getZoom();
+  const zoom = Number.isFinite(currentZoom) ? currentZoom : 1;
 
   // allow zooming to min 20% and max 100%
   const minZoom = 0.2;
   const maxZoom = 1;
   const zoomStep = 0.001;
 
-  // calculate zoom based on mouse scroll wheel with min and max zoom
-  zoom = Math.min(Math.max(minZoom, zoom + delta * zoomStep), maxZoom);
+  // scrolling down (delta > 0) zooms out; scrolling up (delta < 0) zooms in
+  const targetZoom = Math.min(Math.max(minZoom, zoom - delta * zoomStep), maxZoom);
+
+  const offsetX = typeof options.e?.offsetX === 'number' ? options.e.offsetX : 0;
+  const offsetY = typeof options.e?.offsetY === 'number' ? options.e.offsetY : 0;
 
   // set zoom to canvas
-  // zoomToPoint: http://fabricjs.com/docs/fabric.Canvas.html#zoomToPoint
-  canvas.zoomToPoint(new Point(options.e.offsetX, options.e.offsetY), zoom);
+  canvas.zoomToPoint(new Point(offsetX, offsetY), targetZoom);
 
-  options.e.preventDefault();
-  options.e.stopPropagation();
+  options.e?.preventDefault?.();
+  options.e?.stopPropagation?.();
 };

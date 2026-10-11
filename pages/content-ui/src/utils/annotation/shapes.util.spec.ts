@@ -2,6 +2,7 @@
 import type { Canvas } from 'fabric';
 import { describe, expect, it, vi } from 'vitest';
 
+import { handleCanvasZoom } from './canvas.util';
 import { handleDelete } from './key-events.util';
 import { bringElement, createBlur, DEFAULT_BLUR_RADIUS } from './shapes.util';
 
@@ -18,6 +19,13 @@ vi.mock('fabric', () => {
     constructor(public options: any) {}
   }
 
+  class MockPoint {
+    constructor(
+      public x: number,
+      public y: number,
+    ) {}
+  }
+
   return {
     Canvas: vi.fn(),
     Rect: MockRect,
@@ -28,6 +36,7 @@ vi.mock('fabric', () => {
     IText: vi.fn(),
     FabricImage: vi.fn(),
     FabricText: vi.fn(),
+    Point: MockPoint,
     filters: {
       Blur: MockFiltersBlur,
     },
@@ -198,6 +207,88 @@ describe('shapes.util and blur layer cleanup', () => {
       expect(mockCanvas.sendObjectToBack).toHaveBeenCalledWith(mockObj as never);
       expect(mockCanvas.requestRenderAll).toHaveBeenCalled();
       expect(syncShape).toHaveBeenCalledWith(mockObj as never);
+    });
+  });
+
+  describe('handleCanvasZoom', () => {
+    it('zooms out when scrolling down (deltaY > 0)', () => {
+      const zoomToPoint = vi.fn();
+      const mockCanvas = {
+        getZoom: vi.fn().mockReturnValue(0.8),
+        zoomToPoint,
+      } as unknown as Canvas;
+
+      const preventDefault = vi.fn();
+      const stopPropagation = vi.fn();
+
+      handleCanvasZoom({
+        options: {
+          e: { deltaY: 100, offsetX: 50, offsetY: 60, preventDefault, stopPropagation },
+        },
+        canvas: mockCanvas,
+      });
+
+      // 0.8 - (100 * 0.001) = 0.7
+      expect(zoomToPoint).toHaveBeenCalled();
+      const callArgs = zoomToPoint.mock.calls[0];
+      expect(callArgs[0]).toEqual({ x: 50, y: 60 });
+      expect(callArgs[1]).toBeCloseTo(0.7);
+      expect(preventDefault).toHaveBeenCalled();
+      expect(stopPropagation).toHaveBeenCalled();
+    });
+
+    it('zooms in when scrolling up (deltaY < 0) and clamps to maxZoom', () => {
+      const zoomToPoint = vi.fn();
+      const mockCanvas = {
+        getZoom: vi.fn().mockReturnValue(0.95),
+        zoomToPoint,
+      } as unknown as Canvas;
+
+      handleCanvasZoom({
+        options: {
+          e: { deltaY: -200, offsetX: 10, offsetY: 20 },
+        },
+        canvas: mockCanvas,
+      });
+
+      // 0.95 - (-200 * 0.001) = 1.15, clamped to 1.0
+      expect(zoomToPoint).toHaveBeenCalled();
+      expect(zoomToPoint.mock.calls[0][1]).toBe(1.0);
+    });
+
+    it('clamps zoom to minZoom (0.2)', () => {
+      const zoomToPoint = vi.fn();
+      const mockCanvas = {
+        getZoom: vi.fn().mockReturnValue(0.25),
+        zoomToPoint,
+      } as unknown as Canvas;
+
+      handleCanvasZoom({
+        options: {
+          e: { deltaY: 200, offsetX: 0, offsetY: 0 },
+        },
+        canvas: mockCanvas,
+      });
+
+      // 0.25 - 0.2 = 0.05, clamped to 0.2
+      expect(zoomToPoint.mock.calls[0][1]).toBe(0.2);
+    });
+
+    it('returns safely without error when canvas or event is missing', () => {
+      expect(() =>
+        handleCanvasZoom({
+          options: null,
+          canvas: null as unknown as Canvas,
+        }),
+      ).not.toThrow();
+
+      const mockCanvas = { getZoom: vi.fn().mockReturnValue(1), zoomToPoint: vi.fn() } as unknown as Canvas;
+      expect(() =>
+        handleCanvasZoom({
+          options: { e: { deltaY: 'invalid' } },
+          canvas: mockCanvas,
+        }),
+      ).not.toThrow();
     });
   });
 });
