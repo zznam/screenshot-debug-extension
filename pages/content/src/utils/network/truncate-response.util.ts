@@ -1,8 +1,24 @@
-// Utility to truncate large responses
+/**
+ * Utility to truncate large response strings while preserving other data types as-is.
+ *
+ * @param responseBody - The response body to potentially truncate.
+ * @param maxLength - Maximum character length before truncation (default 1000).
+ * @param suffix - Suffix appended when truncated (default '... (truncated)').
+ */
+export const truncateResponse = <T = unknown>(
+  responseBody: T,
+  maxLength = 1000,
+  suffix = '... (truncated)',
+): T | string => {
+  if (typeof responseBody !== 'string') {
+    return responseBody;
+  }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const truncateResponse = (responseBody: any) => {
-  return typeof responseBody === 'string' && responseBody.length > 1000
-    ? responseBody.slice(0, 1000) + '... (truncated)'
-    : responseBody;
+  const safeLimit = Math.max(0, Number.isFinite(maxLength) ? maxLength : 1000);
+
+  if (responseBody.length <= safeLimit) {
+    return responseBody;
+  }
+
+  return `${responseBody.slice(0, safeLimit)}${suffix}`;
 };
