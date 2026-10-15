@@ -23,7 +23,7 @@
     "@extension/shared": "workspace:*",
     "@extension/storage": "workspace:*",
     "@extension/ui": "workspace:*",
-    "fabric": "6.6.7",
+    "fabric": "7.4.0",
     "file-saver": "^2.0.5",
     "uuid": "^11.0.3"
   },
