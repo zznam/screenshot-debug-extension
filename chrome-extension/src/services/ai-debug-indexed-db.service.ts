@@ -86,6 +86,32 @@ const detachAiDebugSessionsFromTab = async (tabId: number): Promise<void> => {
   });
 };
 
+const listAiStorageEntries = async () => {
+  const database = await openDatabase();
+  const sessions = (await requestResult(
+    database.transaction(STORE_NAME).objectStore(STORE_NAME).getAll(),
+  )) as AiDebugSession[];
+  return sessions.map(session => ({
+    id: session.id,
+    category: 'ai' as const,
+    title: session.context.sourceTitle || 'AI session',
+    url: session.context.sourceUrl,
+    updatedAt: session.updatedAt,
+    sizeBytes: new TextEncoder().encode(JSON.stringify(session)).byteLength,
+  }));
+};
+
+const deleteAiStorageEntries = async (ids: string[]) => {
+  const database = await openDatabase();
+  await new Promise<void>((resolve, reject) => {
+    const tx = database.transaction(STORE_NAME, 'readwrite');
+    ids.forEach(id => tx.objectStore(STORE_NAME).delete(id));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+};
+
 export {
   deleteAiDebugSession,
   detachAiDebugSessionsFromTab,
@@ -93,4 +119,6 @@ export {
   getAiDebugSession,
   listAiDebugSessions,
   putAiDebugSession,
+  listAiStorageEntries,
+  deleteAiStorageEntries,
 };

@@ -26,7 +26,7 @@ const filterCaptures = (captures: CaptureSummary[], filters: LibraryFilters) => 
 
     const matchesQuery =
       !query ||
-      [capture.title, sourceTitle, sourceDomain, ...tags]
+      [capture.title, sourceTitle, sourceDomain, capture.searchText, ...tags]
         .filter((val): val is string => typeof val === 'string' && val.length > 0)
         .some(val => val.toLocaleLowerCase().includes(query));
 

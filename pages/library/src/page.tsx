@@ -9,6 +9,9 @@ import { filterCaptures, formatBytes } from './filter';
 import type { LibraryFilters } from './filter';
 
 const ScreenshotEditorPage = lazy(() => import('./screenshot-editor'));
+const SharePage = lazy(() => import('./share-page'));
+const ComparePage = lazy(() => import('./compare-page'));
+const StoragePage = lazy(() => import('./storage-page'));
 
 const emptyFilters: LibraryFilters = { search: '', domain: '', from: '', to: '', kind: '' };
 
@@ -20,6 +23,8 @@ const LibraryPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const captureId = new URLSearchParams(window.location.search).get('capture');
+  const params = new URLSearchParams(window.location.search);
+  const compareId = params.get('compare');
   const refresh = useCallback(async () => {
     try {
       setCaptures(await listLibraryCaptures());
@@ -62,12 +67,27 @@ const LibraryPage = () => {
           <img src="../logo.png" alt="" width="36" height="36" />
           <span>Screenshot &amp; Debug</span>
         </a>
+        <a href="?storage=1" className="library-local">
+          Storage &amp; cleanup
+        </a>
         <span className="library-local">
           <span aria-hidden="true">●</span> On this device
         </span>
       </header>
       <main className="library-main">
-        {captureId ? (
+        {params.has('storage') ? (
+          <Suspense fallback={<p role="status">Opening storage…</p>}>
+            <StoragePage />
+          </Suspense>
+        ) : compareId !== null ? (
+          <Suspense fallback={<p role="status">Opening comparison…</p>}>
+            <ComparePage initialId={compareId} />
+          </Suspense>
+        ) : captureId && params.has('share') ? (
+          <Suspense fallback={<p role="status">Opening review…</p>}>
+            <SharePage id={captureId} />
+          </Suspense>
+        ) : captureId ? (
           <CaptureDetail id={captureId} />
         ) : (
           <>
@@ -114,7 +134,7 @@ const LibraryPage = () => {
                 Search
                 <input
                   type="search"
-                  placeholder="Title, domain, or tag…"
+                  placeholder="Title, domain, tag, or screenshot text…"
                   value={filters.search}
                   onChange={event => updateFilter('search', event.target.value)}
                 />
@@ -160,6 +180,7 @@ const LibraryPage = () => {
                   <button className="library-text-button" onClick={() => setFilters(emptyFilters)}>
                     Clear filters
                   </button>
+                  <a href="?compare=">Compare screenshots</a>
                 </div>
                 {visible.length ? (
                   <div className="library-grid">

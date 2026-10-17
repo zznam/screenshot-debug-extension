@@ -4,6 +4,7 @@ import type { CaptureDocument } from '@extension/shared';
 import { deleteLibraryCapture, getLibraryAsset, getLibraryCapture, updateLibraryMetadata } from '@extension/storage';
 
 import { formatBytes } from './filter';
+import { ScreenshotText } from './screenshot-text';
 
 const CaptureDetail = ({ id }: { id: string }) => {
   const [capture, setCapture] = useState<CaptureDocument>();
@@ -95,6 +96,12 @@ const CaptureDetail = ({ id }: { id: string }) => {
             <a className="library-primary library-edit-link" href={`?capture=${encodeURIComponent(id)}&edit=1`}>
               Edit screenshots
             </a>
+            <a className="library-primary library-edit-link" href={`?capture=${encodeURIComponent(id)}&share=1`}>
+              Review &amp; compose report
+            </a>
+            <a className="library-edit-link" href={`?compare=${encodeURIComponent(id)}`}>
+              Compare screenshots
+            </a>
             <form
               onSubmit={event => {
                 event.preventDefault();
@@ -156,6 +163,7 @@ const CaptureDetail = ({ id }: { id: string }) => {
       ) : (
         !error && <p role="status">Opening capture…</p>
       )}
+      {capture && <ScreenshotText capture={capture} updated={setCapture} />}
     </>
   );
 };

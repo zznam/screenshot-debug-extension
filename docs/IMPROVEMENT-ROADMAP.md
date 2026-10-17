@@ -35,11 +35,11 @@ Implemented batches: [Settings/privacy (#27)](https://github.com/zznam/screensho
 | 27 | Prevent competing capture sessions | Starting another capture cannot overwrite an active session. | P0 | Capture usability |
 | 28 | Shortcut discovery | Popup exposes a link to Chrome's shortcut configuration. | P2 | Capture usability |
 | 29 | Actionable capture errors | Storage and initialization failures return the UI to a usable state. | P1 | Capture usability |
-| 30 | Searchable local capture history | Find saved captures by title, date, domain, or type. | P2 | Proposed |
-| 31 | Storage usage and bulk cleanup | Show usage by capture/AI/Rewind and selectively remove local data. | P1 | Proposed |
-| 32 | Pre-export privacy review | Show diagnostics preview plus sensitive URL/body detections before sharing. | P0 | Proposed |
-| 33 | Screenshot OCR and searchable text | Extract text locally and allow copy/search without sending images away. | P2 | Proposed |
-| 34 | Capture comparison | Compare two screenshots with an overlay/diff and matching viewport metadata. | P2 | Proposed |
+| 30 | Searchable local capture history | Find saved captures by title, date, domain, or type. | P2 | Capture workspace |
+| 31 | Storage usage and bulk cleanup | Show usage by capture/AI/diagnostics and selectively remove local data; Rewind cleanup remains proposed. | P1 | Capture workspace |
+| 32 | Pre-export privacy review | Show diagnostics preview plus sensitive URL/body detections before sharing. | P0 | Capture workspace |
+| 33 | Screenshot OCR and searchable text | Extract text locally and allow copy/search without sending images away. | P2 | Capture workspace |
+| 34 | Capture comparison | Compare two saved screenshots with an overlay/diff and image-dimension checks. | P2 | Capture workspace |
 | 35 | Recording quality and audio controls | Explicit resolution/frame-rate/system-audio options with capability detection. | P2 | Proposed |
 | 36 | AI session export and mobile navigation | Export selected chat/context and reach history on small screens. | P2 | Proposed |
 | 37 | Repository workflow hygiene | PR guidance targets main and generated pnpm stores stay out of Git. | P2 | Capture usability |
@@ -51,8 +51,12 @@ Merge Settings/privacy, Export quality, then Capture usability after their CI ch
 
 ## Next planning pass
 
-Start with the privacy preview and storage manager because they make the local-first promise easier to understand and verify. Searchable history then gives captures a durable workflow. OCR, comparison, recording controls, and AI session enhancements should be separate feature PRs with explicit UI designs and browser acceptance tests.
+The capture workspace follow-up below delivers privacy review, storage cleanup, searchable image text and comparison. Next proposals are recording controls, AI session export/mobile navigation, and Rewind storage management, each with explicit UI designs and browser acceptance tests.
 
 ## Validation boundaries
 
 The first batches add unit coverage for privacy/storage/export boundaries and Chromium tests for the actual extension UI. Microphone permission dialogs, desktop sharing, live paid AI calls, and Firefox packaging remain outside the automated test suite. Proposed ideas need design and implementation before being described as shipped.
+
+## Capture workspace follow-up
+
+Searchable history (#30) is implemented by the local capture library. The workspace tools add storage usage and selective bulk cleanup (#31), reviewed exports with opaque image masks (#32), bundled offline English OCR and searchable text (#33), and saved screenshot comparison (#34). A report composer adds editable reproduction steps and expected/actual behavior to reviewed bundles. See [workspace tools and behavior boundaries](LIBRARY-TOOLS.md). Recording quality controls (#35) and AI session export/mobile navigation (#36) remain proposals.

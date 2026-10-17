@@ -50,3 +50,11 @@ Seven pre-existing React hook dependency warnings remain in the editor, replay U
 Screenshots contain visible page content and are not automatically scrubbed. The AI path redacts diagnostic records; this is not a guarantee that arbitrary page text or URL fields contain no sensitive information. Review screenshot content before using AI Debug. Ordinary localhost diagnostics retain the existing local-development redaction opt-out; AI records use a forced redaction boundary.
 
 The repository still contains inherited Brie naming, legacy authentication/store modules, and upstream reviewer metadata. Removing those safely needs a dedicated dependency and compatibility pass.
+
+## Capture workspace verification on 2026-10-18
+
+- `pnpm validate` passes formatting, lint, all workspace type checks, and 309 unit tests across 51 files with the existing coverage gates.
+- The production Chrome build and build-asset verification pass, including bundled offline OCR assets, the WebAssembly-only CSP allowance, and content-script Unicode compatibility.
+- All 29 Chromium integration scenarios pass against the production bundle. The seven new scenarios cover reviewed ZIP/PNG pixels, selected diagnostics, comparison, offline OCR/search/reload/clearing/cancellation, bulk cleanup and background-cache consistency, and responsive layouts.
+- The existing editor scenarios verify one undo step per drawing gesture, independent image/window histories, conflict handling, quota recovery, and preserved originals.
+- Visual examples and feature boundaries are in [capture workspace tools](LIBRARY-TOOLS.md).
