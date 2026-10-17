@@ -31,3 +31,7 @@ Open **Storage & cleanup** from the library header. The dashboard groups capture
 Filter by type, title/domain, date or minimum size; sort by size or age. Select individual entries or the currently visible entries. **Review deletion** lists the complete selection, including selected items hidden by a later filter. **Keep items** cancels the confirmation. Permanent deletion affects only selected IDs; capture deletion also removes all its original/preview assets and OCR text. AI session deletion includes its saved screenshot, context and messages. Diagnostic deletion removes persistent rows and corresponding records in background memory. New records may arrive while source pages stay open.
 
 Each data category commits separately. If one deletion fails, the dashboard reloads the remaining items and asks for a fresh selection instead of claiming the whole operation succeeded. The new management messages accept requests only from this extension's library page; websites and content scripts cannot list or erase other stored evidence through those messages. Saved capture ingestion and editor revision protections remain unchanged.
+
+## Visual examples
+
+Production Chromium screenshots use synthetic example data: [privacy review and report composition](images/library-tools/review-desktop.png), [before/after comparison](images/library-tools/compare-desktop.png), [storage management](images/library-tools/storage-desktop.png), and [mobile review](images/library-tools/review-mobile.png). Browser checks cover 360, 768, and 1280 pixel widths.
