@@ -478,3 +478,238 @@ h2 {
 .saved-editor-toasts {
   max-width: calc(100vw - 32px);
 }
+
+.library-shell textarea {
+  font: inherit;
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  border: 1px solid var(--lib-line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--lib-text);
+  background: var(--lib-surface);
+}
+.workspace-panel {
+  min-width: 0;
+  border: 1px solid var(--lib-line);
+  border-radius: 12px;
+  padding: 22px;
+  background: var(--lib-surface);
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  margin: 20px 0;
+}
+.workspace-panel h2 {
+  margin: 0;
+}
+.workspace-stack {
+  min-width: 0;
+}
+.workspace-stack .workspace-panel {
+  margin-top: 0;
+}
+.workspace-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.workspace-actions button {
+  max-width: 100%;
+}
+.review-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 24px;
+  margin-top: 24px;
+  align-items: start;
+}
+.review-layout > .workspace-panel {
+  margin-top: 0;
+}
+.review-shot {
+  min-width: 0;
+  border-top: 1px solid var(--lib-line);
+  padding-top: 16px;
+}
+.review-image {
+  margin-top: 10px;
+}
+.library-shell .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.library-shell input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  padding: 0;
+  accent-color: #17604b;
+}
+.library-shell .mask-surface {
+  display: block;
+  position: relative;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  touch-action: none;
+  overflow: hidden;
+  cursor: crosshair;
+}
+.library-shell .mask-surface:hover {
+  filter: none;
+}
+.mask-surface img {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+.privacy-mask {
+  position: absolute;
+  background: #000;
+  pointer-events: none;
+}
+.mask-coordinates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px 0;
+}
+.review-image > button {
+  margin-top: 10px;
+}
+.library-shell details {
+  min-width: 0;
+  padding: 8px 0;
+}
+.library-shell summary {
+  cursor: pointer;
+  line-height: 1.8;
+}
+.library-shell summary .checkbox-label {
+  display: inline-flex;
+}
+.evidence-json {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-height: 320px;
+  overflow-y: auto;
+  font:
+    12px/1.7 ui-monospace,
+    monospace;
+  background: var(--lib-bg);
+  padding: 12px;
+  border-radius: 8px;
+}
+.comparison-selectors,
+.comparison-side {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.comparison-side figure {
+  margin: 0;
+  min-width: 0;
+}
+.comparison-side img,
+.comparison-diff {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.comparison-side figcaption {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.comparison-slider {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+.comparison-slider img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.comparison-slider img + img {
+  position: absolute;
+  inset: 0;
+}
+.comparison-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #43a58b;
+  pointer-events: none;
+}
+.storage-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.storage-totals strong {
+  font-size: 28px;
+}
+.workspace-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.storage-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+.library-shell .storage-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--lib-line);
+}
+.storage-row > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.storage-row strong,
+.storage-row .library-muted {
+  display: block;
+}
+.library-topbar {
+  flex-wrap: wrap;
+}
+.screenshot-text {
+  margin-top: 30px;
+}
+@media (max-width: 900px) {
+  .review-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .workspace-panel {
+    padding: 16px;
+  }
+  .comparison-selectors,
+  .comparison-side,
+  .storage-totals {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .storage-totals .workspace-panel {
+    margin: 8px 0;
+  }
+  .workspace-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

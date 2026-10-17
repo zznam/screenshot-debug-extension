@@ -176,6 +176,33 @@ describe('durable local library', () => {
     expect(stats.totalBytes).toBeGreaterThan(0);
   });
 
+  it('persists searchable text tied to current previews and clears it when images change', async () => {
+    await library.commitScreenshotCapture(payload(), session);
+    const capture = (await library.getLibraryCapture('capture'))!;
+    const entry = { id: 'shot', previewAssetId: capture.screenshots[0]!.previewAssetId, text: 'Checkout unavailable' };
+    await library.saveLibraryText('capture', 1, [entry]);
+    expect((await library.listLibraryCaptures())[0]!.searchText).toBe('Checkout unavailable');
+    expect((await library.getLibraryCapture('capture'))!.screenshotText).toEqual([entry]);
+    await expect(library.saveLibraryText('capture', 1, [entry])).rejects.toThrow('changed');
+    await expect(library.saveLibraryText('capture', 2, [{ ...entry, previewAssetId: 'foreign' }])).rejects.toThrow(
+      'changed',
+    );
+    await expect(library.saveLibraryText('capture', 2, [{ ...entry, text: 'x'.repeat(100_001) }])).rejects.toThrow(
+      'too large',
+    );
+    await library.updateLibraryScreenshots({
+      id: 'capture',
+      expectedRevision: 2,
+      title: 'Edited',
+      thumbnail: png,
+      screenshots: [{ id: 'shot', preview: png, annotations: { objects: [] } }],
+    });
+    expect((await library.listLibraryCaptures())[0]!.searchText).toBe('');
+    await expect(library.saveLibraryText('capture', 3, [entry])).rejects.toThrow('changed');
+    await library.deleteLibraryCapture('capture');
+    await expect(library.saveLibraryText('capture', 3, [])).rejects.toThrow('changed');
+  });
+
   it('supports bulk deletion of multiple captures and their associated assets', async () => {
     await library.commitScreenshotCapture(payload(), session);
 
@@ -195,6 +222,29 @@ describe('durable local library', () => {
     const stats = await library.getLibraryStorageStats();
     expect(stats.captureCount).toBe(0);
     expect(stats.assetCount).toBe(0);
+  });
+
+  it('snapshots recognized text and rolls back a failed text write', async () => {
+    await library.commitScreenshotCapture(payload(), session);
+    const capture = (await library.getLibraryCapture('capture'))!;
+    const entry = { id: 'shot', previewAssetId: capture.screenshots[0]!.previewAssetId, text: 'Original result' };
+    const saving = library.saveLibraryText('capture', 1, [entry]);
+    entry.text = 'Changed after submission';
+    await saving;
+    expect((await library.getLibraryCapture('capture'))!.screenshotText![0]!.text).toBe('Original result');
+    const before = await library.getLibraryCapture('capture');
+    const put = IDBObjectStore.prototype.put;
+    const failing = vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementation(function (
+      this: IDBObjectStore,
+      value,
+      key,
+    ) {
+      if (this.name === 'captures') throw new DOMException('Storage is full', 'QuotaExceededError');
+      return put.call(this, value, key);
+    });
+    await expect(library.saveLibraryText('capture', 2, [])).rejects.toMatchObject({ name: 'QuotaExceededError' });
+    failing.mockRestore();
+    expect(await library.getLibraryCapture('capture')).toEqual(before);
   });
 
   it('edits previews and layers atomically while preserving originals, tags and frozen context', async () => {

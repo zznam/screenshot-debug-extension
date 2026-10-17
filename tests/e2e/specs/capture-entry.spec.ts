@@ -65,9 +65,10 @@ test('uses keyboard-accessible capture buttons and shared initialization recover
   }, sourceId);
   await popup.goto(`chrome-extension://${extensionId}/popup/index.html`);
   await target.bringToFront();
-  await expect(popup.getByRole('button', { name: 'Viewport', exact: true })).toBeVisible();
-  await popup.getByRole('button', { name: 'Viewport', exact: true }).focus();
-  await popup.getByRole('button', { name: 'Viewport', exact: true }).press('Enter');
+  const viewport = popup.getByRole('button', { name: /^Viewport screenshot/ });
+  await expect(viewport).toBeVisible();
+  await viewport.focus();
+  await viewport.press('Enter');
   await expect(target.getByTestId('screenshot-editor')).toBeVisible();
   const session = await serviceWorker.evaluate(async () => chrome.storage.local.get('capture-state-storage-key'));
   expect(session['capture-state-storage-key']).toMatchObject({ mode: 'screenshot', state: 'unsaved' });

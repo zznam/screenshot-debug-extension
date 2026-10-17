@@ -28,3 +28,4 @@ tsconfig.tsbuildinfo
 
 # pnpm runtime/store cache
 .pnpm-store/
+/graft/.cache/

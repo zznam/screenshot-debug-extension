@@ -36,12 +36,15 @@ export interface CaptureDocument {
   screenshots: LibraryScreenshot[];
   diagnostics: unknown[];
   sizeBytes: number;
+  /** Text is tied to the flattened image that was read, never the hidden original. */
+  screenshotText?: { id: string; previewAssetId: string; text: string }[];
 }
 
-export interface CaptureSummary extends Omit<CaptureDocument, 'screenshots' | 'diagnostics'> {
+export interface CaptureSummary extends Omit<CaptureDocument, 'screenshots' | 'diagnostics' | 'screenshotText'> {
   screenshotCount: number;
   diagnosticCount: number;
   thumbnail: string;
+  searchText?: string;
 }
 
 export interface CaptureSnapshot {

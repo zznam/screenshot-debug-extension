@@ -9,6 +9,7 @@ import type { Record } from '@src/types';
 import { decodeRequestBody } from './decode-request-body.util';
 import {
   deleteRecordsBeforeFromDB,
+  deleteStoredDiagnosticIds,
   deleteRecordsFromDB,
   getRecordsFromDB,
   putRecordToDB,
@@ -203,4 +204,14 @@ export const pruneExpiredRecords = async (): Promise<void> => {
     }
   }
   await deleteRecordsBeforeFromDB(cutoff);
+};
+
+export const deleteDiagnosticSelection = async (ids: string[]): Promise<void> => {
+  const selection = new Set(ids);
+  await deleteStoredDiagnosticIds(ids);
+  for (const records of tabRecordsMap.values()) {
+    for (const [key, record] of records) {
+      if (selection.has(record.uuid)) records.delete(key);
+    }
+  }
 };

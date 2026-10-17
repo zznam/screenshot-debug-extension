@@ -254,6 +254,7 @@ const commitScreenshotCapture = async (payload: ScreenshotSavePayload, session: 
       screenshots,
       diagnostics: session.diagnostics,
       sizeBytes,
+      screenshotText: [],
       thumbnail,
       owner: session.id,
     };
@@ -370,6 +371,7 @@ const updateLibraryScreenshots = async (payload: ScreenshotEditPayload): Promise
             screenshots,
             thumbnail: payload.thumbnail,
             sizeBytes,
+            screenshotText: [],
             revision: previous.revision + 1,
             updatedAt: Date.now(),
           });
@@ -392,8 +394,13 @@ const listLibraryCaptures = async (): Promise<CaptureSummary[]> => {
   return captures
     .sort((a, b) => b.createdAt - a.createdAt)
     .map(capture => {
-      const { screenshots, diagnostics, owner: _owner, ...summary } = capture;
-      return { ...summary, screenshotCount: screenshots.length, diagnosticCount: diagnostics.length };
+      const { screenshots, diagnostics, screenshotText, owner: _owner, ...summary } = capture;
+      return {
+        ...summary,
+        screenshotCount: screenshots.length,
+        diagnosticCount: diagnostics.length,
+        searchText: screenshotText?.map(item => item.text).join('\n') ?? '',
+      };
     });
 };
 const updateLibraryMetadata = async (id: string, revision: number, title: string, tags: string[]) => {
@@ -438,6 +445,63 @@ const deleteLibraryCapture = async (id: string) => {
   tx.objectStore('captures').delete(id);
   deleteByIndex(tx.objectStore('assets'), 'captureId', id);
   await done;
+  notifyChange();
+};
+const saveLibraryText = async (
+  id: string,
+  revision: number,
+  entries: NonNullable<CaptureDocument['screenshotText']>,
+): Promise<void> => {
+  if (
+    !Array.isArray(entries) ||
+    entries.length > 30 ||
+    entries.some(
+      item =>
+        !item ||
+        typeof item.id !== 'string' ||
+        typeof item.previewAssetId !== 'string' ||
+        typeof item.text !== 'string' ||
+        item.text.length > 100_000,
+    )
+  )
+    throw new Error('Screenshot text is too large.');
+  const snapshot = structuredClone(entries);
+  const db = await openLibrary();
+  const tx = db.transaction('captures', 'readwrite');
+  const done = completed(tx);
+  let failure: Error | undefined;
+  const request = tx.objectStore('captures').get(id);
+  request.onsuccess = () => {
+    const capture = request.result as StoredCapture | undefined;
+    if (
+      !capture ||
+      capture.revision !== revision ||
+      new Set(snapshot.map(item => item.id)).size !== snapshot.length ||
+      snapshot.some(
+        item => !capture.screenshots.some(shot => shot.id === item.id && shot.previewAssetId === item.previewAssetId),
+      )
+    ) {
+      failure = new Error('This capture changed. Reopen it before reading text again.');
+      tx.abort();
+      return;
+    }
+    const bytes = (value: unknown) => new TextEncoder().encode(JSON.stringify(value)).byteLength;
+    try {
+      tx.objectStore('captures').put({
+        ...capture,
+        screenshotText: snapshot,
+        sizeBytes: capture.sizeBytes - bytes(capture.screenshotText ?? []) + bytes(snapshot),
+        revision: revision + 1,
+        updatedAt: Date.now(),
+      });
+    } catch (cause) {
+      failure = cause instanceof Error ? cause : new Error('Could not save screenshot text.');
+      tx.abort();
+    }
+  };
+  await done.catch(error => {
+    throw failure ?? error;
+  });
   notifyChange();
 };
 const deleteLibraryCaptures = async (ids: string[]) => {
@@ -506,6 +570,7 @@ export {
   getLibraryAsset,
   updateLibraryMetadata,
   updateLibraryScreenshots,
+  saveLibraryText,
   deleteLibraryCapture,
   deleteLibraryCaptures,
   getLibraryStorageStats,

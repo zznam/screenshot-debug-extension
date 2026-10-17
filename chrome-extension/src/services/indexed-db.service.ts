@@ -113,3 +113,23 @@ export const deleteRecordsBeforeFromDB = async (cutoff: number): Promise<void> =
     transaction.onabort = () => reject(transaction.error);
   });
 };
+
+export const listStoredDiagnostics = async (): Promise<(Record & { uuid: string; tabId: number })[]> => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(STORE_NAME).objectStore(STORE_NAME).getAll();
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+export const deleteStoredDiagnosticIds = async (ids: string[]): Promise<void> => {
+  const db = await initDB();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    ids.forEach(id => tx.objectStore(STORE_NAME).delete(id));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+};

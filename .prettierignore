@@ -16,3 +16,4 @@ packages/i18n/lib/i18n.ts
 **/test-results
 **/dist
 **/node_modules
+graft/.cache
