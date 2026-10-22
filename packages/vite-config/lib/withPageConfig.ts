@@ -23,6 +23,8 @@ export const withPageConfig = (config: UserConfig) =>
           'process.env': env,
         },
         base: '',
+        // Chrome rejects literal Unicode noncharacters in extension scripts.
+        esbuild: { charset: 'ascii' },
         plugins: [react(), IS_DEV && watchRebuildPlugin({ refresh: true }), nodePolyfills()],
         build: {
           sourcemap: IS_DEV,
