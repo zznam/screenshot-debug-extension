@@ -429,7 +429,6 @@ const CanvasContainerView = ({ screenshot, onElement, onAiRendererReady }: Canva
         isDrawing,
         selectedShapeRef,
         shapeRef,
-        syncShapeInStorage,
       });
     });
 

@@ -33,6 +33,10 @@ for (const file of files) {
   assert.ok(asset.isFile() && (asset.size > 0 || file.endsWith('.css')), `Missing or empty build asset: ${file}`);
 }
 const entries = await readdir(dist, { recursive: true });
+for (const file of entries.filter(entry => /\.[cm]?js$/.test(entry))) {
+  const source = new TextDecoder('utf-8', { fatal: true }).decode(await readFile(resolve(dist, file)));
+  assert.ok(!/\p{Noncharacter_Code_Point}/u.test(source), `Chrome rejects Unicode noncharacters in script: ${file}`);
+}
 assert.ok(
   !entries.some(file => /(?:^|\/)\.env(?:\.|$)|\.map$|\.spec\.[cm]?[jt]sx?$/.test(file)),
   'Build includes private or development files',

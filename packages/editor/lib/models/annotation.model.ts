@@ -187,7 +187,6 @@ export type CanvasMouseMove = {
   selectedShapeRef: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   shapeRef: any;
-  syncShapeInStorage: (shape: FabricObject) => void;
 };
 
 export type CanvasMouseUp = {
