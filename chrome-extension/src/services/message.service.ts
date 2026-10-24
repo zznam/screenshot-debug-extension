@@ -16,6 +16,7 @@ import { handleOnAuthStart } from './auth.service';
 import { handleLibraryMessage } from './capture-library.service';
 import { startScreenshotFromTab } from './capture-start.service';
 import { downloadAssets, downloadZip } from './download.service';
+import { handleStorageManagement } from './storage-management.service';
 import type { BgResponse } from '../types';
 import { addOrMergeRecords, deleteRecords, getRecords, rewindService } from '../utils';
 
@@ -27,6 +28,9 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
       return handleLibraryMessage(message, sender);
     }
     switch (message.type) {
+      case 'LIBRARY_STORAGE_LIST':
+      case 'LIBRARY_STORAGE_DELETE':
+        return handleStorageManagement(message, sender);
       case 'OPEN_CAPTURE_LIBRARY': {
         await tabs.create({ url: chrome.runtime.getURL('library/index.html') });
         return { status: 'success' };

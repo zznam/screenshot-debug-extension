@@ -12,3 +12,4 @@ export { getInitials } from './get-initials.util.js';
 export { isExtensionElement } from './is-extension-element.util.js';
 export { getCapturePageError } from './capture-page.util.js';
 export { createSendMessageToTab } from './send-capture-message.util.js';
+export { sanitizeText, sanitizeRecord } from './review-sanitization.js';

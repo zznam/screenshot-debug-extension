@@ -11,7 +11,7 @@ assert.equal(manifest.version, pkg.version, 'Manifest version must match package
 assert.equal(manifest.background?.service_worker, 'background.js');
 assert.equal(manifest.background?.type, 'module');
 assert.ok(
-  !manifest.content_security_policy?.extension_pages?.includes('unsafe-eval'),
+  !manifest.content_security_policy?.extension_pages?.split(/[\s;]+/).includes("'unsafe-eval'"),
   'Production CSP must not allow eval',
 );
 
@@ -25,12 +25,21 @@ const files = [
   'ai-debug/index.html',
   'library/index.html',
   'mic-permission/index.html',
+  'library/ocr/worker.min.js',
+  'library/ocr/eng.traineddata.gz',
+  'library/ocr/tesseract-core-simd-lstm.wasm.js',
+  'library/ocr/tesseract-core-simd-lstm.wasm',
 ];
 for (const file of files) {
   const path = resolve(dist, file);
   assert.ok(!relative(dist, path).startsWith('..') && !isAbsolute(file), `Invalid manifest path: ${file}`);
   const asset = await stat(path);
   assert.ok(asset.isFile() && (asset.size > 0 || file.endsWith('.css')), `Missing or empty build asset: ${file}`);
+  if (file.endsWith('.js'))
+    assert.ok(
+      !/[\uFDD0-\uFDEF\uFFFE\uFFFF]/.test(await readFile(path, 'utf8')),
+      `Script contains Unicode noncharacters rejected by Chromium: ${file}`,
+    );
 }
 const entries = await readdir(dist, { recursive: true });
 assert.ok(

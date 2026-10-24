@@ -20,15 +20,18 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@extension/editor": "workspace:*",
     "@extension/shared": "workspace:*",
     "@extension/storage": "workspace:*",
     "@extension/ui": "workspace:*",
-    "@extension/editor": "workspace:*"
+    "fflate": "0.8.2",
+    "tesseract.js": "7.0.0"
   },
   "devDependencies": {
     "@extension/tailwindcss-config": "workspace:*",
     "@extension/tsconfig": "workspace:*",
-    "@extension/vite-config": "workspace:*"
+    "@extension/vite-config": "workspace:*",
+    "@tesseract.js-data/eng": "1.0.0"
   },
   "postcss": {
     "plugins": {

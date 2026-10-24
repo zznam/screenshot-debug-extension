@@ -102,6 +102,22 @@ describe('AI helper browser client', () => {
     expect(JSON.parse(options.body)).toEqual({ sessionId: session.id, messages: [], context: session.context });
   });
 
+  it('propagates user cancellation to the helper request', async () => {
+    const controller = new AbortController();
+    fetchMock.mockImplementation(
+      async (_url, options) =>
+        new Promise((_resolve, reject) => {
+          options.signal.addEventListener('abort', () => reject(options.signal.reason));
+        }),
+    );
+    const pending = requestAiResponse(session, controller.signal);
+    const rejected = expect(pending).rejects.toThrow();
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    controller.abort();
+    await rejected;
+    expect(fetchMock.mock.calls[0][1].signal.aborted).toBe(true);
+  });
+
   it('reports helper errors and HTTP failures', async () => {
     fetchMock.mockResolvedValueOnce(Response.json({ status: 'error', message: 'Pair again' }, { status: 401 }));
     await expect(requestAiResponse(session)).rejects.toThrow('Pair again');

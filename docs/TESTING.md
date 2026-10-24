@@ -50,3 +50,22 @@ Seven pre-existing React hook dependency warnings remain in the editor, replay U
 Screenshots contain visible page content and are not automatically scrubbed. The AI path redacts diagnostic records; this is not a guarantee that arbitrary page text or URL fields contain no sensitive information. Review screenshot content before using AI Debug. Ordinary localhost diagnostics retain the existing local-development redaction opt-out; AI records use a forced redaction boundary.
 
 The repository still contains inherited Brie naming, legacy authentication/store modules, and upstream reviewer metadata. Removing those safely needs a dedicated dependency and compatibility pass.
+
+## Capture workspace verification on 2026-10-18
+
+- `pnpm validate` passes formatting, lint, all workspace type checks, and 309 unit tests across 51 files with the existing coverage gates.
+- The production Chrome build and build-asset verification pass, including bundled offline OCR assets, the WebAssembly-only CSP allowance, and content-script Unicode compatibility.
+- All 29 Chromium integration scenarios pass against the production bundle. The seven new scenarios cover reviewed ZIP/PNG pixels, selected diagnostics, comparison, offline OCR/search/reload/clearing/cancellation, bulk cleanup and background-cache consistency, and responsive layouts.
+- The existing editor scenarios verify one undo step per drawing gesture, independent image/window histories, conflict handling, quota recovery, and preserved originals.
+- Visual examples and feature boundaries are in [capture workspace tools](LIBRARY-TOOLS.md).
+
+## Workspace quality verification on 2026-10-22
+
+- `pnpm validate` passes formatting, lint, all workspace type checks, coverage gates, and 336 unit tests across 55 files. Four existing hook-dependency warnings remain in unchanged content UI components.
+- The production Chrome build and `pnpm verify:build` pass. The packaged ZIP contains 57 files verified byte for byte against the tested build. The manifest version remains 0.5.27; no dependency or permission changes were introduced.
+- All 37 Chromium scenarios passed across the full run and an isolated rerun. The full run passed 36 scenarios; the pre-existing shortcut-registration test timed out while awaiting Chrome's commands API, then passed unchanged on its isolated rerun in 4 seconds. No timeouts, retries, or CI settings were relaxed.
+- Eight new browser scenarios cover offline AI history at 360/768/1280px, keyboard access, selected/redacted exports, cancellation/retry, invalid pairing, failed deletion, sorted/paginated discovery, unsaved-work prompts, oversized capture recovery, and normal full-page rendering.
+- New unit checks cover AI export field selection and Markdown escaping, user cancellation, bounded screenshot dimensions, library view serialization/sorting, and IndexedDB writes/deletions aborted after successful requests.
+- Visual checks include AI light/dark layouts, long unbroken text, and the library at mobile/desktop widths. Screenshots use synthetic test evidence: [AI desktop](images/quality-pass/ai-workspace-1280.png), [AI narrow](images/quality-pass/ai-workspace-360.png), [library desktop](images/quality-pass/library-1280.png), [library narrow](images/quality-pass/library-360.png).
+
+Report drafts remain in memory and are protected by the browser's navigation prompt; they are not crash-recoverable autosaves. Full-page output is deliberately bounded and can omit cross-origin resources the DOM renderer cannot access. Native sharing/microphone dialogs, paid AI calls, Firefox, and store distribution remain outside this verification. The large injected editor bundle remains a performance follow-up.

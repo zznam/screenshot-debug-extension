@@ -174,14 +174,7 @@ export const handleCanvasMouseDown = ({
 };
 
 // handle mouse move event on canvas to draw shapes with different dimensions
-export const handleCanvasMouseMove = ({
-  options,
-  canvas,
-  isDrawing,
-  selectedShapeRef,
-  shapeRef,
-  syncShapeInStorage,
-}: CanvasMouseMove) => {
+export const handleCanvasMouseMove = ({ options, canvas, isDrawing, selectedShapeRef, shapeRef }: CanvasMouseMove) => {
   // if selected shape is freeform, return
   if (!isDrawing.current) {
     return;
@@ -244,10 +237,8 @@ export const handleCanvasMouseMove = ({
   // renderAll: http://fabricjs.com/docs/fabric.Canvas.html#renderAll
   canvas.renderAll();
 
-  // sync shape in storage
-  if (shapeRef.current?.objectId) {
-    syncShapeInStorage(shapeRef.current);
-  }
+  // Keep drag previews on the canvas. Mouse-up persists the completed gesture
+  // once, so Undo removes a shape rather than replaying every pointer movement.
 };
 
 // handle mouse up event on canvas to stop drawing shapes

@@ -16,7 +16,7 @@ Two windows may independently edit a capture. The first successful save wins its
 
 Originals, previews, layers, and the document update commit in one IndexedDB transaction. A failed or full-disk write rolls back to the previous capture. The editor retains its working layers and offers **Retry save**, **Download**, and a link to the library for freeing space. Automatic saving pauses after an error until you retry. Saved captures have no automatic expiry or eviction.
 
-Blur and annotations are editable markup. The original pixels remain local, and image exports are flattened copies. The shared privacy review and opaque export masks belong to the later privacy-review PR.
+Blur and annotations are editable markup. The original pixels remain local, and image exports are flattened copies. For opaque masks baked into shared image pixels and selected diagnostic exports, return to the capture and choose [Review & compose report](LIBRARY-TOOLS.md#review-and-compose-a-bug-report).
 
 ## Implementation and validation
 
