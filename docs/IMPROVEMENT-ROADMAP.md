@@ -41,7 +41,7 @@ Implemented batches: [Settings/privacy (#27)](https://github.com/zznam/screensho
 | 33 | Screenshot OCR and searchable text | Extract text locally and allow copy/search without sending images away. | P2 | Capture workspace |
 | 34 | Capture comparison | Compare two saved screenshots with an overlay/diff and image-dimension checks. | P2 | Capture workspace |
 | 35 | Recording quality and audio controls | Explicit resolution/frame-rate/system-audio options with capability detection. | P2 | Proposed |
-| 36 | AI session export and mobile navigation | Export selected chat/context and reach history on small screens. | P2 | Proposed |
+| 36 | AI session export and mobile navigation | Export selected chat/context and reach history on small screens. | P2 | Quality pass |
 | 37 | Repository workflow hygiene | PR guidance targets main and generated pnpm stores stay out of Git. | P2 | Capture usability |
 | 38 | Accessible screenshot action buttons | Area, viewport, and full-page actions have visible keyboard focus and correct button semantics. | P1 | Capture usability |
 
@@ -51,7 +51,7 @@ Merge Settings/privacy, Export quality, then Capture usability after their CI ch
 
 ## Next planning pass
 
-The capture workspace follow-up below delivers privacy review, storage cleanup, searchable image text and comparison. Next proposals are recording controls, AI session export/mobile navigation, and Rewind storage management, each with explicit UI designs and browser acceptance tests.
+The capture workspace follow-up below delivers privacy review, storage cleanup, searchable image text and comparison. The quality pass below adds AI session export and mobile navigation. Recording controls and Rewind storage management remain proposals, each requiring explicit UI designs and browser acceptance tests.
 
 ## Validation boundaries
 
@@ -59,4 +59,15 @@ The first batches add unit coverage for privacy/storage/export boundaries and Ch
 
 ## Capture workspace follow-up
 
-Searchable history (#30) is implemented by the local capture library. The workspace tools add storage usage and selective bulk cleanup (#31), reviewed exports with opaque image masks (#32), bundled offline English OCR and searchable text (#33), and saved screenshot comparison (#34). A report composer adds editable reproduction steps and expected/actual behavior to reviewed bundles. See [workspace tools and behavior boundaries](LIBRARY-TOOLS.md). Recording quality controls (#35) and AI session export/mobile navigation (#36) remain proposals.
+Searchable history (#30) is implemented by the local capture library. The workspace tools add storage usage and selective bulk cleanup (#31), reviewed exports with opaque image masks (#32), bundled offline English OCR and searchable text (#33), and saved screenshot comparison (#34). A report composer adds editable reproduction steps and expected/actual behavior to reviewed bundles. See [workspace tools and behavior boundaries](LIBRARY-TOOLS.md). Recording quality controls (#35) remain proposed. AI session export/mobile navigation (#36) is implemented in the quality pass below.
+
+## Workspace quality pass — 2026-10-22
+
+- AI history is searchable at narrow widths, and stored conversations stay readable when the helper is offline. Analysis can be cancelled and retried without duplicating a saved question. Invalid pairing reveals setup controls; session deletion checks the response before leaving.
+- AI Markdown/JSON exports explicitly select messages and opt in to redacted URL/diagnostic context. Screenshots and private session identifiers are excluded. Exports require preview review and reuse the library's sanitization boundary.
+- Capture discovery adds stable sorting, 24-item pagination, reloadable filter URLs, and restoration when returning from details in the same tab.
+- Capture details, report drafts, and unsent AI questions guard against accidental navigation. Capture metadata inputs lock during writes; report controls lock while exporting reviewed evidence.
+- AI storage mutations wait for transaction commit. An aborted transaction is surfaced as failure, including when the individual write request succeeded.
+- Full-page capture uses a bounded bitmap and rejects unreadably large pages with an actionable alternative. Temporary canvases are released after encoding.
+
+Native desktop/microphone recording, Firefox, full-page stitching fidelity, and reducing the large injected editor bundle remain separate work. This pass does not claim those areas are fully validated.

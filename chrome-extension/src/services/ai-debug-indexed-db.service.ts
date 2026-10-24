@@ -32,10 +32,22 @@ const requestResult = <T>(request: IDBRequest<T>): Promise<T> =>
     request.onerror = () => reject(request.error);
   });
 
+// A successful request can still be rolled back by a later transaction abort.
+// Only report a saved/deleted session once IndexedDB has committed the write.
+const transactionCompleted = (transaction: IDBTransaction): Promise<void> =>
+  new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onabort = () => reject(transaction.error ?? new Error('Local storage was not updated. Please retry.'));
+    transaction.onerror = () => reject(transaction.error ?? new Error('Could not update local storage.'));
+  });
+
 const putAiDebugSession = async (session: AiDebugSession): Promise<void> => {
   const database = await openDatabase();
   const transaction = database.transaction(STORE_NAME, 'readwrite');
-  await requestResult(transaction.objectStore(STORE_NAME).put(session));
+  await Promise.all([
+    transactionCompleted(transaction),
+    requestResult(transaction.objectStore(STORE_NAME).put(session)),
+  ]);
 };
 
 const getAiDebugSession = async (sessionId: string): Promise<AiDebugSession | null> => {
@@ -73,7 +85,10 @@ const listAiDebugSessions = async (): Promise<AiDebugSessionSummary[]> => {
 const deleteAiDebugSession = async (sessionId: string): Promise<void> => {
   const database = await openDatabase();
   const transaction = database.transaction(STORE_NAME, 'readwrite');
-  await requestResult(transaction.objectStore(STORE_NAME).delete(sessionId));
+  await Promise.all([
+    transactionCompleted(transaction),
+    requestResult(transaction.objectStore(STORE_NAME).delete(sessionId)),
+  ]);
 };
 
 const detachAiDebugSessionsFromTab = async (tabId: number): Promise<void> => {

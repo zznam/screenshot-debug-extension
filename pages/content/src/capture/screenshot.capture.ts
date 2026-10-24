@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { t } from '@extension/i18n';
 import type { Screenshot } from '@extension/shared';
 
+import { fullPageSize } from './full-page-size';
+
 let lastPointerX = 0;
 let lastPointerY = 0;
 let startX: number, startY: number;
@@ -583,15 +585,17 @@ const startScreenshotCapture = async ({
   mode: 'single' | 'multiple';
 }) => {
   if (type === 'full-page') {
-    const scaleFactor = window.devicePixelRatio || 2;
+    const size = fullPageSize(
+      document.documentElement.scrollWidth,
+      document.documentElement.scrollHeight,
+      window.devicePixelRatio,
+    );
     const fullCanvas = await html2canvas(document.body, {
       useCORS: true,
-      allowTaint: true,
+      allowTaint: false,
       logging: false,
       removeContainer: true,
-      scale: scaleFactor,
-      width: document.documentElement.scrollWidth,
-      height: document.documentElement.scrollHeight,
+      ...size,
       ignoreElements: (element: Element) => {
         return [
           'brie-root',
@@ -604,7 +608,15 @@ const startScreenshotCapture = async ({
       },
     });
 
-    await saveAndNotify({ screenshots: [{ src: fullCanvas.toDataURL('image/png', 1.0), isPrimary: true }], mode });
+    try {
+      const src = fullCanvas.toDataURL('image/png');
+      if (!src.startsWith('data:image/png'))
+        throw new Error('The full-page image could not be rendered. Try a viewport capture.');
+      await saveAndNotify({ screenshots: [{ src, isPrimary: true }], mode });
+    } finally {
+      fullCanvas.width = 0;
+      fullCanvas.height = 0;
+    }
     return;
   }
 

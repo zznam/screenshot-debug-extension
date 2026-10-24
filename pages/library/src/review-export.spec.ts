@@ -5,8 +5,7 @@ import { comparePixels } from './image-tools';
 import { buildReviewedZip, reportMarkdown, sanitizeRecord, sensitiveFindings } from './review-export';
 
 vi.mock('@extension/shared', async () => {
-  const { deepRedactSensitiveInfo } = await import('../../../packages/shared/lib/utils/redact-sensitive-info.util');
-  return { deepRedactSensitiveInfo };
+  return import('../../../packages/shared/lib/utils/review-sanitization');
 });
 
 const fields = {

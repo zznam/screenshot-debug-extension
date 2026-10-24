@@ -713,3 +713,42 @@ h2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.library-results {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.library-shell .library-sort {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.library-sort select {
+  width: auto;
+}
+.library-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 20px;
+  font-size: 12px;
+}
+.library-shell .library-primary {
+  background: #17604b;
+  border-color: #17604b;
+  color: #fff;
+}
+.library-shell button:disabled {
+  cursor: not-allowed;
+}
+.review-fieldset {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+:root.dark .library-error,
+:root.dark .library-danger {
+  color: #ff9b9b;
+}

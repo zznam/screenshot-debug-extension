@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { useUnsavedChanges } from '@extension/shared';
 import type { CaptureDocument } from '@extension/shared';
 import { getLibraryAsset, getLibraryCapture } from '@extension/storage';
 
@@ -131,6 +132,9 @@ const SharePage = ({ id }: { id: string }) => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
+  const [dirty, setDirty] = useState(false);
+  const operation = useRef(false);
+  useUnsavedChanges(dirty || busy);
   useEffect(() => {
     let cancelled = false;
     const urls: string[] = [];
@@ -163,6 +167,8 @@ const SharePage = ({ id }: { id: string }) => {
   const included = images.filter(image => image.included);
   const findings = sensitiveFindings(JSON.stringify({ fields, diagnostics: capture?.diagnostics }));
   const run = async (task: () => Promise<void>) => {
+    if (operation.current) return;
+    operation.current = true;
     setBusy(true);
     setError('');
     setStatus('');
@@ -171,12 +177,14 @@ const SharePage = ({ id }: { id: string }) => {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not export. Try again.');
     } finally {
+      operation.current = false;
       setBusy(false);
     }
   };
   const updateImage = (index: number, patch: Partial<ShareImage>) => {
     setImages(previous => previous.map((image, position) => (position === index ? { ...image, ...patch } : image)));
     setReviewed(false);
+    setDirty(true);
   };
   return (
     <>
@@ -195,9 +203,9 @@ const SharePage = ({ id }: { id: string }) => {
         </p>
       )}
       {!capture ? (
-        <p role="status">Opening evidence…</p>
+        !error && <p role="status">Opening evidence…</p>
       ) : (
-        <div className="review-layout">
+        <fieldset className="review-layout review-fieldset" disabled={busy}>
           <section className="workspace-panel" aria-label="Review screenshots">
             <h2>1. Review screenshots</h2>
             <p className="library-muted">
@@ -246,6 +254,7 @@ const SharePage = ({ id }: { id: string }) => {
                     onChange={event => {
                       setFields(previous => ({ ...previous, [key]: event.target.value }));
                       setReviewed(false);
+                      setDirty(true);
                     }}
                   />
                 </label>
@@ -257,6 +266,7 @@ const SharePage = ({ id }: { id: string }) => {
                   onChange={event => {
                     setFields(previous => ({ ...previous, sourceUrl: event.target.checked ? capture.source.url : '' }));
                     setReviewed(false);
+                    setDirty(true);
                   }}
                 />
                 Include source URL
@@ -285,6 +295,7 @@ const SharePage = ({ id }: { id: string }) => {
                             event.target.checked ? [...previous, index] : previous.filter(value => value !== index),
                           );
                           setReviewed(false);
+                          setDirty(true);
                         }}
                       />
                       Include diagnostic {index + 1}
@@ -320,6 +331,7 @@ const SharePage = ({ id }: { id: string }) => {
                       );
                       downloadBlob(blob, 'reviewed-bug-report.zip');
                       setStatus('Reviewed ZIP prepared.');
+                      setDirty(false);
                     })
                   }>
                   Download reviewed ZIP
@@ -361,7 +373,7 @@ const SharePage = ({ id }: { id: string }) => {
               <p role="status">{busy ? 'Preparing reviewed evidence…' : status}</p>
             </section>
           </div>
-        </div>
+        </fieldset>
       )}
     </>
   );

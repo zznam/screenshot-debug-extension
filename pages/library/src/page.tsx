@@ -7,19 +7,23 @@ import { librarySettingsStorage, listLibraryCaptures, themeStorage } from '@exte
 import { CaptureDetail } from './capture-detail';
 import { filterCaptures, formatBytes } from './filter';
 import type { LibraryFilters } from './filter';
+import { PAGE_SIZE, emptyFilters, libraryQuery, readLibraryView, sortCaptures } from './library-view';
+import type { SortOrder } from './library-view';
 
 const ScreenshotEditorPage = lazy(() => import('./screenshot-editor'));
 const SharePage = lazy(() => import('./share-page'));
 const ComparePage = lazy(() => import('./compare-page'));
 const StoragePage = lazy(() => import('./storage-page'));
 
-const emptyFilters: LibraryFilters = { search: '', domain: '', from: '', to: '', kind: '' };
+const initialView = readLibraryView(window.location.search);
 
 const LibraryPage = () => {
   const theme = useStorage(themeStorage);
   const saveMode = useStorage(librarySettingsStorage);
   const [captures, setCaptures] = useState<CaptureSummary[]>([]);
-  const [filters, setFilters] = useState(emptyFilters);
+  const [filters, setFilters] = useState(initialView.filters);
+  const [sort, setSort] = useState<SortOrder>(initialView.sort);
+  const [page, setPage] = useState(initialView.page);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const captureId = new URLSearchParams(window.location.search).get('capture');
@@ -49,10 +53,27 @@ const LibraryPage = () => {
       window.removeEventListener('focus', refresh);
     };
   }, [refresh]);
-  const visible = useMemo(() => filterCaptures(captures, filters), [captures, filters]);
+  const visible = useMemo(() => sortCaptures(filterCaptures(captures, filters), sort), [captures, filters, sort]);
+  const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageCaptures = visible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const invalidDates = Boolean(filters.from && filters.to && filters.from > filters.to);
+  const listView = !captureId && compareId === null && !params.has('storage');
+  useEffect(() => {
+    if (!listView || loading) return;
+    const query = libraryQuery(filters, sort, currentPage);
+    window.history.replaceState(null, '', `index.html${query}`);
+    try {
+      sessionStorage.setItem('library-view', query);
+    } catch {
+      /* Browsing still works when storage is unavailable. */
+    }
+  }, [filters, sort, currentPage, listView, loading]);
   const domains = [...new Set(captures.map(capture => capture.source.domain))].sort();
-  const updateFilter = (key: keyof LibraryFilters, value: string) =>
+  const updateFilter = (key: keyof LibraryFilters, value: string) => {
     setFilters(previous => ({ ...previous, [key]: value }));
+    setPage(1);
+  };
   if (captureId && new URLSearchParams(window.location.search).has('edit')) {
     return (
       <Suspense fallback={<p role="status">Opening editor…</p>}>
@@ -164,6 +185,11 @@ const LibraryPage = () => {
                 <input type="date" value={filters.to} onChange={event => updateFilter('to', event.target.value)} />
               </label>
             </section>
+            {invalidDates && (
+              <p className="library-error" role="alert">
+                Choose an end date on or after the start date.
+              </p>
+            )}
             {error && (
               <p role="alert" className="library-error">
                 {error} <button onClick={() => void refresh()}>Retry</button>
@@ -174,17 +200,50 @@ const LibraryPage = () => {
             ) : (
               <>
                 <div className="library-results">
-                  <span>
+                  <span role="status" aria-live="polite">
                     {visible.length} {visible.length === 1 ? 'capture' : 'captures'}
                   </span>
-                  <button className="library-text-button" onClick={() => setFilters(emptyFilters)}>
+                  <button
+                    className="library-text-button"
+                    onClick={() => {
+                      setFilters(emptyFilters);
+                      setPage(1);
+                    }}>
                     Clear filters
                   </button>
+                  <label className="library-sort">
+                    Sort captures
+                    <select
+                      aria-label="Sort captures"
+                      value={sort}
+                      onChange={event => {
+                        setSort(event.target.value as SortOrder);
+                        setPage(1);
+                      }}>
+                      <option value="newest">Newest first</option>
+                      <option value="oldest">Oldest first</option>
+                      <option value="title">Title A–Z</option>
+                      <option value="size">Largest first</option>
+                    </select>
+                  </label>
                   <a href="?compare=">Compare screenshots</a>
                 </div>
+                {pageCount > 1 && (
+                  <nav className="library-pagination" aria-label="Capture pages">
+                    <button disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>
+                      Previous page
+                    </button>
+                    <span role="status">
+                      Page {currentPage} of {pageCount} · {visible.length} captures
+                    </span>
+                    <button disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>
+                      Next page
+                    </button>
+                  </nav>
+                )}
                 {visible.length ? (
                   <div className="library-grid">
-                    {visible.map(capture => (
+                    {pageCaptures.map(capture => (
                       <a className="library-card" key={capture.id} href={`?capture=${encodeURIComponent(capture.id)}`}>
                         <div className="library-thumbnail">
                           <img src={capture.thumbnail} alt="" loading="lazy" />
