@@ -25,7 +25,7 @@
     "@extension/i18n": "workspace:*",
     "@extension/ui": "workspace:*",
     "@extension/store": "workspace:*",
-    "date-fns": "^4.1.0"
+    "date-fns": "^4.4.0"
   },
   "devDependencies": {
     "@extension/tailwindcss-config": "workspace:*",
