@@ -23,7 +23,7 @@
   "devDependencies": {
     "@extension/shared": "workspace:*",
     "@extension/tsconfig": "workspace:*",
-    "tsx": "4.20.6"
+    "tsx": "4.23.15"
   },
   "engines": {
     "node": ">=22.22.1"
