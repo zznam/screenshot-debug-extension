@@ -7,8 +7,10 @@ import { librarySettingsStorage, listLibraryCaptures, themeStorage } from '@exte
 import { CaptureDetail } from './capture-detail';
 import { filterCaptures, formatBytes } from './filter';
 import type { LibraryFilters } from './filter';
+import { LibraryShortcuts } from './library-shortcuts';
 import { PAGE_SIZE, emptyFilters, libraryQuery, readLibraryView, sortCaptures } from './library-view';
 import type { SortOrder } from './library-view';
+import { SavedViewsPanel } from './saved-views-panel';
 
 const ScreenshotEditorPage = lazy(() => import('./screenshot-editor'));
 const SharePage = lazy(() => import('./share-page'));
@@ -70,6 +72,7 @@ const LibraryPage = () => {
     }
   }, [filters, sort, currentPage, listView, loading]);
   const domains = [...new Set(captures.map(capture => capture.source.domain))].sort();
+  const tags = [...new Set(captures.flatMap(capture => capture.tags))].sort((a, b) => a.localeCompare(b));
   const updateFilter = (key: keyof LibraryFilters, value: string) => {
     setFilters(previous => ({ ...previous, [key]: value }));
     setPage(1);
@@ -155,15 +158,21 @@ const LibraryPage = () => {
                 Search
                 <input
                   type="search"
-                  placeholder="Title, domain, tag, or screenshot text…"
+                  placeholder="Title, domain, tag, notes, or screenshot text…"
                   value={filters.search}
                   onChange={event => updateFilter('search', event.target.value)}
                 />
               </label>
               <label>
                 Domain
-                <select value={filters.domain} onChange={event => updateFilter('domain', event.target.value)}>
+                <select
+                  aria-label="Domain"
+                  value={filters.domain}
+                  onChange={event => updateFilter('domain', event.target.value)}>
                   <option value="">All domains</option>
+                  {filters.domain && !domains.includes(filters.domain) && (
+                    <option value={filters.domain}>{filters.domain} (no current captures)</option>
+                  )}
                   {domains.map(domain => (
                     <option key={domain}>{domain}</option>
                   ))}
@@ -171,9 +180,49 @@ const LibraryPage = () => {
               </label>
               <label>
                 Type
-                <select value={filters.kind} onChange={event => updateFilter('kind', event.target.value)}>
+                <select
+                  aria-label="Type"
+                  value={filters.kind}
+                  onChange={event => updateFilter('kind', event.target.value)}>
                   <option value="">All types</option>
                   <option value="screenshots">Screenshots</option>
+                </select>
+              </label>
+              <label>
+                Tag
+                <select
+                  aria-label="Tag"
+                  value={filters.tag ?? ''}
+                  onChange={event => updateFilter('tag', event.target.value)}>
+                  <option value="">All tags</option>
+                  {filters.tag && !tags.includes(filters.tag) && (
+                    <option value={filters.tag}>{filters.tag} (no current captures)</option>
+                  )}
+                  {tags.map(tag => (
+                    <option key={tag}>{tag}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Favorites
+                <select
+                  aria-label="Favorites"
+                  value={filters.favorite ?? ''}
+                  onChange={event => updateFilter('favorite', event.target.value)}>
+                  <option value="">All captures</option>
+                  <option value="only">Favorites only</option>
+                </select>
+              </label>
+              <label>
+                Status
+                <select
+                  aria-label="Status"
+                  value={filters.status ?? ''}
+                  onChange={event => updateFilter('status', event.target.value)}>
+                  <option value="">All statuses</option>
+                  <option value="open">Open</option>
+                  <option value="in-progress">In progress</option>
+                  <option value="resolved">Resolved</option>
                 </select>
               </label>
               <label>
@@ -185,6 +234,15 @@ const LibraryPage = () => {
                 <input type="date" value={filters.to} onChange={event => updateFilter('to', event.target.value)} />
               </label>
             </section>
+            <SavedViewsPanel
+              view={{ filters, sort, page: currentPage }}
+              apply={view => {
+                setFilters(view.filters);
+                setSort(view.sort);
+                setPage(1);
+              }}
+            />
+            <LibraryShortcuts />
             {invalidDates && (
               <p className="library-error" role="alert">
                 Choose an end date on or after the start date.
@@ -253,7 +311,17 @@ const LibraryPage = () => {
                         </div>
                         <div className="library-card-body">
                           <p className="library-eyebrow">{capture.source.domain}</p>
-                          <h2>{capture.title}</h2>
+                          <h2>
+                            {capture.favorite && <span aria-label="Favorite">★ </span>}
+                            {capture.title}
+                          </h2>
+                          <p className="library-muted">
+                            {
+                              { open: 'Open', 'in-progress': 'In progress', resolved: 'Resolved' }[
+                                capture.workflowStatus ?? 'open'
+                              ]
+                            }
+                          </p>
                           <p className="library-muted">
                             {new Date(capture.createdAt).toLocaleDateString()} · {formatBytes(capture.sizeBytes)}
                           </p>

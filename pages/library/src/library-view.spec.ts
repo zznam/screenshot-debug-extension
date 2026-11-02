@@ -6,7 +6,15 @@ import { emptyFilters, libraryQuery, readLibraryView, sortCaptures } from './lib
 
 describe('library view', () => {
   it('round-trips filters, sort and pagination without admitting unrelated URL fields', () => {
-    const filters = { ...emptyFilters, search: 'checkout & cart', domain: 'shop.example', from: '2026-10-01' };
+    const filters = {
+      ...emptyFilters,
+      search: 'checkout & cart',
+      domain: 'shop.example',
+      from: '2026-10-01',
+      tag: 'Mobile & Tablet',
+      favorite: 'only',
+      status: 'resolved',
+    };
     const query = libraryQuery(filters, 'size', 3);
     expect(readLibraryView(query)).toEqual({ filters, sort: 'size', page: 3 });
     expect(libraryQuery(readLibraryView('?capture=secret&search=cart').filters, 'newest', 1)).toBe('?search=cart');
@@ -17,6 +25,9 @@ describe('library view', () => {
       expect(readLibraryView(`?page=${page}&sort=unknown`)).toMatchObject({ page: 1, sort: 'newest' });
     },
   );
+  it('ignores unknown favorite and status query values', () => {
+    expect(readLibraryView('?favorite=unknown&status=unknown').filters).toEqual(emptyFilters);
+  });
   it('sorts a copy with a deterministic tie break', () => {
     const captures = [
       { id: 'b', title: 'Zebra', createdAt: 2, sizeBytes: 10 },

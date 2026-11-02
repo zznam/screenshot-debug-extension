@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/role-has-required-aria-props */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { t } from '@extension/i18n';
@@ -187,12 +186,18 @@ export const PlaybackStrip = ({
       if (!origin) return;
 
       if (action === 'trimStart') {
-        applyTrim({ start: pointerSeconds, end: origin.trim.end });
+        applyTrim({
+          start: clamp(pointerSeconds, 0, Math.max(0, origin.trim.end - Math.min(0.1, duration))),
+          end: origin.trim.end,
+        });
         return;
       }
 
       if (action === 'trimEnd') {
-        applyTrim({ start: origin.trim.start, end: pointerSeconds });
+        applyTrim({
+          start: origin.trim.start,
+          end: clamp(pointerSeconds, Math.min(duration, origin.trim.start + Math.min(0.1, duration)), duration),
+        });
         return;
       }
 
@@ -283,11 +288,39 @@ export const PlaybackStrip = ({
   const trimStartLabel = useMemo(() => formatDurationMs(trimNormalized.start * 1000), [trimNormalized.start]);
   const trimEndLabel = useMemo(() => formatDurationMs(trimNormalized.end * 1000), [trimNormalized.end]);
   const playheadLabel = useMemo(() => formatDurationMs(currentTime * 1000), [currentTime]);
+  const onSliderKey =
+    (value: number, min: number, max: number, change: (value: number) => void) => (event: React.KeyboardEvent) => {
+      if (!duration || event.altKey || event.ctrlKey || event.metaKey) return;
+      const step = event.shiftKey ? 1 : 0.1;
+      const values: Record<string, number> = {
+        ArrowLeft: value - step,
+        ArrowDown: value - step,
+        ArrowRight: value + step,
+        ArrowUp: value + step,
+        PageDown: value - duration / 10,
+        PageUp: value + duration / 10,
+        Home: min,
+        End: max,
+      };
+      const next = values[event.key];
+      if (next === undefined) return;
+      event.preventDefault();
+      event.stopPropagation();
+      change(clamp(next, min, max));
+    };
+  const minimumTrim = Math.min(0.1, duration);
+  const maxStart = Math.max(0, trimNormalized.end - minimumTrim);
+  const minEnd = Math.min(duration, trimNormalized.start + minimumTrim);
 
   return (
     <div className="border-border bg-background mx-auto mt-4 flex w-full gap-4 rounded-2xl border p-2 shadow-sm">
       <div className="flex w-full items-center gap-3">
-        <Button type="button" size="icon" variant="ghost" onClick={toggle}>
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          aria-label={isPlaying ? 'Pause playback' : 'Play recording'}
+          onClick={toggle}>
           <Icon name={isPlaying ? 'Pause' : 'Play'} className="h-4 w-4" />
         </Button>
 
@@ -313,6 +346,14 @@ export const PlaybackStrip = ({
               <div
                 className="absolute top-1/2 h-9 w-[2px] -translate-y-1/2 bg-yellow-500"
                 style={{ left: `${playheadPercentage}%` }}
+                role="slider"
+                tabIndex={duration > 0 ? 0 : -1}
+                aria-label="Playback position"
+                aria-valuemin={0}
+                aria-valuemax={duration}
+                aria-valuenow={currentTime}
+                aria-valuetext={`${currentTime.toFixed(1)} seconds`}
+                onKeyDown={onSliderKey(currentTime, 0, duration, seek)}
               />
 
               {showPlayheadTip && (
@@ -330,7 +371,15 @@ export const PlaybackStrip = ({
                     style={{ left: `${trimStartPercentage}%` }}
                     onPointerDown={startPointerAction('trimStart')}
                     role="slider"
+                    tabIndex={duration > 0 ? 0 : -1}
                     aria-label={t('trimStart')}
+                    aria-valuemin={0}
+                    aria-valuemax={maxStart}
+                    aria-valuenow={trimNormalized.start}
+                    aria-valuetext={`${trimNormalized.start.toFixed(1)} seconds`}
+                    onKeyDown={onSliderKey(trimNormalized.start, 0, maxStart, start =>
+                      applyTrim({ start, end: trimNormalized.end }),
+                    )}
                   />
                   {showTrimStartTip && (
                     <div
@@ -345,7 +394,15 @@ export const PlaybackStrip = ({
                     style={{ left: `${trimEndPercentage}%` }}
                     onPointerDown={startPointerAction('trimEnd')}
                     role="slider"
+                    tabIndex={duration > 0 ? 0 : -1}
                     aria-label={t('trimEnd')}
+                    aria-valuemin={minEnd}
+                    aria-valuemax={duration}
+                    aria-valuenow={trimNormalized.end}
+                    aria-valuetext={`${trimNormalized.end.toFixed(1)} seconds`}
+                    onKeyDown={onSliderKey(trimNormalized.end, minEnd, duration, end =>
+                      applyTrim({ start: trimNormalized.start, end }),
+                    )}
                   />
                   {showTrimEndTip && (
                     <div

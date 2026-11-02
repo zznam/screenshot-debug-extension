@@ -121,6 +121,7 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
         return handleOnAuthStart();
 
       case TAB.GET_ACTIVE: {
+        if (sender.tab) return { tab: sender.tab } as BgResponse;
         const [tab] = await tabs.query({ active: true, currentWindow: true });
         return { tab: tab ?? {} } as BgResponse;
       }

@@ -84,6 +84,9 @@ const getMigratedSettings = async (): Promise<RewindSettings> => {
   return settings;
 };
 
+let previousSnapshot: RewindSettings | null = null;
+let normalizedSnapshot = defaultRewindSettings;
+
 export const rewindSettingsStorage: RewindSettingsStorage = {
   ...baseStorage,
   get: getMigratedSettings,
@@ -91,7 +94,11 @@ export const rewindSettingsStorage: RewindSettingsStorage = {
 
   getSnapshot: () => {
     const snapshot = baseStorage.getSnapshot();
-    return snapshot ? migrateRewindSettings(snapshot) : defaultRewindSettings;
+    if (snapshot !== previousSnapshot) {
+      previousSnapshot = snapshot;
+      normalizedSnapshot = snapshot ? migrateRewindSettings(snapshot) : defaultRewindSettings;
+    }
+    return normalizedSnapshot;
   },
 
   isRewindEnabled: async () => {

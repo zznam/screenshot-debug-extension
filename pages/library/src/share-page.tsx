@@ -6,7 +6,19 @@ import { getLibraryAsset, getLibraryCapture } from '@extension/storage';
 
 import { downloadBlob, flattenImage } from './image-tools';
 import type { Mask } from './image-tools';
-import { buildReviewedZip, reportMarkdown, sanitizeRecord, sensitiveFindings } from './review-export';
+import {
+  discardReportDraft,
+  draftKey,
+  readReportDraftSnapshot,
+  ReportDraftConflictError,
+  saveReportDraft,
+  severityValues,
+  withReportDraftLock,
+} from './report-draft';
+import type { DraftResult } from './report-draft';
+import { applyReportTemplate, reportTemplates } from './report-templates';
+import type { ReportTemplate } from './report-templates';
+import { buildReviewedZip, reportJson, reportMarkdown, sanitizeRecord, sensitiveFindings } from './review-export';
 import type { ReportFields } from './review-export';
 
 interface ShareImage {
@@ -133,7 +145,12 @@ const SharePage = ({ id }: { id: string }) => {
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [dirty, setDirty] = useState(false);
+  const [draft, setDraft] = useState<DraftResult>({ status: 'missing' });
+  const [draftConflict, setDraftConflict] = useState(false);
+  const [template, setTemplate] = useState<ReportTemplate>('bug');
+  const [replaceTemplate, setReplaceTemplate] = useState(false);
   const operation = useRef(false);
+  const draftToken = useRef<string | null>(null);
   useUnsavedChanges(dirty || busy);
   useEffect(() => {
     let cancelled = false;
@@ -155,6 +172,13 @@ const SharePage = ({ id }: { id: string }) => {
       setCapture(document);
       setImages(loaded);
       setFields(previous => ({ ...previous, title: document.title }));
+      try {
+        const saved = readReportDraftSnapshot(localStorage, document);
+        draftToken.current = saved.token;
+        setDraft(saved.result);
+      } catch {
+        setError('Saved drafts are unavailable. You can still compose and export this report.');
+      }
     })().catch(cause => {
       if (!cancelled) setError(cause instanceof Error ? cause.message : 'Could not open evidence.');
     });
@@ -163,6 +187,25 @@ const SharePage = ({ id }: { id: string }) => {
       urls.forEach(url => URL.revokeObjectURL(url));
     };
   }, [id]);
+  useEffect(() => {
+    if (!capture) return;
+    const changed = (event: StorageEvent) => {
+      if (event.storageArea !== localStorage || (event.key !== draftKey(id) && event.key !== null)) return;
+      try {
+        const saved = readReportDraftSnapshot(localStorage, capture);
+        if (saved.token === draftToken.current) return;
+        setDraft(saved.result);
+        setDraftConflict(true);
+        setDirty(true);
+        setStatus('');
+      } catch {
+        setError('The saved draft could not be checked. Your current report remains open.');
+        setDirty(true);
+      }
+    };
+    window.addEventListener('storage', changed);
+    return () => window.removeEventListener('storage', changed);
+  }, [capture, id]);
   const records = capture?.diagnostics.map(sanitizeRecord) ?? [];
   const included = images.filter(image => image.included);
   const findings = sensitiveFindings(JSON.stringify({ fields, diagnostics: capture?.diagnostics }));
@@ -175,6 +218,15 @@ const SharePage = ({ id }: { id: string }) => {
     try {
       await task();
     } catch (cause) {
+      if (cause instanceof ReportDraftConflictError) {
+        setDraftConflict(true);
+        setDirty(true);
+        try {
+          if (capture) setDraft(readReportDraftSnapshot(localStorage, capture).result);
+        } catch {
+          // Preserve the open report even when storage becomes unavailable during recovery.
+        }
+      }
       setError(cause instanceof Error ? cause.message : 'Could not export. Try again.');
     } finally {
       operation.current = false;
@@ -185,6 +237,55 @@ const SharePage = ({ id }: { id: string }) => {
     setImages(previous => previous.map((image, position) => (position === index ? { ...image, ...patch } : image)));
     setReviewed(false);
     setDirty(true);
+  };
+  const applyTemplate = () => {
+    setFields(previous => applyReportTemplate(previous, template));
+    setReviewed(false);
+    setDirty(true);
+    setReplaceTemplate(false);
+    setStatus(`${reportTemplates[template].label} template applied.`);
+  };
+  const saveDraft = async (replace = false) => {
+    if (!capture) return;
+    await withReportDraftLock(id, async () => {
+      const latest = await getLibraryCapture(id);
+      if (!latest || latest.revision !== capture.revision)
+        throw new Error('This capture changed. Reload it before saving a report draft.');
+      const expected = replace ? readReportDraftSnapshot(localStorage, capture).token : draftToken.current;
+      const saved = saveReportDraft(localStorage, capture, fields, images, selected, expected);
+      draftToken.current = JSON.stringify(saved);
+      setDraft({ status: 'ready', draft: saved });
+      setDraftConflict(false);
+      setDirty(false);
+      setStatus('Report draft saved on this device.');
+    });
+  };
+  const restoreDraft = async () => {
+    if (!capture) return;
+    await withReportDraftLock(id, async () => {
+      const latest = await getLibraryCapture(id);
+      if (!latest || latest.revision !== capture.revision)
+        throw new Error('This capture changed. Reload it before restoring a report draft.');
+      const snapshot = readReportDraftSnapshot(localStorage, latest);
+      const saved = snapshot.result;
+      setDraft(saved);
+      if (saved.status !== 'ready')
+        throw new Error('This draft cannot be restored. The saved evidence may have changed.');
+      setFields(saved.draft.fields);
+      setImages(previous =>
+        previous.map((image, index) => ({
+          ...image,
+          included: saved.draft.images[index]!.included,
+          masks: saved.draft.images[index]!.masks,
+        })),
+      );
+      setSelected(saved.draft.selected);
+      draftToken.current = snapshot.token;
+      setDraftConflict(false);
+      setReviewed(false);
+      setDirty(false);
+      setStatus('Draft restored. Review the selected evidence again before exporting.');
+    });
   };
   return (
     <>
@@ -229,6 +330,129 @@ const SharePage = ({ id }: { id: string }) => {
           <div className="workspace-stack">
             <section className="workspace-panel">
               <h2>2. Compose your bug report</h2>
+              <section aria-label="Report draft">
+                <p className="library-muted">Save report text and evidence choices on this device to continue later.</p>
+                {draft.status === 'ready' && <p>Local draft saved {new Date(draft.draft.savedAt).toLocaleString()}.</p>}
+                {draftConflict && (
+                  <p role="alert">The saved draft changed in another tab. Your current report is still open.</p>
+                )}
+                {(draft.status === 'stale' || draft.status === 'invalid') && (
+                  <p role="alert">
+                    {draft.status === 'stale'
+                      ? 'The saved draft refers to an older capture. Discard it and review the current evidence.'
+                      : 'The saved draft could not be read. Discard it to start a new draft.'}
+                  </p>
+                )}
+                <div className="workspace-actions">
+                  <button type="button" onClick={() => void run(() => saveDraft())}>
+                    Save draft
+                  </button>
+                  {draftConflict && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!window.confirm('Replace the saved draft from another tab with your current report?'))
+                          return;
+                        void run(() => saveDraft(true));
+                      }}>
+                      Replace saved draft
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    disabled={draft.status !== 'ready'}
+                    onClick={() => {
+                      if (dirty && !window.confirm('Replace your unsaved report with the saved draft?')) return;
+                      void run(restoreDraft);
+                    }}>
+                    Restore draft
+                  </button>
+                  <button
+                    type="button"
+                    disabled={draft.status === 'missing'}
+                    onClick={() =>
+                      void run(() =>
+                        withReportDraftLock(id, () => {
+                          discardReportDraft(localStorage, id, draftToken.current);
+                          draftToken.current = null;
+                          setDraft({ status: 'missing' });
+                          setDraftConflict(false);
+                          setDirty(true);
+                          setStatus('Saved draft discarded. Your current report remains open.');
+                        }),
+                      )
+                    }>
+                    Discard saved draft
+                  </button>
+                </div>
+              </section>
+              <label>
+                Report template
+                <select
+                  aria-label="Report template"
+                  value={template}
+                  onChange={event => {
+                    setTemplate(event.target.value as ReportTemplate);
+                    setReplaceTemplate(false);
+                  }}>
+                  {Object.entries(reportTemplates).map(([value, item]) => (
+                    <option value={value} key={value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  if (fields.steps || fields.expected || fields.actual) setReplaceTemplate(true);
+                  else applyTemplate();
+                }}>
+                Apply template
+              </button>
+              {replaceTemplate && (
+                <div role="group" aria-label="Replace report text" className="library-confirm">
+                  <p>Replace steps, expected behavior, and actual behavior with this template?</p>
+                  <button type="button" onClick={applyTemplate}>
+                    Replace report text
+                  </button>
+                  <button type="button" onClick={() => setReplaceTemplate(false)}>
+                    Keep current text
+                  </button>
+                </div>
+              )}
+              <label>
+                Severity
+                <select
+                  aria-label="Severity"
+                  value={fields.severity ?? ''}
+                  onChange={event => {
+                    setFields(previous => ({ ...previous, severity: event.target.value as ReportFields['severity'] }));
+                    setReviewed(false);
+                    setDirty(true);
+                  }}>
+                  {severityValues.map(value => (
+                    <option key={value} value={value}>
+                      {value ? value[0]!.toUpperCase() + value.slice(1) : 'Not specified'}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Environment
+                <textarea
+                  rows={2}
+                  maxLength={10_000}
+                  aria-label="Environment"
+                  placeholder="Browser, operating system, app version, device…"
+                  value={fields.environment ?? ''}
+                  onChange={event => {
+                    setFields(previous => ({ ...previous, environment: event.target.value }));
+                    setReviewed(false);
+                    setDirty(true);
+                  }}
+                />
+              </label>
               {(['title', 'steps', 'expected', 'actual'] as const).map(key => (
                 <label key={key}>
                   {
@@ -340,6 +564,28 @@ const SharePage = ({ id }: { id: string }) => {
                   disabled={!reviewed || busy || !fields.title.trim()}
                   onClick={() => {
                     downloadBlob(
+                      new Blob(
+                        [
+                          reportJson(
+                            fields,
+                            included.length,
+                            selected.map(index => records[index]),
+                          ),
+                        ],
+                        {
+                          type: 'application/json',
+                        },
+                      ),
+                      'reviewed-report.json',
+                    );
+                    setStatus('Reviewed JSON prepared. Attachment names refer to the PNG files in the ZIP.');
+                  }}>
+                  Download reviewed JSON
+                </button>
+                <button
+                  disabled={!reviewed || busy || !fields.title.trim()}
+                  onClick={() => {
+                    downloadBlob(
                       new Blob([reportMarkdown(fields, included.length)], { type: 'text/markdown' }),
                       'report.md',
                     );
@@ -370,7 +616,8 @@ const SharePage = ({ id }: { id: string }) => {
                   </button>
                 ))}
               </div>
-              <p role="status">{busy ? 'Preparing reviewed evidence…' : status}</p>
+              <p role="status">{busy ? 'Working on report…' : status}</p>
+              {dirty && <p className="library-muted">Unsaved report changes</p>}
             </section>
           </div>
         </fieldset>

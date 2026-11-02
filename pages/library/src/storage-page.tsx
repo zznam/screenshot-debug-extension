@@ -4,6 +4,7 @@ import { deleteLibraryCaptures, listLibraryCaptures } from '@extension/storage';
 import type { LibraryResponse, ManagedStorageEntry, StorageCategory } from '@extension/storage';
 
 import { formatBytes } from './filter';
+import { discardReportDraft, listReportDraftIds } from './report-draft';
 
 const categoryNames: Record<StorageCategory, string> = {
   captures: 'Captures',
@@ -24,6 +25,7 @@ const StoragePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
+  const [pendingDrafts, setPendingDrafts] = useState<string[]>([]);
   const refresh = useCallback(async () => {
     try {
       const [captures, response] = await Promise.all([
@@ -43,6 +45,17 @@ const StoragePage = () => {
         ...response.data,
       ]);
       setError('');
+      try {
+        const captureIds = new Set(captures.map(capture => capture.id));
+        const orphanDrafts = listReportDraftIds(localStorage).filter(id => !captureIds.has(id));
+        setPendingDrafts(orphanDrafts);
+        if (orphanDrafts.length)
+          setError(
+            `${orphanDrafts.length} saved report drafts belong to deleted captures. Retry draft cleanup to remove them.`,
+          );
+      } catch {
+        setError('Report drafts could not be checked. Other saved data is available below.');
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not read local storage.');
     } finally {
@@ -67,6 +80,18 @@ const StoragePage = () => {
   );
   const chosen = entries.filter(entry => selected.includes(keyFor(entry)));
   const bytes = chosen.reduce((total, entry) => total + entry.sizeBytes, 0);
+  const cleanDrafts = (ids: string[]) => {
+    const remaining = ids.filter(id => {
+      try {
+        discardReportDraft(localStorage, id);
+        return false;
+      } catch {
+        return true;
+      }
+    });
+    setPendingDrafts(remaining);
+    return remaining;
+  };
   const remove = async () => {
     setBusy(true);
     setError('');
@@ -76,8 +101,14 @@ const StoragePage = () => {
       for (const category of ['captures', 'ai', 'diagnostics'] as const) {
         const ids = chosen.filter(entry => entry.category === category).map(entry => entry.id);
         if (!ids.length) continue;
-        if (category === 'captures') await deleteLibraryCaptures(ids);
-        else {
+        if (category === 'captures') {
+          await deleteLibraryCaptures(ids);
+          const remaining = cleanDrafts(ids);
+          if (remaining.length)
+            throw new Error(
+              `Captures were deleted, but ${remaining.length} saved report drafts could not be removed. Retry draft cleanup.`,
+            );
+        } else {
           for (let start = 0; start < ids.length; start += 10_000) {
             const response = (await chrome.runtime.sendMessage({
               type: 'LIBRARY_STORAGE_DELETE',
@@ -111,8 +142,8 @@ const StoragePage = () => {
       <p className="library-eyebrow">ON THIS DEVICE</p>
       <h1>Storage &amp; cleanup</h1>
       <p className="library-muted">
-        Saved content sizes exclude browser overhead. Nothing is deleted automatically. New diagnostics can arrive while
-        pages remain open.
+        Saved content sizes exclude browser overhead, report drafts, and preferences. Deleting captures also removes
+        their saved report drafts. New diagnostics can arrive while pages remain open.
       </p>
       <div className="storage-totals">
         {(['captures', 'ai', 'diagnostics'] as const).map(category => {
@@ -222,6 +253,20 @@ const StoragePage = () => {
             {error}
           </p>
         )}
+        {pendingDrafts.length > 0 && (
+          <button
+            disabled={busy}
+            onClick={() => {
+              const remaining = cleanDrafts(pendingDrafts);
+              if (!remaining.length) {
+                setError('');
+                setStatus('Saved report drafts removed.');
+              } else
+                setError(`${remaining.length} saved report drafts still could not be removed. Retry draft cleanup.`);
+            }}>
+            Retry draft cleanup
+          </button>
+        )}
         <div className="storage-list">
           {visible.map(entry => (
             <label className="storage-row" key={keyFor(entry)}>
@@ -252,15 +297,18 @@ const StoragePage = () => {
         <p>
           {chosen.length} selected · approximately {formatBytes(bytes)}
         </p>
-        <button className="library-danger" disabled={busy || !chosen.length} onClick={() => setConfirming(true)}>
+        <button
+          className="library-danger"
+          disabled={busy || !chosen.length || pendingDrafts.length > 0}
+          onClick={() => setConfirming(true)}>
           Review deletion
         </button>
         {confirming && (
           <section className="library-confirm" aria-label="Review selected deletion">
             <h2>Delete {chosen.length} selected items?</h2>
             <p>
-              This permanently removes the selected captures and their originals, selected AI conversations, and
-              selected diagnostic records.
+              This permanently removes the selected captures, their originals and saved report drafts, selected AI
+              conversations, and selected diagnostic records.
             </p>
             <ul>
               {chosen.map(entry => (

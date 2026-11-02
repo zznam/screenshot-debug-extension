@@ -69,3 +69,23 @@ The repository still contains inherited Brie naming, legacy authentication/store
 - Visual checks include AI light/dark layouts, long unbroken text, and the library at mobile/desktop widths. Screenshots use synthetic test evidence: [AI desktop](images/quality-pass/ai-workspace-1280.png), [AI narrow](images/quality-pass/ai-workspace-360.png), [library desktop](images/quality-pass/library-1280.png), [library narrow](images/quality-pass/library-360.png).
 
 Report drafts remain in memory and are protected by the browser's navigation prompt; they are not crash-recoverable autosaves. Full-page output is deliberately bounded and can omit cross-origin resources the DOM renderer cannot access. Native sharing/microphone dialogs, paid AI calls, Firefox, and store distribution remain outside this verification. The large injected editor bundle remains a performance follow-up.
+
+## Investigation workflow verification on 2026-10-31
+
+- `pnpm validate` passes formatting, repository-wide lint and type checks, and 380 unit tests across 59 files. The same four existing React hook warnings remain.
+- Coverage gates pass: 25.90% lines, 25.16% statements, 21.34% functions, and 24.95% branches across the runtime source. These figures include untested source and are not a claim of complete code coverage.
+- The production Chrome build and `verify:build` pass, including the bundled single-thread video encoder, worker, and WebAssembly assets. The encoder adds about 31 MB to the unpacked extension and loads only for trimmed/converting exports. Full WebM downloads preserve their original bytes.
+- [Ten workflow additions](INVESTIGATION-WORKFLOW.md) cover capture triage, saved views, keyboard navigation, report templates, explicit local drafts, structured report context, and reviewed JSON.
+- New regression checks protect metadata writes from synchronous quota errors, preserve triage across image edits, reject oversized saved views and stale report writes, validate draft evidence, and preserve original WebM bytes for full exports. Encoder tests cover load failure, timeout, conversion failure, and worker cleanup.
+- Report drafts can now be saved explicitly and restored after reopening. Concurrent tabs cannot silently replace a newer draft; restoring still requires a fresh evidence review. Deleting a capture removes its draft, with retryable cleanup if browser storage fails.
+
+## Final verification on 2026-11-03
+
+- Final `pnpm validate` passes all **383 unit tests across 59 files**, formatting, source lint, and workspace type checks. Coverage gates pass with 26.07% lines, 25.32% statements, 21.55% functions, and 25.06% branches. Production asset verification passes; four pre-existing hook warnings remain.
+
+- All **55 Chromium E2E scenarios passed in one clean run** against the production build, without retries or skipped tests (1.3 minutes). The local command used three isolated workers and a 120-second execution budget; repository defaults remain unchanged. The HTML report is generated at `tests/e2e/playwright-report/index.html`.
+- Recording coverage uses a synthetic stream only at the native sharing boundary. Real MediaRecorder frames, pause/resume, two active segments, keyboard trim controls, byte-identical full WebM download, offline FFmpeg trimming, and decoded output dimensions/duration all pass.
+- WebM trims copy packets without re-encoding. A trim start can align to a nearby codec keyframe. Native sharing/microphone dialogs remain manual checks; MP4 conversion is unit-tested and has no exposed UI control.
+- Fixed unstable recording/rewind settings snapshots that froze the Record tab, the popup-close race in content-tab identification, and duration refinement sending full exports through conversion. Added snapshot identity and requesting-tab regression tests.
+- Rewind tests verify real rrweb events and opt-out stopping collection. The known browser warning about blocked scripts in the intentionally sandboxed replay frame is recognized specifically; unexpected extension errors still fail the tests.
+- Generated Playwright reports and test results are excluded from ESLint to prevent generated report bundles from stalling source validation.

@@ -2,7 +2,7 @@ import { strFromU8, unzipSync } from 'fflate';
 import { describe, expect, it, vi } from 'vitest';
 
 import { comparePixels } from './image-tools';
-import { buildReviewedZip, reportMarkdown, sanitizeRecord, sensitiveFindings } from './review-export';
+import { buildReviewedZip, reportJson, reportMarkdown, sanitizeRecord, sensitiveFindings } from './review-export';
 
 vi.mock('@extension/shared', async () => {
   return import('../../../packages/shared/lib/utils/review-sanitization');
@@ -16,6 +16,33 @@ const fields = {
   sourceUrl: '',
 };
 describe('reviewed evidence boundary', () => {
+  it('exports structured reviewed context with explicit fields and selected sanitized diagnostics', () => {
+    const text = reportJson(
+      {
+        ...fields,
+        severity: 'high',
+        environment: 'Chrome; contact alice@example.com',
+        sourceUrl: 'https://example.com/?token=private-token',
+        hidden: 'must-not-export',
+      } as typeof fields,
+      1,
+      [{ message: 'Selected record', password: 'diagnostic-secret' }],
+    );
+    const json = JSON.parse(text);
+    expect(json.schemaVersion).toBe(1);
+    expect(json.report.severity).toBe('high');
+    expect(json.attachments).toEqual(['screenshot-1.png']);
+    expect(json.diagnostics).toHaveLength(1);
+    expect(text).not.toMatch(/alice@example.com|private-token|must-not-export|diagnostic-secret/);
+    expect(reportMarkdown({ ...fields, severity: 'high', environment: 'Chrome alice@example.com' }, 0)).toContain(
+      'Severity: high',
+    );
+    expect(reportMarkdown({ ...fields, environment: 'Chrome alice@example.com' }, 0)).not.toContain(
+      'alice@example.com',
+    );
+    expect(JSON.parse(reportJson(fields, 0, [])).report).not.toHaveProperty('sourceUrl');
+  });
+
   it('redacts nested credentials, localhost URLs and email addresses without changing saved evidence', () => {
     const original = {
       url: 'http://localhost/?token=very-private-token',

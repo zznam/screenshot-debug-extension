@@ -9,7 +9,7 @@ import { PlaybackStrip } from './playback-strip.ui';
 interface VideoPlayerProps {
   video: VideoSource;
   disableExport: boolean;
-  onExport: (format: VideoFormat, trim: TrimRange) => void;
+  onExport: (format: VideoFormat, trim: TrimRange, duration: number) => void;
   onTrimUpdate: (trim: TrimRange, trimDuration: number) => void;
 }
 
@@ -52,7 +52,7 @@ export const VideoPlayer = ({ video, disableExport, onExport, onTrimUpdate }: Vi
         events={events}
         api={videoPlayback.api}
         disableExport={disableExport}
-        onExport={format => onExport(format, videoPlayback.api.trim)}
+        onExport={format => onExport(format, videoPlayback.api.trim, videoPlayback.api.duration)}
       />
     </div>
   );

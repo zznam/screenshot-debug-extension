@@ -106,3 +106,27 @@ describe('rewindSettingsStorage operations', () => {
     expect(Array.isArray(snapshot?.rewind.disabledHosts)).toBe(true);
   });
 });
+
+describe('React settings snapshots', () => {
+  it('keeps recording snapshots stable until a setting changes', async () => {
+    const { recordingSettingsStorage: storage } = await import('./recording-settings.storage.js');
+    await storage.get();
+    const first = storage.getSnapshot();
+    expect(storage.getSnapshot()).toBe(first);
+    await storage.setMicEnabled(!first!.mic.enabled);
+    const changed = storage.getSnapshot();
+    expect(changed).not.toBe(first);
+    expect(storage.getSnapshot()).toBe(changed);
+  });
+
+  it('keeps rewind snapshots stable until a setting changes', async () => {
+    const { rewindSettingsStorage: storage } = await import('./rewind-settings.storage.js');
+    await storage.get();
+    const first = storage.getSnapshot();
+    expect(storage.getSnapshot()).toBe(first);
+    await storage.setRewindEnabled(true);
+    const changed = storage.getSnapshot();
+    expect(changed).not.toBe(first);
+    expect(storage.getSnapshot()).toBe(changed);
+  });
+});

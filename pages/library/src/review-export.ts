@@ -11,6 +11,8 @@ interface ReportFields {
   expected: string;
   actual: string;
   sourceUrl: string;
+  severity?: '' | 'low' | 'medium' | 'high' | 'critical';
+  environment?: string;
 }
 interface ReviewedImage {
   blob: Blob;
@@ -29,6 +31,8 @@ const reportMarkdown = (fields: ReportFields, imageCount: number) =>
   [
     `# ${markdownText(fields.title).replace(/[\r\n]+/g, ' ')}`,
     fields.sourceUrl ? `Page: ${markdownText(fields.sourceUrl)}` : '',
+    fields.severity ? `Severity: ${markdownText(fields.severity)}` : '',
+    fields.environment ? `## Environment\n\n${markdownText(fields.environment)}` : '',
     '## Steps to reproduce',
     markdownText(fields.steps),
     '## Expected behavior',
@@ -39,6 +43,26 @@ const reportMarkdown = (fields: ReportFields, imageCount: number) =>
     ...Array.from({ length: imageCount }, (_, index) => `![Screenshot ${index + 1}](screenshot-${index + 1}.png)`),
     'Only selected, reviewed evidence is included. Diagnostic records are in diagnostics.json when selected.',
   ].join('\n\n') + '\n';
+
+const reportJson = (fields: ReportFields, imageCount: number, records: unknown[]) =>
+  JSON.stringify(
+    {
+      schemaVersion: 1,
+      report: {
+        title: sanitizeText(fields.title),
+        steps: sanitizeText(fields.steps),
+        expected: sanitizeText(fields.expected),
+        actual: sanitizeText(fields.actual),
+        ...(fields.sourceUrl ? { sourceUrl: sanitizeText(fields.sourceUrl) } : {}),
+        ...(fields.severity ? { severity: sanitizeText(fields.severity) } : {}),
+        ...(fields.environment ? { environment: sanitizeText(fields.environment) } : {}),
+      },
+      attachments: Array.from({ length: imageCount }, (_, index) => `screenshot-${index + 1}.png`),
+      diagnostics: records.map(sanitizeRecord),
+    },
+    null,
+    2,
+  ) + '\n';
 
 const buildReviewedZip = async (fields: ReportFields, images: ReviewedImage[], records: unknown[]): Promise<Blob> => {
   const files: Record<string, Uint8Array> = { 'report.md': strToU8(reportMarkdown(fields, images.length)) };
@@ -51,5 +75,5 @@ const buildReviewedZip = async (fields: ReportFields, images: ReviewedImage[], r
   return new Blob([Uint8Array.from(zipSync(files))], { type: 'application/zip' });
 };
 
-export { buildReviewedZip, reportMarkdown, sanitizeRecord, sanitizeText, sensitiveFindings };
+export { buildReviewedZip, reportMarkdown, reportJson, sanitizeRecord, sanitizeText, sensitiveFindings };
 export type { ReportFields, ReviewedImage };

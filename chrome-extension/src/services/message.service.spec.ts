@@ -129,3 +129,11 @@ describe('message.service captureVisibleTab', () => {
     expect(response).toEqual({ success: false, message: 'Cannot capture active tab' });
   });
 });
+
+it('identifies the requesting content tab even while another tab is focused', async () => {
+  const tab = { id: 42, windowId: 5, url: 'https://example.com/' } as NonNullable<
+    Parameters<typeof handleOnMessage>[1]['tab']
+  >;
+  const response = await handleOnMessage({ type: 'TAB:GET_ACTIVE' }, { tab });
+  expect(response).toEqual({ tab });
+});

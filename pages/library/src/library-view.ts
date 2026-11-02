@@ -5,15 +5,27 @@ import type { LibraryFilters } from './filter';
 const PAGE_SIZE = 24;
 const sortOrders = ['newest', 'oldest', 'title', 'size'] as const;
 type SortOrder = (typeof sortOrders)[number];
-const emptyFilters: LibraryFilters = { search: '', domain: '', from: '', to: '', kind: '' };
+const emptyFilters: LibraryFilters = {
+  search: '',
+  domain: '',
+  from: '',
+  to: '',
+  kind: '',
+  tag: '',
+  favorite: '',
+  status: '',
+};
 const readLibraryView = (search: string) => {
   const params = new URLSearchParams(search);
   const order = params.get('sort');
   const page = Number(params.get('page'));
+  const filters = Object.fromEntries(
+    Object.keys(emptyFilters).map(key => [key, params.get(key) ?? '']),
+  ) as unknown as LibraryFilters;
+  if (filters.favorite !== 'only') filters.favorite = '';
+  if (!['open', 'in-progress', 'resolved'].includes(filters.status ?? '')) filters.status = '';
   return {
-    filters: Object.fromEntries(
-      Object.keys(emptyFilters).map(key => [key, params.get(key) ?? '']),
-    ) as unknown as LibraryFilters,
+    filters,
     sort: sortOrders.includes(order as SortOrder) ? (order as SortOrder) : ('newest' as SortOrder),
     page: Number.isSafeInteger(page) && page > 0 ? page : 1,
   };

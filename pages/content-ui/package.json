@@ -37,7 +37,8 @@
     "rrweb": "2.1.7",
     "rrweb-player": "1.0.0-alpha.4",
     "uuid": "^11.0.3",
-    "@extension/editor": "workspace:*"
+    "@extension/editor": "workspace:*",
+    "@ffmpeg/core": "0.12.10"
   },
   "devDependencies": {
     "@extension/hmr": "workspace:*",
