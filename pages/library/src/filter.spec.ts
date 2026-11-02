@@ -10,6 +10,9 @@ describe('library discovery', () => {
       title: 'Checkout failure',
       source: { title: 'Cart', domain: 'shop.test' },
       tags: ['Mobile'],
+      favorite: true,
+      workflowStatus: 'in-progress',
+      notes: 'Only reproducible with prepaid cards',
       kind: 'screenshots',
       createdAt: new Date('2026-10-04T12:00:00').getTime(),
     },
@@ -23,7 +26,7 @@ describe('library discovery', () => {
   ] as CaptureSummary[];
   const empty = { search: '', domain: '', from: '', to: '', kind: '' };
   it('matches titles, source titles, domains and tags without case sensitivity', () => {
-    for (const search of ['CHECKOUT', 'cart', 'SHOP.TEST', 'mobile'])
+    for (const search of ['CHECKOUT', 'cart', 'SHOP.TEST', 'mobile', 'prepaid'])
       expect(filterCaptures(captures, { ...empty, search })).toEqual([captures[0]]);
   });
   it('combines filters and includes the entire final local calendar day', () => {
@@ -32,6 +35,15 @@ describe('library discovery', () => {
     ]);
     expect(filterCaptures(captures, { ...empty, domain: 'account.test', search: 'Checkout' })).toEqual([]);
     expect(filterCaptures(captures, { ...empty, kind: 'video' })).toEqual([]);
+  });
+  it('combines exact tag, favorite and workflow filters while treating old captures as open', () => {
+    expect(filterCaptures(captures, { ...empty, tag: 'Mobile', favorite: 'only', status: 'in-progress' })).toEqual([
+      captures[0],
+    ]);
+    expect(filterCaptures(captures, { ...empty, tag: 'Mob' })).toEqual([]);
+    expect(filterCaptures(captures, { ...empty, tag: 'mobile' })).toEqual([]);
+    expect(filterCaptures(captures, { ...empty, status: 'open' })).toEqual([captures[1]]);
+    expect(filterCaptures(captures, { ...empty, favorite: 'only', status: 'open' })).toEqual([]);
   });
   it('handles invalid date strings gracefully without discarding results', () => {
     expect(filterCaptures(captures, { ...empty, from: 'invalid-date', to: 'not-a-date' })).toEqual(captures);

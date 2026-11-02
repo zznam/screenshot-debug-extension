@@ -13,6 +13,13 @@ A privacy-focused Chrome extension for capturing screenshots, recording a tab or
 - Open a persistent AI Debug session with a viewport screenshot and redacted browser diagnostics.
 - Run locally without login or server uploads.
 - Save screenshot sets in a searchable local capture library, preserving originals, annotations, and diagnostic snapshots.
+- Review private evidence, mask screenshot pixels, and compose shareable bug reports.
+- Compare saved screenshots and recognize/search English text locally, including offline.
+- Review local storage usage and bulk-delete selected captures, AI sessions, or diagnostics.
+- Browse AI conversations offline, search session history at any window width, stop/retry analysis, and export selected messages.
+- Sort and page through the capture library without losing your search when returning from capture details.
+- Organize investigations with favorites, workflow status, searchable notes, exact tag filters, and named saved views.
+- Navigate the library with keyboard shortcuts and prepare reports with templates, local drafts, severity, environment, and reviewed JSON exports.
 
 ## Requirements
 
@@ -59,6 +66,8 @@ After rebuilding, return to `chrome://extensions/` and click the extension's rel
 3. Review and annotate the result in the page editor.
 4. Download the screenshot, debug report, or ZIP from the editor.
 
+Full-page capture bounds its bitmap to 16 megapixels and 16,384 pixels per side, reducing resolution for tall pages. Pages that would require less than half-size rendering are rejected with guidance to use viewport or area capture. Cross-origin images without capture permission may be omitted by the DOM renderer; use viewport capture when pixel fidelity is essential.
+
 ### Recordings
 
 1. Open the **Record** tab.
@@ -66,6 +75,8 @@ After rebuilding, return to `chrome://extensions/` and click the extension's rel
 3. Click **Start** in the page overlay and select what Chrome should share.
 4. Use the overlay or popup to pause, resume, or stop.
 5. Review, trim, and export the captured video.
+
+Playback and trim handles support Arrow keys, Home, and End; Shift+Arrow makes larger changes. Trimming runs locally with a bundled video encoder. Full, untouched WebM recordings download without re-encoding. WebM trims copy encoded packets to preserve quality; their start can align to a nearby codec keyframe.
 
 Microphone access is optional. The first time it is enabled, the extension opens its microphone permission page.
 
@@ -97,6 +108,10 @@ Then:
 
 The AI session opens in its own extension tab and remains available after the popup closes or the browser restarts. Clicking **AI Debug** again on the same source tab refreshes its context and reuses the session.
 
+Saved conversations and their context remain readable even when the helper is disconnected. On narrow windows, use **Sessions** to search history. **Stop analysis** cancels the pending helper request; **Retry saved question** reuses the existing question without creating a duplicate. Unanswered questions require an explicit retry after reopening the page.
+
+Use **Export session** to choose messages, optionally include the source URL and diagnostics, review the preview, and download Markdown or JSON. Recognized credentials and email addresses are redacted; screenshots and internal session identifiers are excluded. Review the text because automated redaction cannot identify every kind of private information. Clearing a session requires confirmation, and a failed deletion keeps the conversation open.
+
 If setup fails:
 
 - **Helper is not running:** confirm `pnpm ai:helper` is listening on `127.0.0.1:43123`.
@@ -108,7 +123,11 @@ The helper accepts requests only from Chrome extension origins with the pairing 
 
 ## Capture library
 
-Open **Capture library** from the popup, or choose **Save to library** in the screenshot editor. On first use, choose manual or automatic saving; the preference stays available in Settings. Saved captures persist after their source page closes or the browser restarts, and remain until deleted. Choose **Edit screenshots** to reopen their annotation layers, undo/redo, save changes, or copy/download an image. See [capture library details](docs/CAPTURE-LIBRARY.md) and [saved screenshot editing](docs/LIBRARY-EDITOR.md).
+Open **Capture library** from the popup, or choose **Save to library** in the screenshot editor. On first use, choose manual or automatic saving; the preference stays available in Settings. Saved captures persist after their source page closes or the browser restarts, and remain until deleted. Choose **Edit screenshots** to reopen their annotation layers, undo/redo, save changes, or copy/download an image. Choose **Review & compose report** to prepare selected evidence for sharing, **Compare screenshots** to inspect before/after images, or **Read screenshot text** to make English image text searchable offline. **Storage & cleanup** in the library header manages saved data. See [capture library details](docs/CAPTURE-LIBRARY.md), [saved screenshot editing](docs/LIBRARY-EDITOR.md), and [workspace tools](docs/LIBRARY-TOOLS.md).
+
+The library offers newest, oldest, title, and size sorting with 24 captures per page. Filters and the current page survive reloads, and **All captures** restores your last search in the same tab. Save up to 20 named views to reuse filters and sorting across sessions. Use `/` to focus search, `j`/`k` to move between captures, and `?` to show keyboard help. Shortcuts pause while typing.
+
+Capture details include a favorite flag, Open/In progress/Resolved status, and searchable investigation notes. Save these with **Save details**. In the report composer, choose a template, add severity and environment, and use **Save draft** to keep text, image masks, and evidence choices locally. **Restore draft** requires a fresh review before export; drafts for a changed capture are rejected. Drafts are saved explicitly, not automatically. Unsaved capture details, report changes, and AI questions prompt before navigation or closing the tab. A completed reviewed ZIP export clears the report's unsaved warning. See [investigation workflow](docs/INVESTIGATION-WORKFLOW.md) for all ten additions and their boundaries.
 
 ## Development
 

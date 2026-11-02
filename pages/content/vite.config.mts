@@ -17,6 +17,12 @@ const classicContentScriptPlugin = {
       /\nexport default ([A-Za-z_$][\w$]*)\(\);\s*$/,
       (_statement, entryFunction: string) => `\n${entryFunction}();\n`,
     );
+    // Chromium rejects Unicode noncharacters even inside otherwise valid UTF-8
+    // strings emitted by dependencies such as PostCSS. Keep their JS meaning.
+    chunk.code = chunk.code.replace(
+      /[\uFDD0-\uFDEF\uFFFE\uFFFF]/g,
+      character => `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`,
+    );
   },
 } satisfies Plugin;
 

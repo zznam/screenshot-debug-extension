@@ -51,6 +51,7 @@ export const RecordingToolbar: FC<RecordingToolbarProps> = ({ state, tool, onToo
         <div className="flex items-center space-x-4">
           <button
             type="button"
+            aria-label="Move recording toolbar"
             onPointerDown={onDragAndDrop}
             className="text-muted-foreground bg-accent hover:bg-accent mr-1 flex h-7 w-5 cursor-grab items-center justify-center rounded-lg active:cursor-grabbing">
             <Icon name="GripVertical" className="h-3 w-3" />
@@ -71,6 +72,7 @@ export const RecordingToolbar: FC<RecordingToolbarProps> = ({ state, tool, onToo
                   size="icon"
                   variant="ghost"
                   className="cursor-pointer shadow-none disabled:cursor-not-allowed"
+                  aria-label={isPaused ? t('resumeRecording') : t('pauseRecording')}
                   onClick={() => {
                     handleOnToggleTool('none');
                     safePostMessage(isPaused ? RECORDING.RESUME : RECORDING.PAUSE);
@@ -89,6 +91,7 @@ export const RecordingToolbar: FC<RecordingToolbarProps> = ({ state, tool, onToo
                     size="icon"
                     variant="ghost"
                     className="cursor-pointer shadow-none disabled:cursor-not-allowed"
+                    aria-label={isMicMuted ? t('unmuteMic') : t('muteMic')}
                     onClick={handleOnToggleMic}>
                     {isMicMuted ? (
                       <Icon name="MicOff" className="size-4 text-red-400" />
@@ -108,6 +111,7 @@ export const RecordingToolbar: FC<RecordingToolbarProps> = ({ state, tool, onToo
                   size="icon"
                   variant="ghost"
                   className="cursor-pointer shadow-none disabled:cursor-not-allowed"
+                  aria-label={t('stopAndSave')}
                   onClick={() => {
                     handleOnToggleTool('none');
                     safePostMessage(RECORDING.STOP);
@@ -131,6 +135,7 @@ export const RecordingToolbar: FC<RecordingToolbarProps> = ({ state, tool, onToo
                   className={cn('cursor-pointer shadow-none disabled:cursor-not-allowed', {
                     'bg-destructive/10 disabled:opacity-100': isHighlighter,
                   })}
+                  aria-label={isHighlighter ? t('exitDrawMode') : t('drawMode')}
                   onClick={() => handleOnToggleTool('highlighter')}>
                   <Icon
                     name={!isHighlighter ? 'Highlighter' : 'X'}
@@ -152,6 +157,7 @@ export const RecordingToolbar: FC<RecordingToolbarProps> = ({ state, tool, onToo
                   className={cn('cursor-pointer shadow-none disabled:cursor-not-allowed', {
                     'bg-destructive/10 disabled:opacity-100': isBlur,
                   })}
+                  aria-label={isBlur ? t('exitBlurMode') : t('blurElement')}
                   onClick={() => handleOnToggleTool('blur')}>
                   <Icon
                     name={!isBlur ? 'BlurIcon' : 'X'}

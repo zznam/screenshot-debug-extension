@@ -155,11 +155,11 @@ export default function App() {
   }, []);
 
   const exportVideo = useCallback(
-    async (format: VideoFormat, trim: TrimRange) => {
+    async (format: VideoFormat, trim: TrimRange, duration: number) => {
       if (!video) return;
       setExportingVideo(true);
       try {
-        const result = await exportRecordingVideo(video.blob, video.durationMs / 1000, {
+        const result = await exportRecordingVideo(video.blob, duration, {
           format,
           trim,
           filenameBase: `recording-${Date.now()}`,
@@ -257,7 +257,7 @@ export default function App() {
                       <VideoPlayer
                         video={video}
                         disableExport={isExportingVideo}
-                        onExport={(format, trim) => void exportVideo(format, trim)}
+                        onExport={(format, trim, duration) => void exportVideo(format, trim, duration)}
                         onTrimUpdate={() => undefined}
                       />
                     </TabsContent>

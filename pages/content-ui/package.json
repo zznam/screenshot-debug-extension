@@ -37,7 +37,8 @@
     "rrweb": "2.1.7",
     "rrweb-player": "1.0.0-alpha.4",
     "uuid": "^11.0.3",
-    "@extension/editor": "workspace:*"
+    "@extension/editor": "workspace:*",
+    "@ffmpeg/core": "0.12.10"
   },
   "devDependencies": {
     "@extension/hmr": "workspace:*",
@@ -45,7 +46,7 @@
     "@extension/tsconfig": "workspace:*",
     "@extension/vite-config": "workspace:*",
     "@types/file-saver": "^2.0.7",
-    "concurrently": "^10.0.6",
-    "cross-env": "^10.1.0"
+    "concurrently": "^10.0.5",
+    "cross-env": "^7.0.3"
   }
 }

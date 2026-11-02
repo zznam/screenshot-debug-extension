@@ -7,6 +7,16 @@ const EXTENSION_ID_HEADER = 'x-screenshot-debug-extension-id';
 
 type HelperState = 'checking' | 'offline' | 'missing-key' | 'unpaired' | 'ready';
 
+class HelperRequestError extends Error {
+  constructor(
+    message: string,
+    readonly code?: string,
+  ) {
+    super(message);
+    this.name = 'HelperRequestError';
+  }
+}
+
 const readHelperUrl = async (): Promise<string> => {
   const stored = await chrome.storage.local.get(HELPER_URL_KEY);
   const candidate = typeof stored[HELPER_URL_KEY] === 'string' ? stored[HELPER_URL_KEY] : HELPER_URL;
@@ -48,7 +58,7 @@ const checkHelper = async (): Promise<{ state: HelperState; model?: string }> =>
   }
 };
 
-const requestAiResponse = async (session: AiDebugSession): Promise<AiHelperResponse> => {
+const requestAiResponse = async (session: AiDebugSession, signal?: AbortSignal): Promise<AiHelperResponse> => {
   const helperUrl = await readHelperUrl();
   const token = await readPairingToken();
   const body: AiHelperResponseRequest = {
@@ -58,7 +68,7 @@ const requestAiResponse = async (session: AiDebugSession): Promise<AiHelperRespo
   };
   const response = await fetch(`${helperUrl}/v1/debug/responses`, {
     method: 'POST',
-    signal: AbortSignal.timeout(65_000),
+    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(65_000)]) : AbortSignal.timeout(65_000),
     redirect: 'error',
     headers: {
       'content-type': 'application/json',
@@ -68,12 +78,14 @@ const requestAiResponse = async (session: AiDebugSession): Promise<AiHelperRespo
     body: JSON.stringify(body),
   });
   const result = (await response.json()) as AiHelperResponse | AiHelperError;
-  if (result.status === 'error') throw new Error(result.message || 'The AI helper request failed.');
+  if (result.status === 'error')
+    throw new HelperRequestError(result.message || 'The AI helper request failed.', result.code);
   if (!response.ok) throw new Error('The AI helper request failed.');
   return result;
 };
 
 export {
+  HelperRequestError,
   checkHelper,
   HELPER_URL,
   HELPER_URL_KEY,

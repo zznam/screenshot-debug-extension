@@ -12,7 +12,7 @@ export const exportRecordingVideo = async (
   const filenameBase = options.filenameBase ?? `recording-${Date.now()}`;
   const outName = `${filenameBase}.${format}`;
 
-  const isFullRange = trim.start <= 0.001 && Math.abs(trim.end - durationSeconds / 1000) <= 0.001;
+  const isFullRange = trim.start <= 0.001 && Math.abs(trim.end - durationSeconds) <= 0.001;
   const isWebm = input.type.includes('webm') || input.type === '';
   const canFastPath = isFullRange && format === 'webm' && isWebm;
 

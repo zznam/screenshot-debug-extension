@@ -23,7 +23,15 @@ export interface LibraryScreenshot {
   isPrimary: boolean;
 }
 
-export interface CaptureDocument {
+export type CaptureWorkflowStatus = 'open' | 'in-progress' | 'resolved';
+
+export interface CaptureTriage {
+  favorite?: boolean;
+  workflowStatus?: CaptureWorkflowStatus;
+  notes?: string;
+}
+
+export interface CaptureDocument extends CaptureTriage {
   schemaVersion: 1;
   id: string;
   revision: number;
@@ -36,12 +44,15 @@ export interface CaptureDocument {
   screenshots: LibraryScreenshot[];
   diagnostics: unknown[];
   sizeBytes: number;
+  /** Text is tied to the flattened image that was read, never the hidden original. */
+  screenshotText?: { id: string; previewAssetId: string; text: string }[];
 }
 
-export interface CaptureSummary extends Omit<CaptureDocument, 'screenshots' | 'diagnostics'> {
+export interface CaptureSummary extends Omit<CaptureDocument, 'screenshots' | 'diagnostics' | 'screenshotText'> {
   screenshotCount: number;
   diagnosticCount: number;
   thumbnail: string;
+  searchText?: string;
 }
 
 export interface CaptureSnapshot {

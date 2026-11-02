@@ -6,9 +6,11 @@ test('registers capture commands and captures through the shared background gate
   extensionId,
   extensionErrors,
 }) => {
-  const commands = await serviceWorker.evaluate(
-    () => new Promise<chrome.commands.Command[]>(resolve => chrome.commands.getAll(resolve)),
-  );
+  const popup = await context.newPage();
+  await popup.goto(`chrome-extension://${extensionId}/popup/index.html`);
+  // Exercise the real commands API from a loaded extension page, avoiding the
+  // debugger callback evaluation that can stall on a newly starting MV3 worker.
+  const commands = await popup.evaluate(() => chrome.commands.getAll());
   expect(
     commands
       .filter(command => command.name?.startsWith('capture-'))
@@ -23,8 +25,6 @@ test('registers capture commands and captures through the shared background gate
     const tabs = await chrome.tabs.query({});
     return tabs.find(tab => tab.url === source)!.id!;
   }, url);
-  const popup = await context.newPage();
-  await popup.goto(`chrome-extension://${extensionId}/popup/index.html`);
   await expect(popup.getByRole('button', { name: 'Customize capture shortcuts' })).toBeVisible();
   await target.bringToFront();
   const response = await popup.evaluate(
@@ -65,9 +65,10 @@ test('uses keyboard-accessible capture buttons and shared initialization recover
   }, sourceId);
   await popup.goto(`chrome-extension://${extensionId}/popup/index.html`);
   await target.bringToFront();
-  await expect(popup.getByRole('button', { name: 'Viewport', exact: true })).toBeVisible();
-  await popup.getByRole('button', { name: 'Viewport', exact: true }).focus();
-  await popup.getByRole('button', { name: 'Viewport', exact: true }).press('Enter');
+  const viewport = popup.getByRole('button', { name: /^Viewport screenshot/ });
+  await expect(viewport).toBeVisible();
+  await viewport.focus();
+  await viewport.press('Enter');
   await expect(target.getByTestId('screenshot-editor')).toBeVisible();
   const session = await serviceWorker.evaluate(async () => chrome.storage.local.get('capture-state-storage-key'));
   expect(session['capture-state-storage-key']).toMatchObject({ mode: 'screenshot', state: 'unsaved' });

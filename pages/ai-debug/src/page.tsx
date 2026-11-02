@@ -1,19 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { AI_DEBUG, useStorage } from '@extension/shared';
+import { AI_DEBUG, useStorage, useUnsavedChanges } from '@extension/shared';
 import type { AiDebugMessage, AiDebugResponse, AiDebugSession, AiDebugSessionSummary } from '@extension/shared';
 import { themeStorage } from '@extension/storage';
-import { Button, Input, Textarea, cn } from '@extension/ui';
+import { Button, Input, Textarea } from '@extension/ui';
 
-import { checkHelper, HELPER_URL, requestAiResponse, savePairingToken } from './helper-client';
+import { checkHelper, HELPER_URL, HelperRequestError, requestAiResponse, savePairingToken } from './helper-client';
 import type { HelperState } from './helper-client';
+import { SessionExportPanel } from './session-export-panel';
 
 const sessionId = new URLSearchParams(window.location.search).get('session') ?? '';
 const initialPrompt =
   'Analyze this page capture and its diagnostics. Identify the most likely root cause, cite the supporting evidence, and recommend concrete fixes and verification steps.';
-
 const sendRuntime = async (message: unknown): Promise<AiDebugResponse> => chrome.runtime.sendMessage(message);
-
 const helperLabel: Record<HelperState, string> = {
   checking: 'Checking helper…',
   offline: 'Helper is not running',
@@ -30,17 +29,36 @@ export const AiDebugPage = () => {
   const [pairingToken, setPairingToken] = useState('');
   const [draft, setDraft] = useState('');
   const [error, setError] = useState('');
+  const [status, setStatus] = useState('');
   const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [pairing, setPairing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyQuery, setHistoryQuery] = useState('');
+  const [exportOpen, setExportOpen] = useState(false);
   const autoStarted = useRef(false);
+  const request = useRef<AbortController | null>(null);
+  const pairLock = useRef(false);
+  const deleteLock = useRef(false);
+  const allowNavigation = useUnsavedChanges(Boolean(draft.trim()) || sending);
 
   const refreshSession = useCallback(async () => {
-    const [sessionResponse, historyResponse] = await Promise.all([
-      sessionId ? sendRuntime({ type: AI_DEBUG.GET_SESSION, sessionId }) : Promise.resolve(null),
-      sendRuntime({ type: AI_DEBUG.LIST_SESSIONS }),
-    ]);
-    if (sessionResponse?.status === 'success') setSession(sessionResponse.session ?? null);
-    else if (sessionResponse?.status === 'error') setError(sessionResponse.message);
-    if (historyResponse.status === 'success') setHistory(historyResponse.sessions ?? []);
+    try {
+      const [sessionResponse, historyResponse] = await Promise.all([
+        sessionId ? sendRuntime({ type: AI_DEBUG.GET_SESSION, sessionId }) : Promise.resolve(null),
+        sendRuntime({ type: AI_DEBUG.LIST_SESSIONS }),
+      ]);
+      if (sessionResponse?.status === 'error') throw new Error(sessionResponse.message);
+      if (historyResponse.status === 'error') throw new Error(historyResponse.message);
+      setSession(sessionResponse?.session ?? null);
+      setHistory(historyResponse.sessions ?? []);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not load saved sessions. Try reloading this page.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const refreshHelper = useCallback(async () => {
@@ -54,9 +72,10 @@ export const AiDebugPage = () => {
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(theme);
   }, [theme]);
-
   useEffect(() => {
-    void Promise.all([refreshSession(), refreshHelper()]);
+    void refreshSession();
+    void refreshHelper();
+    return () => request.current?.abort();
   }, [refreshHelper, refreshSession]);
 
   const persistMessage = useCallback(async (message: AiDebugMessage, model?: string) => {
@@ -69,57 +88,88 @@ export const AiDebugPage = () => {
 
   const submit = useCallback(
     async (text?: string) => {
-      if (!session || sending || helperState !== 'ready') return;
+      if (!session || request.current || deleteLock.current || helperState !== 'ready') return;
       if (!session.context.screenshotDataUrl) {
         setError(session.error || 'A screenshot is required. Return to the source tab and click AI Debug again.');
         return;
       }
-
+      const controller = new AbortController();
+      request.current = controller;
       setSending(true);
       setError('');
+      setStatus('');
+      setConfirmDelete(false);
+      setExportOpen(false);
       try {
         let current = session;
-        const last = current.messages.at(-1);
-        if (text || last?.role !== 'user' || current.status !== 'prepared') {
-          const userMessage: AiDebugMessage = {
+        // A retry reuses the saved question; it never appends another copy.
+        if (text || current.messages.at(-1)?.role !== 'user') {
+          current = await persistMessage({
             id: crypto.randomUUID(),
             role: 'user',
             content: text || initialPrompt,
             createdAt: Date.now(),
-          };
-          current = await persistMessage(userMessage);
+          });
+          if (text) setDraft('');
         }
-        const result = await requestAiResponse(current);
+        controller.signal.throwIfAborted();
+        const result = await requestAiResponse(current, controller.signal);
+        controller.signal.throwIfAborted();
         await persistMessage(result.message, result.model);
-        setDraft('');
         await refreshSession();
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : 'AI Debug failed.');
+        if (cause instanceof HelperRequestError && cause.code === 'PAIRING_REQUIRED') setHelperState('unpaired');
+        if (cause instanceof HelperRequestError && cause.code === 'MISSING_API_KEY') setHelperState('missing-key');
+        if (controller.signal.aborted) setStatus('Analysis stopped. Your saved question is ready to retry.');
+        else setError(cause instanceof Error ? cause.message : 'AI Debug failed. Retry your saved question.');
       } finally {
+        request.current = null;
         setSending(false);
       }
     },
-    [helperState, persistMessage, refreshSession, sending, session],
+    [helperState, persistMessage, refreshSession, session],
   );
 
   useEffect(() => {
     if (autoStarted.current || helperState !== 'ready' || session?.status !== 'prepared') return;
     autoStarted.current = true;
-    void submit();
-  }, [helperState, session?.status, submit]);
+    // Existing unanswered questions require an explicit retry after reopening.
+    if (session.messages.at(-1)?.role !== 'user') void submit();
+  }, [helperState, session, submit]);
 
   const pair = async () => {
-    await savePairingToken(pairingToken);
-    const state = await refreshHelper();
-    if (state === 'ready') setError('');
+    if (pairLock.current) return;
+    pairLock.current = true;
+    setPairing(true);
+    setError('');
+    try {
+      await savePairingToken(pairingToken);
+      setPairingToken('');
+      await refreshHelper();
+    } catch {
+      setError('Could not save the pairing token. Please try again.');
+    } finally {
+      pairLock.current = false;
+      setPairing(false);
+    }
   };
 
   const removeSession = async () => {
-    if (!session) return;
-    await sendRuntime({ type: AI_DEBUG.DELETE_SESSION, sessionId: session.id });
-    window.location.href = chrome.runtime.getURL('ai-debug/index.html');
+    if (!session || request.current || deleteLock.current) return;
+    deleteLock.current = true;
+    setDeleting(true);
+    setError('');
+    try {
+      const response = await sendRuntime({ type: AI_DEBUG.DELETE_SESSION, sessionId: session.id });
+      if (response.status === 'error') throw new Error(response.message);
+      allowNavigation();
+      window.location.href = chrome.runtime.getURL('ai-debug/index.html');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not delete the session. Please try again.');
+      deleteLock.current = false;
+      setDeleting(false);
+    }
   };
-
   const domain = useMemo(() => {
     try {
       return session ? new URL(session.context.sourceUrl).hostname : '';
@@ -127,154 +177,247 @@ export const AiDebugPage = () => {
       return '';
     }
   }, [session]);
+  const filteredHistory = history.filter(item =>
+    `${item.sourceTitle} ${item.sourceUrl}`.toLocaleLowerCase().includes(historyQuery.trim().toLocaleLowerCase()),
+  );
+  const pendingQuestion = session?.messages.at(-1)?.role === 'user';
 
   return (
-    <main className="bg-background text-foreground flex min-h-screen">
-      <aside className="border-border bg-card hidden w-72 shrink-0 border-r p-4 lg:block">
-        <div className="mb-6 flex items-center gap-3">
-          <img
-            src={chrome.runtime.getURL('logo.png')}
-            className="size-10 object-contain"
-            alt="Screenshot & Debug nón lá logo"
-          />
-          <div>
-            <h1 className="font-semibold">AI Debug</h1>
-            <p className="text-muted-foreground text-xs">Persistent local sessions</p>
-          </div>
-        </div>
-        <div className="space-y-2">
-          {history.map(item => (
+    <div className="ai-shell bg-background text-foreground">
+      <a href="#conversation" className="ai-skip">
+        Skip to conversation
+      </a>
+      <aside id="session-history" className="ai-history" data-open={historyOpen} aria-label="Saved sessions">
+        <a className="ai-brand" href={chrome.runtime.getURL('ai-debug/index.html')}>
+          <img src={chrome.runtime.getURL('logo.png')} alt="" width="36" height="36" />
+          <span>
+            AI Debug<small>Saved on this device</small>
+          </span>
+        </a>
+        <label htmlFor="session-search">Find a session</label>
+        <Input
+          id="session-search"
+          type="search"
+          placeholder="Title or website…"
+          value={historyQuery}
+          onChange={event => setHistoryQuery(event.target.value)}
+        />
+        <nav aria-label="Session history">
+          {filteredHistory.map(item => (
             <a
               key={item.id}
-              href={chrome.runtime.getURL(`ai-debug/index.html?session=${item.id}`)}
-              className={cn('hover:bg-accent block rounded-lg p-3 text-sm', item.id === sessionId && 'bg-accent')}>
-              <div className="truncate font-medium">{item.sourceTitle || 'Untitled page'}</div>
-              <div className="text-muted-foreground mt-1 truncate text-xs">{item.sourceUrl}</div>
+              href={chrome.runtime.getURL(`ai-debug/index.html?session=${encodeURIComponent(item.id)}`)}
+              aria-current={item.id === sessionId ? 'page' : undefined}>
+              <strong>{item.sourceTitle || 'Untitled page'}</strong>
+              <span>{item.sourceUrl}</span>
+              <small>
+                {new Date(item.updatedAt).toLocaleDateString()} · {item.messageCount} messages
+              </small>
             </a>
           ))}
-          {!history.length && <p className="text-muted-foreground text-sm">No AI sessions yet.</p>}
-        </div>
+          <p className="ai-muted" role="status">
+            {loading
+              ? 'Loading sessions…'
+              : !filteredHistory.length
+                ? history.length
+                  ? 'No matching sessions.'
+                  : 'No AI sessions yet.'
+                : `${filteredHistory.length} saved sessions`}
+          </p>
+        </nav>
+        <a className="ai-library-link" href={chrome.runtime.getURL('library/index.html')}>
+          Open capture library →
+        </a>
       </aside>
-
-      <section className="flex min-w-0 flex-1 flex-col">
-        <header className="border-border bg-card flex min-h-16 items-center justify-between border-b px-5 py-3">
-          <div className="min-w-0">
-            <h2 className="truncate font-semibold">{session?.context.sourceTitle || 'AI Debug setup'}</h2>
-            <p className="text-muted-foreground truncate text-xs">{domain || HELPER_URL}</p>
+      <section className="ai-workspace">
+        <header className="ai-header">
+          <div className="ai-heading">
+            <Button
+              className="ai-history-toggle"
+              variant="outline"
+              size="sm"
+              aria-expanded={historyOpen}
+              aria-controls="session-history"
+              onClick={() => setHistoryOpen(value => !value)}>
+              Sessions
+            </Button>
+            <div>
+              <h1>{session?.context.sourceTitle || 'AI Debug'}</h1>
+              <p className="ai-muted">{domain || 'Your debugging workspace'}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="border-border bg-muted rounded-full border px-3 py-1 text-xs">
+          <div className="ai-actions">
+            <span className="ai-helper-state" data-ready={helperState === 'ready'} role="status">
               {helperLabel[helperState]}
             </span>
             {session && (
-              <Button variant="outline" size="sm" onClick={removeSession}>
-                Clear session
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={sending || deleting}
+                  aria-expanded={exportOpen}
+                  aria-controls="session-export"
+                  onClick={() => setExportOpen(value => !value)}>
+                  Export session
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={sending || deleting}
+                  aria-expanded={confirmDelete}
+                  onClick={() => setConfirmDelete(value => !value)}>
+                  Clear session
+                </Button>
+              </>
             )}
           </div>
         </header>
-
-        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col p-5">
-          {helperState !== 'ready' ? (
-            <section className="border-border bg-card mx-auto mt-12 w-full max-w-2xl rounded-2xl border p-6 shadow-sm">
-              <h2 className="text-xl font-semibold">Connect the local AI helper</h2>
-              <p className="text-muted-foreground mt-2 text-sm">
-                Your prepared screenshot and diagnostics stay in this extension until the helper is ready.
+        <main id="conversation" className="ai-main" tabIndex={-1}>
+          {error && (
+            <div className="ai-error" role="alert">
+              {error}
+            </div>
+          )}
+          {confirmDelete && (
+            <section className="ai-panel" aria-label="Confirm session deletion">
+              <h2>Delete this saved conversation?</h2>
+              <p>This removes its messages and captured context from this device.</p>
+              <div className="ai-actions">
+                <Button variant="destructive" disabled={deleting} onClick={() => void removeSession()}>
+                  Delete permanently
+                </Button>
+                <Button variant="outline" disabled={deleting} onClick={() => setConfirmDelete(false)}>
+                  Keep session
+                </Button>
+              </div>
+            </section>
+          )}
+          {exportOpen && session && (
+            <div id="session-export">
+              <SessionExportPanel session={session} />
+            </div>
+          )}
+          {helperState !== 'ready' && (
+            <section className="ai-panel" aria-labelledby="helper-title">
+              <h2 id="helper-title">Connect the local AI helper</h2>
+              <p className="ai-muted">
+                Your saved conversations are available below. Connect the helper to ask another question.
               </p>
-              <ol className="mt-6 space-y-4 text-sm">
-                <li>
-                  <strong>1.</strong> Set <code className="bg-muted rounded px-2 py-1">OPENAI_API_KEY</code> in your
-                  terminal.
-                </li>
-                <li>
-                  <strong>2.</strong> Run <code className="bg-muted rounded px-2 py-1">pnpm ai:helper</code> from the
-                  repository.
-                </li>
-                <li>
-                  <strong>3.</strong> Paste the pairing token printed by the helper.
-                </li>
-              </ol>
-              <div className="mt-6 flex gap-2">
+              <details open={!session?.messages.length}>
+                <summary>Helper setup</summary>
+                <ol className="ai-setup-steps">
+                  <li>
+                    Set <code>OPENAI_API_KEY</code> in your terminal.
+                  </li>
+                  <li>
+                    Run <code>pnpm ai:helper</code> from the repository.
+                  </li>
+                  <li>Paste the pairing token printed by the helper.</li>
+                </ol>
+                <p className="ai-muted">Helper address: {HELPER_URL}</p>
+              </details>
+              <form
+                className="ai-pair-form"
+                onSubmit={event => {
+                  event.preventDefault();
+                  if (pairingToken.trim()) void pair();
+                }}>
                 <Input
                   aria-label="Pairing token"
                   type="password"
+                  autoComplete="off"
                   value={pairingToken}
                   onChange={event => setPairingToken(event.target.value)}
                   placeholder="Pairing token"
                 />
-                <Button onClick={pair} disabled={!pairingToken.trim()}>
+                <Button type="submit" disabled={!pairingToken.trim() || pairing}>
                   Pair
                 </Button>
-                <Button variant="outline" onClick={refreshHelper}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={helperState === 'checking' || pairing}
+                  onClick={() => void refreshHelper()}>
                   Retry
                 </Button>
-              </div>
+              </form>
             </section>
-          ) : (
-            <>
-              {session?.context.screenshotDataUrl && (
-                <details className="border-border bg-card mb-4 rounded-xl border p-3">
-                  <summary className="cursor-pointer text-sm font-medium">
-                    Debug context · {session.context.records.length} records
-                    {session.context.recordsTruncated ? ' (truncated)' : ''}
-                  </summary>
-                  <img
-                    src={session.context.screenshotDataUrl}
-                    alt="Captured source page"
-                    className="border-border mt-3 max-h-72 rounded-lg border object-contain"
-                  />
-                </details>
-              )}
-
-              <div className="flex-1 space-y-4" aria-live="polite">
-                {session?.messages.map(message => (
-                  <article
-                    key={message.id}
-                    className={cn(
-                      'max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6',
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground ml-auto'
-                        : 'bg-card border-border border',
-                    )}>
-                    {message.content}
-                  </article>
-                ))}
-                {sending && <p className="text-muted-foreground text-sm">Analyzing the capture…</p>}
-                {!session && (
-                  <p className="text-muted-foreground mt-12 text-center">Open the popup and click AI Debug.</p>
-                )}
-              </div>
-
-              {error && (
-                <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-300">
-                  {error}
-                </div>
-              )}
-
-              {session && (
-                <form
-                  className="border-border bg-card mt-4 rounded-2xl border p-3 shadow-sm"
-                  onSubmit={event => {
-                    event.preventDefault();
-                    if (draft.trim()) void submit(draft.trim());
-                  }}>
-                  <Textarea
-                    value={draft}
-                    onChange={event => setDraft(event.target.value)}
-                    placeholder="Ask a follow-up about this bug…"
-                    disabled={sending}
-                  />
-                  <div className="mt-2 flex justify-end">
-                    <Button type="submit" disabled={!draft.trim() || sending} loading={sending}>
-                      Send
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </>
           )}
-        </div>
+          {loading && <p role="status">Opening saved conversation…</p>}
+          {session?.context.screenshotDataUrl && (
+            <details className="ai-panel ai-context">
+              <summary>
+                Debug context · {session.context.records.length} records
+                {session.context.recordsTruncated ? ' (truncated)' : ''}
+              </summary>
+              <img src={session.context.screenshotDataUrl} alt="Captured source page" />
+              <p className="ai-muted">
+                Captured {new Date(session.context.capturedAt).toLocaleString()}. New questions send this screenshot and
+                diagnostics through your local AI helper.
+              </p>
+            </details>
+          )}
+          <section className="ai-messages" aria-label="Conversation">
+            {session?.messages.map(message => (
+              <article
+                key={message.id}
+                className="ai-message"
+                data-role={message.role}
+                aria-label={message.role === 'user' ? 'Your message' : 'AI response'}>
+                <span className="ai-speaker">{message.role === 'user' ? 'You' : 'AI assistant'}</span>
+                <p>{message.content}</p>
+              </article>
+            ))}
+          </section>
+          <div role="status" className="ai-muted ai-progress">
+            {sending ? 'Analyzing the capture…' : status}
+          </div>
+          {sending && (
+            <Button variant="outline" onClick={() => request.current?.abort()}>
+              Stop analysis
+            </Button>
+          )}
+          {!sending && pendingQuestion && (
+            <Button variant="outline" disabled={helperState !== 'ready' || deleting} onClick={() => void submit()}>
+              Retry saved question
+            </Button>
+          )}
+          {!loading && !session && (
+            <section className="ai-empty">
+              <h2>Start with a page worth investigating</h2>
+              <p>Open the extension on a website and choose AI Debug. Your saved sessions stay available here.</p>
+            </section>
+          )}
+          {session && (
+            <form
+              className="ai-panel ai-composer"
+              onSubmit={event => {
+                event.preventDefault();
+                if (draft.trim()) void submit(draft.trim());
+              }}>
+              <label htmlFor="follow-up">Ask a follow-up</label>
+              <Textarea
+                id="follow-up"
+                value={draft}
+                onChange={event => setDraft(event.target.value)}
+                placeholder="What should I investigate next?"
+                disabled={sending || deleting}
+              />
+              <div className="ai-composer-footer">
+                <span className="ai-muted">
+                  {helperState === 'ready'
+                    ? 'Uses the captured page context above.'
+                    : 'Connect the helper to send. You can keep drafting.'}
+                </span>
+                <Button type="submit" disabled={!draft.trim() || sending || deleting || helperState !== 'ready'}>
+                  Send
+                </Button>
+              </div>
+            </form>
+          )}
+        </main>
       </section>
-    </main>
+    </div>
   );
 };

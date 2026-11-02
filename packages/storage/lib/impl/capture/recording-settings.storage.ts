@@ -52,6 +52,9 @@ type RecordingSettingsStorage = BaseStorage<RecordingSettings> & {
   getSettings: () => Promise<RecordingSettings>;
 };
 
+let previousSnapshot: RecordingSettings | null = null;
+let normalizedSnapshot = defaultRecordingSettings;
+
 const recordingSettingsStorage: RecordingSettingsStorage = {
   ...storage,
 
@@ -59,7 +62,11 @@ const recordingSettingsStorage: RecordingSettingsStorage = {
 
   getSnapshot: () => {
     const snapshot = storage.getSnapshot();
-    return snapshot ? normalizeRecordingSettings(snapshot) : defaultRecordingSettings;
+    if (snapshot !== previousSnapshot) {
+      previousSnapshot = snapshot;
+      normalizedSnapshot = snapshot ? normalizeRecordingSettings(snapshot) : defaultRecordingSettings;
+    }
+    return normalizedSnapshot;
   },
 
   async setMicEnabled(enabled: boolean) {

@@ -10,7 +10,7 @@
   "module": "dist/index.mjs",
   "scripts": {
     "clean:node_modules": "pnpx rimraf node_modules",
-    "clean:bundle": "pnpx rimraf dist",
+    "clean:bundle": "rimraf dist",
     "clean": "pnpm clean:bundle && pnpm clean:node_modules",
     "ready": "tsc -b"
   },
@@ -20,6 +20,6 @@
   "devDependencies": {
     "@extension/hmr": "workspace:*",
     "@extension/tsconfig": "workspace:*",
-    "@vitejs/plugin-react-swc": "^4.3.3"
+    "@vitejs/plugin-react-swc": "^3.8.1"
   }
 }

@@ -28,3 +28,7 @@ tsconfig.tsbuildinfo
 
 # pnpm runtime/store cache
 .pnpm-store/
+/graft/.cache/
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/

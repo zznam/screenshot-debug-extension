@@ -6,6 +6,9 @@ interface LibraryFilters {
   from: string;
   to: string;
   kind: string;
+  tag?: string;
+  favorite?: string;
+  status?: string;
 }
 
 const filterCaptures = (captures: CaptureSummary[], filters: LibraryFilters) => {
@@ -26,7 +29,7 @@ const filterCaptures = (captures: CaptureSummary[], filters: LibraryFilters) => 
 
     const matchesQuery =
       !query ||
-      [capture.title, sourceTitle, sourceDomain, ...tags]
+      [capture.title, sourceTitle, sourceDomain, capture.searchText, capture.notes, ...tags]
         .filter((val): val is string => typeof val === 'string' && val.length > 0)
         .some(val => val.toLocaleLowerCase().includes(query));
 
@@ -37,7 +40,12 @@ const filterCaptures = (captures: CaptureSummary[], filters: LibraryFilters) => 
         ? true
         : capture.createdAt >= from && capture.createdAt <= to;
 
-    return matchesQuery && matchesDomain && matchesKind && matchesDate;
+    const matchesTag = !filters?.tag || tags.includes(filters.tag);
+    const matchesFavorite = filters?.favorite !== 'only' || capture.favorite === true;
+    const matchesStatus = !filters?.status || (capture.workflowStatus ?? 'open') === filters.status;
+    return (
+      matchesQuery && matchesDomain && matchesKind && matchesDate && matchesTag && matchesFavorite && matchesStatus
+    );
   });
 };
 

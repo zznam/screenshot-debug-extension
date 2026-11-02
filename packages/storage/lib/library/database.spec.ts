@@ -176,6 +176,33 @@ describe('durable local library', () => {
     expect(stats.totalBytes).toBeGreaterThan(0);
   });
 
+  it('persists searchable text tied to current previews and clears it when images change', async () => {
+    await library.commitScreenshotCapture(payload(), session);
+    const capture = (await library.getLibraryCapture('capture'))!;
+    const entry = { id: 'shot', previewAssetId: capture.screenshots[0]!.previewAssetId, text: 'Checkout unavailable' };
+    await library.saveLibraryText('capture', 1, [entry]);
+    expect((await library.listLibraryCaptures())[0]!.searchText).toBe('Checkout unavailable');
+    expect((await library.getLibraryCapture('capture'))!.screenshotText).toEqual([entry]);
+    await expect(library.saveLibraryText('capture', 1, [entry])).rejects.toThrow('changed');
+    await expect(library.saveLibraryText('capture', 2, [{ ...entry, previewAssetId: 'foreign' }])).rejects.toThrow(
+      'changed',
+    );
+    await expect(library.saveLibraryText('capture', 2, [{ ...entry, text: 'x'.repeat(100_001) }])).rejects.toThrow(
+      'too large',
+    );
+    await library.updateLibraryScreenshots({
+      id: 'capture',
+      expectedRevision: 2,
+      title: 'Edited',
+      thumbnail: png,
+      screenshots: [{ id: 'shot', preview: png, annotations: { objects: [] } }],
+    });
+    expect((await library.listLibraryCaptures())[0]!.searchText).toBe('');
+    await expect(library.saveLibraryText('capture', 3, [entry])).rejects.toThrow('changed');
+    await library.deleteLibraryCapture('capture');
+    await expect(library.saveLibraryText('capture', 3, [])).rejects.toThrow('changed');
+  });
+
   it('supports bulk deletion of multiple captures and their associated assets', async () => {
     await library.commitScreenshotCapture(payload(), session);
 
@@ -195,6 +222,29 @@ describe('durable local library', () => {
     const stats = await library.getLibraryStorageStats();
     expect(stats.captureCount).toBe(0);
     expect(stats.assetCount).toBe(0);
+  });
+
+  it('snapshots recognized text and rolls back a failed text write', async () => {
+    await library.commitScreenshotCapture(payload(), session);
+    const capture = (await library.getLibraryCapture('capture'))!;
+    const entry = { id: 'shot', previewAssetId: capture.screenshots[0]!.previewAssetId, text: 'Original result' };
+    const saving = library.saveLibraryText('capture', 1, [entry]);
+    entry.text = 'Changed after submission';
+    await saving;
+    expect((await library.getLibraryCapture('capture'))!.screenshotText![0]!.text).toBe('Original result');
+    const before = await library.getLibraryCapture('capture');
+    const put = IDBObjectStore.prototype.put;
+    const failing = vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementation(function (
+      this: IDBObjectStore,
+      value,
+      key,
+    ) {
+      if (this.name === 'captures') throw new DOMException('Storage is full', 'QuotaExceededError');
+      return put.call(this, value, key);
+    });
+    await expect(library.saveLibraryText('capture', 2, [])).rejects.toMatchObject({ name: 'QuotaExceededError' });
+    failing.mockRestore();
+    expect(await library.getLibraryCapture('capture')).toEqual(before);
   });
 
   it('edits previews and layers atomically while preserving originals, tags and frozen context', async () => {
@@ -278,5 +328,74 @@ describe('durable local library', () => {
     expect(await library.getLibraryAsset(before.screenshots[0]!.originalAssetId)).toBeDefined();
     expect(await library.getLibraryAsset(before.screenshots[0]!.previewAssetId)).toBeDefined();
     expect(await library.updateLibraryScreenshots(edit)).toBe(2);
+  });
+
+  it('persists triage with metadata, preserves it across screenshot saves, and accounts for notes', async () => {
+    await library.commitScreenshotCapture(payload(), session);
+    const before = (await library.getLibraryCapture('capture'))!;
+    const triage = { favorite: true, workflowStatus: 'in-progress' as const, notes: 'Retry only fails after checkout' };
+    await library.updateLibraryMetadata('capture', 1, before.title, ['mobile'], triage);
+    const saved = (await library.getLibraryCapture('capture'))!;
+    expect(saved).toMatchObject({ ...triage, revision: 2, tags: ['mobile'] });
+    expect(saved.sizeBytes).toBeGreaterThan(before.sizeBytes);
+    expect((await library.listLibraryCaptures())[0]).toMatchObject(triage);
+    await library.updateLibraryScreenshots({
+      id: 'capture',
+      expectedRevision: 2,
+      title: 'Edited',
+      thumbnail: png,
+      screenshots: [{ id: 'shot', preview: png, annotations: { objects: [] } }],
+    });
+    expect(await library.getLibraryCapture('capture')).toMatchObject({ ...triage, revision: 3 });
+    await library.commitScreenshotCapture({ ...payload(), expectedRevision: 3 }, session);
+    expect(await library.getLibraryCapture('capture')).toMatchObject({ ...triage, revision: 4 });
+    await library.updateLibraryMetadata('capture', 4, 'Renamed', []);
+    expect(await library.getLibraryCapture('capture')).toMatchObject({ ...triage, revision: 5 });
+  });
+
+  it('rejects stale triage and invalid input without replacing saved decisions', async () => {
+    await library.commitScreenshotCapture(payload(), session);
+    await library.updateLibraryMetadata('capture', 1, 'Fixed', [], {
+      favorite: true,
+      workflowStatus: 'resolved',
+      notes: 'Done',
+    });
+    const before = await library.getLibraryCapture('capture');
+    await expect(library.updateLibraryMetadata('capture', 1, 'Stale', [], { notes: 'Lost' })).rejects.toThrow(
+      'changed',
+    );
+    await expect(
+      library.updateLibraryMetadata('capture', 2, 'Fixed', [], { notes: 'x'.repeat(10_001) }),
+    ).rejects.toThrow('10,000');
+    await expect(
+      library.updateLibraryMetadata('capture', 2, 'Fixed', [], { workflowStatus: 'invalid' as never }),
+    ).rejects.toThrow('valid status');
+    expect(await library.getLibraryCapture('capture')).toEqual(before);
+  });
+
+  it('snapshots triage inputs and surfaces metadata quota failures with an intact prior revision', async () => {
+    await library.commitScreenshotCapture(payload(), session);
+    const triage = { notes: 'Submitted note', favorite: true };
+    const tags = ['submitted'];
+    const saving = library.updateLibraryMetadata('capture', 1, 'Submitted', tags, triage);
+    triage.notes = 'Mutated later';
+    tags.push('later');
+    await saving;
+    expect(await library.getLibraryCapture('capture')).toMatchObject({ notes: 'Submitted note', tags: ['submitted'] });
+    const before = await library.getLibraryCapture('capture');
+    const put = IDBObjectStore.prototype.put;
+    const failing = vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementation(function (
+      this: IDBObjectStore,
+      value,
+      key,
+    ) {
+      if (this.name === 'captures') throw new DOMException('Storage is full', 'QuotaExceededError');
+      return put.call(this, value, key);
+    });
+    await expect(library.updateLibraryMetadata('capture', 2, 'Lost', [], { favorite: false })).rejects.toMatchObject({
+      name: 'QuotaExceededError',
+    });
+    failing.mockRestore();
+    expect(await library.getLibraryCapture('capture')).toEqual(before);
   });
 });

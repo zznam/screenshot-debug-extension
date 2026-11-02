@@ -1,19 +1,38 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
+import { useUnsavedChanges } from '@extension/shared';
 import type { CaptureDocument } from '@extension/shared';
 import { deleteLibraryCapture, getLibraryAsset, getLibraryCapture, updateLibraryMetadata } from '@extension/storage';
+import type { CaptureWorkflowStatus } from '@extension/storage';
 
 import { formatBytes } from './filter';
+import { libraryHome } from './library-view';
+import { discardReportDraft } from './report-draft';
+import { ScreenshotText } from './screenshot-text';
 
 const CaptureDetail = ({ id }: { id: string }) => {
   const [capture, setCapture] = useState<CaptureDocument>();
   const [images, setImages] = useState<string[]>([]);
   const [title, setTitle] = useState('');
   const [tags, setTags] = useState('');
+  const [favorite, setFavorite] = useState(false);
+  const [workflowStatus, setWorkflowStatus] = useState<CaptureWorkflowStatus>('open');
+  const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [draftCleanupPending, setDraftCleanupPending] = useState(false);
+  const operation = useRef(false);
+  const dirty = Boolean(
+    capture &&
+      (title !== capture.title ||
+        tags !== capture.tags.join(', ') ||
+        favorite !== Boolean(capture.favorite) ||
+        workflowStatus !== (capture.workflowStatus ?? 'open') ||
+        notes !== (capture.notes ?? '')),
+  );
+  const allowNavigation = useUnsavedChanges(dirty || busy);
   useEffect(() => {
     let cancelled = false;
     const urls: string[] = [];
@@ -24,6 +43,9 @@ const CaptureDetail = ({ id }: { id: string }) => {
       setCapture(document);
       setTitle(document.title);
       setTags(document.tags.join(', '));
+      setFavorite(Boolean(document.favorite));
+      setWorkflowStatus(document.workflowStatus ?? 'open');
+      setNotes(document.notes ?? '');
       for (const screenshot of document.screenshots) {
         const blob = await getLibraryAsset(screenshot.previewAssetId);
         if (cancelled) return;
@@ -40,41 +62,78 @@ const CaptureDetail = ({ id }: { id: string }) => {
     };
   }, [id]);
   const save = async () => {
-    if (!capture) return;
+    if (!capture || operation.current) return;
+    operation.current = true;
     setBusy(true);
     setError('');
     setStatus('');
     try {
-      await updateLibraryMetadata(id, capture.revision, title, tags.split(','));
+      await updateLibraryMetadata(id, capture.revision, title, tags.split(','), { favorite, workflowStatus, notes });
       const updated = await getLibraryCapture(id);
+      if (!updated) throw new Error('This capture no longer exists.');
       setCapture(updated);
+      setTitle(updated.title);
+      setTags(updated.tags.join(', '));
+      setFavorite(Boolean(updated.favorite));
+      setWorkflowStatus(updated.workflowStatus ?? 'open');
+      setNotes(updated.notes ?? '');
       setStatus('Changes saved.');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not save changes.');
     } finally {
+      operation.current = false;
       setBusy(false);
     }
   };
   const remove = async () => {
+    if (operation.current) return;
+    operation.current = true;
     setBusy(true);
     setError('');
     try {
       await deleteLibraryCapture(id);
-      window.location.href = 'index.html';
+      setCapture(undefined);
+      setImages([]);
+      try {
+        discardReportDraft(localStorage, id);
+      } catch {
+        setDraftCleanupPending(true);
+        throw new Error('Capture deleted, but its saved report draft could not be removed. Retry draft cleanup.');
+      }
+      allowNavigation();
+      window.location.href = libraryHome();
     } catch (cause) {
+      operation.current = false;
       setError(cause instanceof Error ? cause.message : 'Could not delete this capture.');
       setBusy(false);
     }
   };
   return (
     <>
-      <a className="library-back" href="index.html">
+      <a className="library-back" href={libraryHome()}>
         ← All captures
       </a>
       {error && (
         <p role="alert" className="library-error">
           {error}
         </p>
+      )}
+      {draftCleanupPending && (
+        <button
+          disabled={busy}
+          onClick={() => {
+            try {
+              discardReportDraft(localStorage, id);
+              allowNavigation();
+              window.location.href = libraryHome();
+            } catch {
+              setError(
+                'The saved report draft could not be removed. Retry draft cleanup when local storage is available.',
+              );
+            }
+          }}>
+          Retry draft cleanup
+        </button>
       )}
       {capture ? (
         <div className="library-detail">
@@ -95,6 +154,12 @@ const CaptureDetail = ({ id }: { id: string }) => {
             <a className="library-primary library-edit-link" href={`?capture=${encodeURIComponent(id)}&edit=1`}>
               Edit screenshots
             </a>
+            <a className="library-primary library-edit-link" href={`?capture=${encodeURIComponent(id)}&share=1`}>
+              Review &amp; compose report
+            </a>
+            <a className="library-edit-link" href={`?compare=${encodeURIComponent(id)}`}>
+              Compare screenshots
+            </a>
             <form
               onSubmit={event => {
                 event.preventDefault();
@@ -102,22 +167,78 @@ const CaptureDetail = ({ id }: { id: string }) => {
               }}>
               <label>
                 Title
-                <input value={title} maxLength={500} onChange={event => setTitle(event.target.value)} required />
+                <input
+                  value={title}
+                  maxLength={500}
+                  disabled={busy}
+                  onChange={event => {
+                    setTitle(event.target.value);
+                    setStatus('');
+                  }}
+                  required
+                />
               </label>
               <label>
                 Tags
                 <input
                   value={tags}
-                  onChange={event => setTags(event.target.value)}
+                  disabled={busy}
+                  onChange={event => {
+                    setTags(event.target.value);
+                    setStatus('');
+                  }}
                   placeholder="checkout, mobile, bug"
                 />
               </label>
               <p className="library-muted">Separate tags with commas.</p>
-              <button className="library-primary" disabled={busy} type="submit">
-                Save details
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={favorite}
+                  disabled={busy}
+                  onChange={event => {
+                    setFavorite(event.target.checked);
+                    setStatus('');
+                  }}
+                />
+                Favorite capture
+              </label>
+              <label>
+                Workflow status
+                <select
+                  aria-label="Workflow status"
+                  value={workflowStatus}
+                  disabled={busy}
+                  onChange={event => {
+                    setWorkflowStatus(event.target.value as CaptureWorkflowStatus);
+                    setStatus('');
+                  }}>
+                  <option value="open">Open</option>
+                  <option value="in-progress">In progress</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+              </label>
+              <label>
+                Investigation notes
+                <textarea
+                  aria-label="Investigation notes"
+                  value={notes}
+                  maxLength={10_000}
+                  rows={5}
+                  disabled={busy}
+                  placeholder="Reproduction clues, decisions, and next steps…"
+                  onChange={event => {
+                    setNotes(event.target.value);
+                    setStatus('');
+                  }}
+                />
+              </label>
+              <p className="library-muted">Notes stay on this device and are searchable in the library.</p>
+              <button className="library-primary" disabled={busy || !dirty || !title.trim()} type="submit">
+                {busy ? 'Saving…' : 'Save details'}
               </button>
             </form>
-            <p role="status">{status}</p>
+            <p role="status">{dirty ? 'Unsaved changes' : status}</p>
             <dl className="library-facts">
               <div>
                 <dt>Images</dt>
@@ -142,7 +263,7 @@ const CaptureDetail = ({ id }: { id: string }) => {
             </button>
             {deleting && (
               <div className="library-confirm" role="group" aria-label="Confirm deletion">
-                <p>Delete this capture and its images permanently?</p>
+                <p>Delete this capture, its images, and its saved report draft permanently?</p>
                 <button className="library-danger" disabled={busy} onClick={() => void remove()}>
                   Delete permanently
                 </button>
@@ -156,6 +277,7 @@ const CaptureDetail = ({ id }: { id: string }) => {
       ) : (
         !error && <p role="status">Opening capture…</p>
       )}
+      {capture && <ScreenshotText capture={capture} updated={setCapture} />}
     </>
   );
 };

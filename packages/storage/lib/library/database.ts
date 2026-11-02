@@ -2,6 +2,7 @@ import type {
   CaptureDocument,
   CaptureSnapshot,
   CaptureSummary,
+  CaptureTriage,
   LibraryStorageStats,
   ScreenshotSavePayload,
   ScreenshotEditPayload,
@@ -28,6 +29,11 @@ interface Upload {
   length: number;
   createdAt: number;
 }
+
+const triageBytes = ({ favorite, workflowStatus, notes }: CaptureTriage) =>
+  favorite === undefined && workflowStatus === undefined && notes === undefined
+    ? 0
+    : new TextEncoder().encode(JSON.stringify({ favorite, workflowStatus, notes })).byteLength;
 
 const DATABASE = 'screenshot_debug_library_v1';
 const CHUNK_SIZE = 256 * 1024;
@@ -248,12 +254,16 @@ const commitScreenshotCapture = async (payload: ScreenshotSavePayload, session: 
       kind: 'screenshots',
       title: payload.title.trim() || session.source.title || 'Untitled capture',
       tags: previous?.tags ?? [],
+      favorite: previous?.favorite,
+      workflowStatus: previous?.workflowStatus,
+      notes: previous?.notes,
       source: session.source,
       createdAt: previous?.createdAt ?? session.source.capturedAt,
       updatedAt: Date.now(),
       screenshots,
       diagnostics: session.diagnostics,
-      sizeBytes,
+      sizeBytes: sizeBytes + triageBytes(previous ?? {}),
+      screenshotText: [],
       thumbnail,
       owner: session.id,
     };
@@ -353,6 +363,7 @@ const updateLibraryScreenshots = async (payload: ScreenshotEditPayload): Promise
         });
         const sizeBytes =
           originalBytes +
+          triageBytes(previous) +
           edits.reduce((total, edit) => total + edit.blob.size, 0) +
           new TextEncoder().encode(
             JSON.stringify({ screenshots, diagnostics: previous.diagnostics, thumbnail: payload.thumbnail }),
@@ -370,6 +381,7 @@ const updateLibraryScreenshots = async (payload: ScreenshotEditPayload): Promise
             screenshots,
             thumbnail: payload.thumbnail,
             sizeBytes,
+            screenshotText: [],
             revision: previous.revision + 1,
             updatedAt: Date.now(),
           });
@@ -392,11 +404,22 @@ const listLibraryCaptures = async (): Promise<CaptureSummary[]> => {
   return captures
     .sort((a, b) => b.createdAt - a.createdAt)
     .map(capture => {
-      const { screenshots, diagnostics, owner: _owner, ...summary } = capture;
-      return { ...summary, screenshotCount: screenshots.length, diagnosticCount: diagnostics.length };
+      const { screenshots, diagnostics, screenshotText, owner: _owner, ...summary } = capture;
+      return {
+        ...summary,
+        screenshotCount: screenshots.length,
+        diagnosticCount: diagnostics.length,
+        searchText: screenshotText?.map(item => item.text).join('\n') ?? '',
+      };
     });
 };
-const updateLibraryMetadata = async (id: string, revision: number, title: string, tags: string[]) => {
+const updateLibraryMetadata = async (
+  id: string,
+  revision: number,
+  title: string,
+  tags: string[],
+  triage: CaptureTriage = {},
+) => {
   if (
     typeof title !== 'string' ||
     !title.trim() ||
@@ -406,6 +429,20 @@ const updateLibraryMetadata = async (id: string, revision: number, title: string
     tags.some(tag => typeof tag !== 'string' || tag.length > 60)
   )
     throw new Error('Use a title and up to 20 short tags.');
+  if (
+    !Number.isSafeInteger(revision) ||
+    revision < 1 ||
+    (triage.favorite !== undefined && typeof triage.favorite !== 'boolean') ||
+    (triage.workflowStatus !== undefined && !['open', 'in-progress', 'resolved'].includes(triage.workflowStatus)) ||
+    (triage.notes !== undefined && (typeof triage.notes !== 'string' || triage.notes.length > 10_000))
+  )
+    throw new Error('Use a valid status and investigation notes of at most 10,000 characters.');
+  const normalizedTitle = title.trim();
+  const normalizedTags = [...new Set(tags.map(tag => tag.trim()).filter(Boolean))];
+  const patch: CaptureTriage = {};
+  if (triage.favorite !== undefined) patch.favorite = triage.favorite;
+  if (triage.workflowStatus !== undefined) patch.workflowStatus = triage.workflowStatus;
+  if (triage.notes !== undefined) patch.notes = triage.notes;
   const db = await openLibrary();
   const tx = db.transaction('captures', 'readwrite');
   const done = completed(tx);
@@ -418,13 +455,20 @@ const updateLibraryMetadata = async (id: string, revision: number, title: string
       tx.abort();
       return;
     }
-    tx.objectStore('captures').put({
-      ...capture,
-      title: title.trim(),
-      tags: [...new Set(tags.map(tag => tag.trim()).filter(Boolean))],
-      revision: revision + 1,
-      updatedAt: Date.now(),
-    });
+    try {
+      const updated = { ...capture, ...patch };
+      tx.objectStore('captures').put({
+        ...updated,
+        title: normalizedTitle,
+        tags: normalizedTags,
+        sizeBytes: capture.sizeBytes - triageBytes(capture) + triageBytes(updated),
+        revision: revision + 1,
+        updatedAt: Date.now(),
+      });
+    } catch (cause) {
+      failure = cause instanceof Error ? cause : new Error('Could not save capture details.');
+      tx.abort();
+    }
   };
   await done.catch(error => {
     throw failure ?? error;
@@ -438,6 +482,63 @@ const deleteLibraryCapture = async (id: string) => {
   tx.objectStore('captures').delete(id);
   deleteByIndex(tx.objectStore('assets'), 'captureId', id);
   await done;
+  notifyChange();
+};
+const saveLibraryText = async (
+  id: string,
+  revision: number,
+  entries: NonNullable<CaptureDocument['screenshotText']>,
+): Promise<void> => {
+  if (
+    !Array.isArray(entries) ||
+    entries.length > 30 ||
+    entries.some(
+      item =>
+        !item ||
+        typeof item.id !== 'string' ||
+        typeof item.previewAssetId !== 'string' ||
+        typeof item.text !== 'string' ||
+        item.text.length > 100_000,
+    )
+  )
+    throw new Error('Screenshot text is too large.');
+  const snapshot = structuredClone(entries);
+  const db = await openLibrary();
+  const tx = db.transaction('captures', 'readwrite');
+  const done = completed(tx);
+  let failure: Error | undefined;
+  const request = tx.objectStore('captures').get(id);
+  request.onsuccess = () => {
+    const capture = request.result as StoredCapture | undefined;
+    if (
+      !capture ||
+      capture.revision !== revision ||
+      new Set(snapshot.map(item => item.id)).size !== snapshot.length ||
+      snapshot.some(
+        item => !capture.screenshots.some(shot => shot.id === item.id && shot.previewAssetId === item.previewAssetId),
+      )
+    ) {
+      failure = new Error('This capture changed. Reopen it before reading text again.');
+      tx.abort();
+      return;
+    }
+    const bytes = (value: unknown) => new TextEncoder().encode(JSON.stringify(value)).byteLength;
+    try {
+      tx.objectStore('captures').put({
+        ...capture,
+        screenshotText: snapshot,
+        sizeBytes: capture.sizeBytes - bytes(capture.screenshotText ?? []) + bytes(snapshot),
+        revision: revision + 1,
+        updatedAt: Date.now(),
+      });
+    } catch (cause) {
+      failure = cause instanceof Error ? cause : new Error('Could not save screenshot text.');
+      tx.abort();
+    }
+  };
+  await done.catch(error => {
+    throw failure ?? error;
+  });
   notifyChange();
 };
 const deleteLibraryCaptures = async (ids: string[]) => {
@@ -506,6 +607,7 @@ export {
   getLibraryAsset,
   updateLibraryMetadata,
   updateLibraryScreenshots,
+  saveLibraryText,
   deleteLibraryCapture,
   deleteLibraryCaptures,
   getLibraryStorageStats,

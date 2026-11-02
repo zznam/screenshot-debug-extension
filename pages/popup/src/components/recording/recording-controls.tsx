@@ -144,11 +144,20 @@ export const RecordingControls = () => {
       <div className="rounded-lg border p-3 text-sm">
         <div className="flex items-center justify-between gap-3">
           <span>{t('enableMic')}</span>
-          <Switch checked={recordingSettings.mic.enabled} onCheckedChange={setMicEnabled} disabled={isRecording} />
+          <Switch
+            aria-label={t('enableMic')}
+            checked={recordingSettings.mic.enabled}
+            onCheckedChange={setMicEnabled}
+            disabled={isRecording}
+          />
         </div>
         <div className="mt-3 flex items-center justify-between gap-3">
           <span>{t('toggleRewind')}</span>
-          <Switch checked={rewindSettings.rewind.enabled} onCheckedChange={setRewindEnabled} />
+          <Switch
+            aria-label={t('toggleRewind')}
+            checked={rewindSettings.rewind.enabled}
+            onCheckedChange={setRewindEnabled}
+          />
         </div>
       </div>
 

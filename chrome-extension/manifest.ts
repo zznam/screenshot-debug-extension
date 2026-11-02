@@ -20,6 +20,7 @@ const packageJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '..', '
  */
 const manifest = {
   manifest_version: 3,
+  content_security_policy: { extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';" },
   default_locale: 'en',
   name: '__MSG_extensionName__',
   browser_specific_settings: {
@@ -95,6 +96,9 @@ const manifest = {
         'content/extend.iife.js',
         'auth-identity.html',
         'mic-permission/index.html',
+        'content-ui/ffmpeg/ffmpeg-worker.js',
+        'content-ui/ffmpeg/ffmpeg-core.js',
+        'content-ui/ffmpeg/ffmpeg-core.wasm',
       ],
       matches: ['*://*/*'],
     },

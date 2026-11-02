@@ -11,7 +11,7 @@
   "types": "index.mts",
   "main": "dist/index.mjs",
   "scripts": {
-    "clean:bundle": "rimraf dist && pnpx rimraf build",
+    "clean:bundle": "rimraf dist build",
     "clean:node_modules": "pnpx rimraf node_modules",
     "clean:turbo": "rimraf .turbo",
     "clean": "pnpm clean:bundle && pnpm clean:node_modules && pnpm clean:turbo",
@@ -25,11 +25,11 @@
   "devDependencies": {
     "@extension/tsconfig": "workspace:*",
     "@extension/env": "workspace:*",
-    "@rollup/plugin-sucrase": "^5.1.0",
-    "@types/ws": "^8.18.2",
+    "@rollup/plugin-sucrase": "^5.0.2",
+    "@types/ws": "^8.18.0",
     "esm": "^3.2.25",
-    "rollup": "^4.64.10",
+    "rollup": "^4.38.0",
     "ts-node": "^10.9.2",
-    "ws": "^8.22.0"
+    "ws": "^8.18.1"
   }
 }
