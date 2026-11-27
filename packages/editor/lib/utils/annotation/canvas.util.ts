@@ -59,6 +59,10 @@ export const initializeFabric = ({
   const canvas = new Canvas(canvasRef.current, {
     width,
     height,
+    fireMiddleClick: false,
+    fireRightClick: false,
+    stopContextMenu: false,
+    preserveObjectStacking: false,
   });
 
   if (backgroundImage) {
@@ -119,13 +123,7 @@ export const handleCanvasMouseDown = ({
   // get pointer coordinates
   const pointer = canvas.getScenePoint(options.e);
 
-  /**
-   * get target object i.e., the object that is clicked
-   * findtarget() returns the object that is clicked
-   *
-   * findTarget: http://fabricjs.com/docs/fabric.Canvas.html#findTarget
-   */
-  const target = canvas.findTarget(options.e);
+  const { target } = canvas.findTarget(options.e);
 
   // set canvas drawing mode to false
   canvas.isDrawingMode = false;

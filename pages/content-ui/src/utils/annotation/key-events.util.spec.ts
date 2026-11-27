@@ -12,7 +12,9 @@ vi.mock('fabric', () => {
   }
 
   return {
+    BaseFabricObject: { ownDefaults: {} },
     Canvas: vi.fn(),
+    Line: vi.fn(),
     ActiveSelection: MockActiveSelection,
     util: { enlivenObjects: vi.fn() },
   };

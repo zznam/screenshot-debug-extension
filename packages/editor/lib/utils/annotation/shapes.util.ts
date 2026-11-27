@@ -1,5 +1,17 @@
 import type { Canvas } from 'fabric';
-import { Rect, Line, Triangle, Circle, Group, IText, FabricImage, FabricText, filters as FabricFilters } from 'fabric';
+import {
+  BaseFabricObject,
+  Rect,
+  // eslint-disable-next-line import-x/no-deprecated -- Preserve the saved Line annotation format.
+  Line,
+  Triangle,
+  Circle,
+  Group,
+  IText,
+  FabricImage,
+  FabricText,
+  filters as FabricFilters,
+} from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
 
 import { DRAWING_TOOLS } from './canvas.util';
@@ -9,6 +21,13 @@ import type {
   ElementDirection,
   ModifyShape,
 } from '../../models/annotation.model';
+
+// Existing annotation coordinates and legacy saves use the top-left origin.
+BaseFabricObject.ownDefaults.originX = 'left';
+BaseFabricObject.ownDefaults.originY = 'top';
+
+// eslint-disable-next-line import-x/no-deprecated -- Fabric 7 can still read and write existing Line annotations.
+const AnnotationLine = Line;
 
 const DEFAULT_SHAPE_OPTIONS = {
   width: 100,
@@ -62,18 +81,18 @@ export const createCircle = (pointer: PointerEvent, stroke: string) => {
 };
 
 export const createLine = (pointer: PointerEvent, stroke: string) => {
-  return new Line([pointer.x, pointer.y, pointer.x + 100, pointer.y + 100], {
+  return new AnnotationLine([pointer.x, pointer.y, pointer.x + 100, pointer.y + 100], {
     stroke,
 
     objectId: uuidv4(),
     shapeType: 'line',
     ...DEFAULT_SHAPE_OPTIONS,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as CustomFabricObject<Line> | any);
+  } as CustomFabricObject<InstanceType<typeof AnnotationLine>> | any);
 };
 
 export const createArrow = (pointer: PointerEvent, stroke: string) => {
-  const line = new Line([0, 0, 100, 0], {
+  const line = new AnnotationLine([0, 0, 100, 0], {
     stroke,
     strokeWidth: 3,
     selectable: false,
@@ -107,7 +126,7 @@ export const createArrow = (pointer: PointerEvent, stroke: string) => {
     padding: 10,
     selectable: true,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as CustomFabricObject<Line> | any);
+  } as CustomFabricObject<InstanceType<typeof AnnotationLine>> | any);
 
   arrowGroup.setCoords();
 
@@ -172,21 +191,21 @@ export const createBlur = (canvas: Canvas | undefined, pointer: PointerEvent): R
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createSuggestingBox = ({ boxLeft, boxWidth, boxTop, boxHeight, className, score }: any) => {
-  const leftLine = new Line([boxLeft, boxTop, boxLeft, boxTop + boxHeight], {
+  const leftLine = new AnnotationLine([boxLeft, boxTop, boxLeft, boxTop + boxHeight], {
     stroke: 'yellow',
     opacity: 0.5,
     strokeWidth: 1.5,
     strokeDashArray: [10, 8],
   });
 
-  const rightLine = new Line([boxLeft + boxWidth, boxTop, boxLeft + boxWidth, boxTop + boxHeight], {
+  const rightLine = new AnnotationLine([boxLeft + boxWidth, boxTop, boxLeft + boxWidth, boxTop + boxHeight], {
     stroke: 'yellow',
     opacity: 0.5,
     strokeWidth: 1.5,
     strokeDashArray: [10, 8],
   });
 
-  const bottomLine = new Line([boxLeft, boxTop + boxHeight, boxLeft + boxWidth, boxTop + boxHeight], {
+  const bottomLine = new AnnotationLine([boxLeft, boxTop + boxHeight, boxLeft + boxWidth, boxTop + boxHeight], {
     stroke: 'yellow',
     opacity: 0.5,
     strokeWidth: 1.5,
