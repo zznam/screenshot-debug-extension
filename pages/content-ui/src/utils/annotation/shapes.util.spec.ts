@@ -27,6 +27,7 @@ vi.mock('fabric', () => {
   }
 
   return {
+    BaseFabricObject: { ownDefaults: {} },
     Canvas: vi.fn(),
     Rect: MockRect,
     Line: vi.fn(),
