@@ -42,6 +42,7 @@ describe('capture downloads', () => {
       includePerformance: false,
       retentionMinutes: 0,
       autoScreenshotOnError: false,
+      downloadFolder: '',
     } satisfies CaptureSettings);
     vi.mocked(getRecords).mockResolvedValue([]);
     download.mockResolvedValueOnce(10).mockResolvedValueOnce(11);
@@ -88,6 +89,32 @@ describe('capture downloads', () => {
     expect(getRecords).not.toHaveBeenCalled();
     expect(download).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ status: 'success', files: ['capture.png'], downloadIds: [10] });
+  });
+
+  it('saves individual files and zip bundles inside the configured Downloads subfolder', async () => {
+    vi.mocked(captureSettingsStorage.get).mockResolvedValue({
+      ...(await captureSettingsStorage.get()),
+      downloadFolder: 'Bug reports/acme',
+    });
+
+    await expect(downloadAssets(payload, 42)).resolves.toMatchObject({
+      files: ['Bug reports/acme/capture.png', 'Bug reports/acme/capture.json'],
+    });
+    expect(download.mock.calls.map(([options]) => options.filename)).toEqual([
+      'Bug reports/acme/capture.png',
+      'Bug reports/acme/capture.json',
+    ]);
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(strToU8('png'))),
+    );
+    download.mockReset().mockResolvedValue(12);
+    await expect(downloadZip({ ...payload, saveDebugLog: false }, 42)).resolves.toEqual({
+      status: 'success',
+      files: ['Bug reports/acme/capture.zip'],
+      downloadIds: [12],
+    });
   });
 
   it('rejects the operation when a download cannot be started', async () => {

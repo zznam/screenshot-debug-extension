@@ -30,6 +30,22 @@ describe('capture settings', () => {
     expect(normalizeCaptureSettings({ screenshotQuality: 10 }).screenshotQuality).toBe(50);
     expect(normalizeCaptureSettings({ screenshotQuality: Number.NaN }).screenshotQuality).toBe(100);
   });
+  it('normalizes the Downloads subfolder into a safe relative path', async () => {
+    const { normalizeDownloadFolder, normalizeCaptureSettings } = await import('./settings.storage.js');
+    expect(normalizeCaptureSettings({}).downloadFolder).toBe('');
+    expect(normalizeDownloadFolder('  Bug reports / acme  ')).toBe('Bug reports/acme');
+    expect(normalizeDownloadFolder('../../etc/./passwd')).toBe('etc/passwd');
+    expect(normalizeDownloadFolder('/abs\\\\win\\path/')).toBe('abs/win/path');
+    expect(normalizeDownloadFolder('C:\\Users')).toBe('C-/Users');
+    expect(normalizeDownloadFolder('a<b>|c?*"d\u0007')).toBe('a-b--c---d');
+    expect(normalizeDownloadFolder('a/b/c/d/e/f')).toBe('a/b/c/d');
+    expect(normalizeDownloadFolder('x'.repeat(80))).toHaveLength(60);
+    expect(normalizeDownloadFolder(42)).toBe('');
+    expect(normalizeDownloadFolder(' . / .. /  ...hidden... ')).toBe('hidden');
+    const started = performance.now();
+    expect(normalizeDownloadFolder(`${'.'.repeat(100_000)}x`)).toBe('');
+    expect(performance.now() - started).toBeLessThan(500);
+  });
   it('keeps simultaneous settings changes and restores defaults', async () => {
     const { captureSettingsStorage } = await import('./settings.storage.js');
     await Promise.all([

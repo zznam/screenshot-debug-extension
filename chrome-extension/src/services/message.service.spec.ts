@@ -79,6 +79,7 @@ describe('message.service captureVisibleTab', () => {
       includePerformance: false,
       retentionMinutes: 0,
       autoScreenshotOnError: false,
+      downloadFolder: '',
     });
     vi.mocked(tabs.captureVisibleTab).mockResolvedValue('data:image/png;base64,samplepng');
 
@@ -99,6 +100,7 @@ describe('message.service captureVisibleTab', () => {
       includePerformance: false,
       retentionMinutes: 0,
       autoScreenshotOnError: false,
+      downloadFolder: '',
     });
     vi.mocked(tabs.captureVisibleTab).mockResolvedValue('data:image/jpeg;base64,samplejpeg');
 
@@ -119,6 +121,7 @@ describe('message.service captureVisibleTab', () => {
       includePerformance: false,
       retentionMinutes: 0,
       autoScreenshotOnError: false,
+      downloadFolder: '',
     });
     vi.mocked(tabs.captureVisibleTab).mockRejectedValue(new Error('Cannot capture active tab'));
 
