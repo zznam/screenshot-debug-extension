@@ -35,13 +35,25 @@ const screenshotFiles = (payload: DownloadPayload) => {
     return { ...screenshot, filename: `${base}${count > 1 ? `-${count}` : ''}.${extension}` };
   });
 };
+/** Places a file inside the configured Downloads subfolder, if any. */
+const inFolder = (folder: string, filename: string) => (folder ? `${folder}/${filename}` : filename);
+
 const encodeText = (value: string) => Uint8Array.from(new TextEncoder().encode(value));
 
-const snapshotDebugRecords = async (tabId: number | undefined, saveDebugLog: boolean): Promise<ExtRecord[]> => {
-  if (!saveDebugLog || typeof tabId !== 'number') return [];
+const snapshotDebugRecords = async (
+  tabId: number | undefined,
+  saveDebugLog: boolean,
+): Promise<{ records: ExtRecord[]; folder: string }> => {
+  if (!saveDebugLog || typeof tabId !== 'number') {
+    const settings = await captureSettingsStorage.get();
+    return { records: [], folder: settings.downloadFolder };
+  }
 
   const [records, settings] = await Promise.all([getRecords(tabId), captureSettingsStorage.get()]);
-  return settings.includePerformance ? records : records.filter(record => record.recordType !== 'performance');
+  return {
+    records: settings.includePerformance ? records : records.filter(record => record.recordType !== 'performance'),
+    folder: settings.downloadFolder,
+  };
 };
 
 const buildJsonDataUrl = (value: unknown) => {
@@ -71,19 +83,19 @@ export const downloadAssets = async (
   tabId: number | undefined,
 ): Promise<DownloadResponse> => {
   // Snapshot first so a slow screenshot download cannot race record cleanup.
-  const records = await snapshotDebugRecords(tabId, payload.saveDebugLog);
+  const { records, folder } = await snapshotDebugRecords(tabId, payload.saveDebugLog);
   const files: string[] = [];
   const downloadIds: number[] = [];
 
   for (const screenshot of screenshotFiles(payload)) {
-    const { filename } = screenshot;
+    const filename = inFolder(folder, screenshot.filename);
     const downloadId = await chrome.downloads.download({ url: screenshot.src, filename, saveAs: false });
     files.push(filename);
     downloadIds.push(downloadId);
   }
 
   if (payload.saveDebugLog) {
-    const filename = `${safeName(payload.name)}.json`;
+    const filename = inFolder(folder, `${safeName(payload.name)}.json`);
     const downloadId = await chrome.downloads.download({
       url: buildJsonDataUrl(buildReport(records, payload)),
       filename,
@@ -98,7 +110,7 @@ export const downloadAssets = async (
 
 export const downloadZip = async (payload: DownloadPayload, tabId: number | undefined): Promise<DownloadResponse> => {
   // Snapshot before fetching screenshots; converting large images can be slow.
-  const records = await snapshotDebugRecords(tabId, payload.saveDebugLog);
+  const { records, folder } = await snapshotDebugRecords(tabId, payload.saveDebugLog);
   const zipData: globalThis.Record<string, Uint8Array> = {};
 
   for (const screenshot of screenshotFiles(payload)) {
@@ -116,7 +128,7 @@ export const downloadZip = async (payload: DownloadPayload, tabId: number | unde
   }
 
   const blob = new Blob([zipSync(zipData)], { type: 'application/zip' });
-  const filename = `${safeName(payload.name)}.zip`;
+  const filename = inFolder(folder, `${safeName(payload.name)}.zip`);
   const downloadId = await chrome.downloads.download({
     url: await blobToDataUrl(blob),
     filename,

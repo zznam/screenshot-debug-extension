@@ -12,6 +12,8 @@ interface CaptureSettings {
   includePerformance: boolean;
   retentionMinutes: number; // 0 means no auto-delete, else e.g. 15, 30, 60
   autoScreenshotOnError: boolean;
+  /** Subfolder inside the browser's Downloads folder, e.g. "Bug reports/acme". Empty saves at the top level. */
+  downloadFolder: string;
 }
 
 const DEFAULT_SETTINGS: CaptureSettings = {
@@ -21,6 +23,7 @@ const DEFAULT_SETTINGS: CaptureSettings = {
   includePerformance: false,
   retentionMinutes: 0,
   autoScreenshotOnError: false,
+  downloadFolder: '',
 };
 
 type CaptureSettingsStorage = BaseStorage<CaptureSettings> & {
@@ -32,6 +35,34 @@ const storage = createStorage<CaptureSettings>('capture-settings-storage-key', D
   storageEnum: StorageEnum.Local,
   liveUpdate: true,
 });
+
+const MAX_FOLDER_DEPTH = 4;
+const MAX_SEGMENT_LENGTH = 60;
+
+/**
+ * Turns user input into a relative path chrome.downloads accepts: no drive letters, no `..`,
+ * no characters Windows or macOS reject, at most four levels.
+ */
+const normalizeDownloadFolder = (value: unknown): string => {
+  if (typeof value !== 'string') return '';
+  return value
+    .split(/[\\/]+/)
+    .map(segment =>
+      Array.from(segment, character =>
+        character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127 ? '' : character,
+      )
+        .join('')
+        .replace(/[<>:"|?*]/g, '-')
+        .trim()
+        .replace(/^\.+|\.+$/g, '')
+        .trim()
+        .slice(0, MAX_SEGMENT_LENGTH)
+        .trim(),
+    )
+    .filter(Boolean)
+    .slice(0, MAX_FOLDER_DEPTH)
+    .join('/');
+};
 
 const normalizeCaptureSettings = (value: Partial<CaptureSettings> | null | undefined): CaptureSettings => ({
   exportFormat: value?.exportFormat === 'zip' ? 'zip' : 'individual',
@@ -45,6 +76,7 @@ const normalizeCaptureSettings = (value: Partial<CaptureSettings> | null | undef
       ? Math.floor(value!.retentionMinutes!)
       : DEFAULT_SETTINGS.retentionMinutes,
   autoScreenshotOnError: value?.autoScreenshotOnError === true,
+  downloadFolder: normalizeDownloadFolder(value?.downloadFolder),
 });
 
 let previousSnapshot: CaptureSettings | null = null;
@@ -67,5 +99,5 @@ export const captureSettingsStorage: CaptureSettingsStorage = {
   resetSettings: () => storage.set(DEFAULT_SETTINGS),
 };
 
-export { normalizeCaptureSettings };
+export { normalizeCaptureSettings, normalizeDownloadFolder };
 export type { ExportFormat, ScreenshotFormat, CaptureSettings };

@@ -1,5 +1,5 @@
 import { ArrowLeft } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useStorage } from '@extension/shared';
 import {
@@ -22,6 +22,9 @@ export const SettingsContent = ({ onBack }: { onBack: () => void }) => {
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [addingDomain, setAddingDomain] = useState(false);
+  const [folderDraft, setFolderDraft] = useState(settings.downloadFolder);
+
+  useEffect(() => setFolderDraft(settings.downloadFolder), [settings.downloadFolder]);
 
   const save = async (operation: () => Promise<void>, message = 'Settings saved.') => {
     setError('');
@@ -84,6 +87,34 @@ export const SettingsContent = ({ onBack }: { onBack: () => void }) => {
             <option value="zip">Zip Bundle</option>
           </select>
         </div>
+        <form
+          className="flex flex-col gap-1"
+          onSubmit={event => {
+            event.preventDefault();
+            update({ downloadFolder: folderDraft });
+          }}>
+          <label htmlFor="download-folder" className="text-sm font-medium">
+            Download Folder
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="download-folder"
+              type="text"
+              className={`${controlClass} min-w-0 flex-1`}
+              placeholder="Top of Downloads"
+              aria-describedby="download-folder-help"
+              value={folderDraft}
+              onChange={e => setFolderDraft(e.target.value)}
+              onBlur={() => folderDraft !== settings.downloadFolder && update({ downloadFolder: folderDraft })}
+            />
+            <Button type="submit" variant="outline" disabled={folderDraft === settings.downloadFolder}>
+              Save
+            </Button>
+          </div>
+          <p id="download-folder-help" className="text-muted-foreground text-xs">
+            Saves to Downloads/{settings.downloadFolder ? `${settings.downloadFolder}/` : ''}. Use / for subfolders.
+          </p>
+        </form>
         <div className="flex flex-col gap-1">
           <label htmlFor="screenshot-format" className="text-sm font-medium">
             Screenshot Format
