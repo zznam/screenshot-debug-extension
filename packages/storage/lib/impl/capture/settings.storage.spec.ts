@@ -41,6 +41,10 @@ describe('capture settings', () => {
     expect(normalizeDownloadFolder('a/b/c/d/e/f')).toBe('a/b/c/d');
     expect(normalizeDownloadFolder('x'.repeat(80))).toHaveLength(60);
     expect(normalizeDownloadFolder(42)).toBe('');
+    expect(normalizeDownloadFolder(' . / .. /  ...hidden... ')).toBe('hidden');
+    const started = performance.now();
+    expect(normalizeDownloadFolder(`${'.'.repeat(100_000)}x`)).toBe('');
+    expect(performance.now() - started).toBeLessThan(500);
   });
   it('keeps simultaneous settings changes and restores defaults', async () => {
     const { captureSettingsStorage } = await import('./settings.storage.js');

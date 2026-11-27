@@ -38,26 +38,39 @@ const storage = createStorage<CaptureSettings>('capture-settings-storage-key', D
 
 const MAX_FOLDER_DEPTH = 4;
 const MAX_SEGMENT_LENGTH = 60;
+/** Longer input cannot produce a longer result, so bound the work before normalizing. */
+const MAX_FOLDER_INPUT = (MAX_SEGMENT_LENGTH + 1) * 16;
+
+/** Strips leading and trailing dots and spaces in linear time (no backtracking regex). */
+const trimDotsAndSpaces = (segment: string) => {
+  const removable = (character: string) => character === '.' || character.trim() === '';
+  let start = 0;
+  let end = segment.length;
+  while (start < end && removable(segment[start])) start++;
+  while (end > start && removable(segment[end - 1])) end--;
+  return segment.slice(start, end);
+};
 
 /**
- * Turns user input into a relative path chrome.downloads accepts: no drive letters, no `..`,
- * no characters Windows or macOS reject, at most four levels.
+ * Turns user input into a relative path chrome.downloads accepts: no `.` or `..` segments, no
+ * characters Windows or macOS reject (a drive letter like `C:` becomes a plain `C-` folder), and
+ * at most four levels.
  */
 const normalizeDownloadFolder = (value: unknown): string => {
   if (typeof value !== 'string') return '';
   return value
-    .split(/[\\/]+/)
+    .slice(0, MAX_FOLDER_INPUT)
+    .split(/[\\/]/)
     .map(segment =>
-      Array.from(segment, character =>
-        character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127 ? '' : character,
-      )
-        .join('')
-        .replace(/[<>:"|?*]/g, '-')
-        .trim()
-        .replace(/^\.+|\.+$/g, '')
-        .trim()
-        .slice(0, MAX_SEGMENT_LENGTH)
-        .trim(),
+      trimDotsAndSpaces(
+        trimDotsAndSpaces(
+          Array.from(segment, character =>
+            character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127 ? '' : character,
+          )
+            .join('')
+            .replace(/[<>:"|?*]/g, '-'),
+        ).slice(0, MAX_SEGMENT_LENGTH),
+      ),
     )
     .filter(Boolean)
     .slice(0, MAX_FOLDER_DEPTH)
