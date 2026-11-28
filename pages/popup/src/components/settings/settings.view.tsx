@@ -101,7 +101,7 @@ export const SettingsContent = ({ onBack }: { onBack: () => void }) => {
               id="download-folder"
               type="text"
               className={`${controlClass} min-w-0 flex-1`}
-              placeholder="Top of Downloads"
+              placeholder="e.g. Bug reports/{host}/{date}"
               aria-describedby="download-folder-help"
               value={folderDraft}
               onChange={e => setFolderDraft(e.target.value)}
@@ -112,7 +112,8 @@ export const SettingsContent = ({ onBack }: { onBack: () => void }) => {
             </Button>
           </div>
           <p id="download-folder-help" className="text-muted-foreground text-xs">
-            Saves to Downloads/{settings.downloadFolder ? `${settings.downloadFolder}/` : ''}. Use / for subfolders.
+            Saves to Downloads/{settings.downloadFolder ? `${settings.downloadFolder}/` : ''}. Use / for subfolders,{' '}
+            <code>{'{host}'}</code> for the site and <code>{'{date}'}</code> for the capture day.
           </p>
         </form>
         <div className="flex flex-col gap-1">

@@ -117,6 +117,18 @@ describe('capture downloads', () => {
     });
   });
 
+  it('fills {host} and {date} placeholders in the Downloads subfolder', async () => {
+    vi.mocked(captureSettingsStorage.get).mockResolvedValue({
+      ...(await captureSettingsStorage.get()),
+      downloadFolder: 'Bugs/{host}/{date}',
+    });
+    const timestamp = new Date(2026, 0, 2, 9).getTime();
+
+    await expect(downloadAssets({ ...payload, timestamp, saveDebugLog: false }, 42)).resolves.toMatchObject({
+      files: ['Bugs/example.test/2026-01-02/capture.png'],
+    });
+  });
+
   it('rejects the operation when a download cannot be started', async () => {
     download.mockReset().mockRejectedValue(new Error('Download denied'));
 
