@@ -5,6 +5,7 @@ import { captureSettingsStorage } from '@extension/storage';
 
 import type { Record as ExtRecord } from '../types';
 import { getRecords } from '../utils';
+import { expandDownloadFolder } from '../utils/download-folder.util';
 import { buildHarLog } from '../utils/har-builder.util';
 import { buildDebugReport } from '../utils/report-builder.util';
 import { buildReportMarkdown } from '../utils/report-markdown.util';
@@ -83,7 +84,8 @@ export const downloadAssets = async (
   tabId: number | undefined,
 ): Promise<DownloadResponse> => {
   // Snapshot first so a slow screenshot download cannot race record cleanup.
-  const { records, folder } = await snapshotDebugRecords(tabId, payload.saveDebugLog);
+  const { records, folder: template } = await snapshotDebugRecords(tabId, payload.saveDebugLog);
+  const folder = expandDownloadFolder(template, payload);
   const files: string[] = [];
   const downloadIds: number[] = [];
 
@@ -110,7 +112,8 @@ export const downloadAssets = async (
 
 export const downloadZip = async (payload: DownloadPayload, tabId: number | undefined): Promise<DownloadResponse> => {
   // Snapshot before fetching screenshots; converting large images can be slow.
-  const { records, folder } = await snapshotDebugRecords(tabId, payload.saveDebugLog);
+  const { records, folder: template } = await snapshotDebugRecords(tabId, payload.saveDebugLog);
+  const folder = expandDownloadFolder(template, payload);
   const zipData: globalThis.Record<string, Uint8Array> = {};
 
   for (const screenshot of screenshotFiles(payload)) {
